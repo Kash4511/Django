@@ -90,14 +90,20 @@ const AIGeneratingAnimation: React.FC = () => {
     <div className="ai-demo">
       <div className="ai-brain">
         <Bot size={24} />
-        <motion.div
-          className="thinking-dots"
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        >
-          <span>•</span><span>•</span><span>•</span>
-        </motion.div>
       </div>
+      
+      <div className="ai-loading-center">
+        {isGenerating && (
+          <motion.div
+            className="thinking-dots"
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            <span>•</span><span>•</span><span>•</span>
+          </motion.div>
+        )}
+      </div>
+      
       <div className="generated-content">
         <AnimatePresence mode="wait">
           {!isGenerating && (

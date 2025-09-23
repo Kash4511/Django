@@ -170,8 +170,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
   color: #f59e0b;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.ai-loading-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   height: 20px;
   flex-shrink: 0;
 }
@@ -179,6 +186,7 @@
 .thinking-dots {
   display: flex;
   gap: 0.2rem;
+  color: #f59e0b;
 }
 
 .thinking-dots span {
