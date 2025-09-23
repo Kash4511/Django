@@ -1,39 +1,6 @@
-import React, { Suspense } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Float } from '@react-three/drei'
+import React from 'react'
 import { motion } from 'framer-motion'
 import './HeroSection.css'
-
-function FloatingShapes() {
-  return (
-    <>
-      <Float speed={1.2} rotationIntensity={1} floatIntensity={2}>
-        <mesh position={[2, 0, 0]}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="#4f46e5" transparent opacity={0.7} />
-        </mesh>
-      </Float>
-      <Float speed={1.5} rotationIntensity={0.8} floatIntensity={1.5}>
-        <mesh position={[-2, 1, -1]}>
-          <sphereGeometry args={[0.8, 32, 32]} />
-          <meshStandardMaterial color="#06b6d4" transparent opacity={0.8} />
-        </mesh>
-      </Float>
-      <Float speed={1.8} rotationIntensity={1.2} floatIntensity={2.5}>
-        <mesh position={[0, -1, 1]}>
-          <octahedronGeometry args={[0.9]} />
-          <meshStandardMaterial color="#8b5cf6" transparent opacity={0.6} />
-        </mesh>
-      </Float>
-      <Float speed={1.4} rotationIntensity={0.6} floatIntensity={1.8}>
-        <mesh position={[-1, -2, 0]}>
-          <tetrahedronGeometry args={[0.7]} />
-          <meshStandardMaterial color="#f59e0b" transparent opacity={0.7} />
-        </mesh>
-      </Float>
-    </>
-  )
-}
 
 interface HeroSectionProps {
   onGetStarted: () => void
@@ -51,9 +18,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, user }) => {
             transition={{ duration: 0.8 }}
             className="hero-title"
           >
-            Meet your first AI employee
-            <br />
-            <span className="gradient-text">for PDF Generation</span>
+            Talking about PDFs, what's <br/>
+            <span className="gradient-text">your opinion?</span>
           </motion.h1>
           
           <motion.p
@@ -62,7 +28,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, user }) => {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="hero-subtitle"
           >
-            Simplest way for businesses to create, manage, and share PDF content. Now with just a prompt.
+AI is a useful solution to streamline processes.
           </motion.p>
           
           <motion.div
@@ -74,10 +40,10 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, user }) => {
             <div className="input-container">
               <input 
                 type="text" 
-                placeholder="How can I help? Describe your PDF and I'll build it."
+                placeholder="Describe your project"
                 className="hero-input"
               />
-              <button className="input-submit-btn">↑</button>
+              <button className="input-submit-btn">→</button>
             </div>
             
             <div className="action-tags">
@@ -93,15 +59,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, user }) => {
           </motion.div>
         </div>
         
-        <div className="hero-3d">
-          <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
-            <ambientLight intensity={0.4} />
-            <directionalLight position={[10, 10, 5]} intensity={1} />
-            <Suspense fallback={null}>
-              <FloatingShapes />
-            </Suspense>
-            <OrbitControls enableZoom={false} enablePan={false} />
-          </Canvas>
+        <div className="hero-visual">
+          <div className="floating-pdf">
+            <div className="pdf-icon">📄</div>
+            <div className="pdf-text">Professional<br/>PDF Generator</div>
+          </div>
         </div>
       </div>
     </section>
