@@ -198,12 +198,13 @@
 .content-line {
   font-size: 0.8rem;
   color: #6b7280;
-  margin-bottom: 0.25rem;
   text-align: left;
-  position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
-  right: 0.75rem;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 0.75rem;
 }
 
 /* Download Animation */

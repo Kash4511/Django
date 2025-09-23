@@ -66,7 +66,8 @@ const TypingAnimation: React.FC = () => {
 }
 
 const AIGeneratingAnimation: React.FC = () => {
-  const [lines, setLines] = useState<string[]>([])
+  const [currentLineIndex, setCurrentLineIndex] = useState(0)
+  const [isGenerating, setIsGenerating] = useState(true)
   const contentLines = [
     'Sustainable Architecture Trends...',
     'Energy-efficient design principles...',
@@ -76,13 +77,12 @@ const AIGeneratingAnimation: React.FC = () => {
   
   useEffect(() => {
     const interval = setInterval(() => {
-      setLines(prev => {
-        if (prev.length >= contentLines.length) {
-          return []
-        }
-        return [...prev, contentLines[prev.length]]
-      })
-    }, 1200)
+      setIsGenerating(true)
+      setTimeout(() => {
+        setCurrentLineIndex((prev) => (prev + 1) % contentLines.length)
+        setIsGenerating(false)
+      }, 1000)
+    }, 2500)
     return () => clearInterval(interval)
   }, [])
   
@@ -99,18 +99,19 @@ const AIGeneratingAnimation: React.FC = () => {
         </motion.div>
       </div>
       <div className="generated-content">
-        <AnimatePresence>
-          {lines.map((line, index) => (
+        <AnimatePresence mode="wait">
+          {!isGenerating && (
             <motion.div
-              key={index}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0 }}
+              key={currentLineIndex}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
               className="content-line"
             >
-              {line}
+              {contentLines[currentLineIndex]}
             </motion.div>
-          ))}
+          )}
         </AnimatePresence>
       </div>
     </div>
