@@ -44,15 +44,17 @@
 }
 
 .step-card {
-  background: linear-gradient(145deg, #4a5568 0%, #2d3748 50%, #1a202c 100%);
+  background: linear-gradient(145deg, #3a3a3a 0%, #2c2c2c 25%, #1f1f1f 75%, #151515 100%);
   border-radius: 20px;
   padding: 2.5rem;
   position: relative;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid #718096;
+  border: 1px solid #444444;
   backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 
+              inset 0 1px 0 rgba(255, 255, 255, 0.12),
+              inset 0 -1px 0 rgba(0, 0, 0, 0.4);
   cursor: pointer;
 }
 
