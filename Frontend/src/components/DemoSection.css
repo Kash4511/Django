@@ -1,6 +1,7 @@
 .demo-section {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: #f8f8f8;
   position: relative;
+  padding: 8rem 2rem;
 }
 
 .demo-header {
@@ -11,15 +12,23 @@
 
 .demo-title {
   font-size: 2.5rem;
-  font-weight: 700;
+  font-weight: 400;
   margin-bottom: 1.5rem;
-  color: #1a1a1a;
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
 }
 
 .demo-subtitle {
-  font-size: 1.25rem;
-  color: #666;
+  font-size: 1.1rem;
+  color: #666666;
   line-height: 1.6;
+  text-align: center;
+  font-weight: 300;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .demo-grid {

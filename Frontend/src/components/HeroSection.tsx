@@ -7,7 +7,7 @@ interface HeroSectionProps {
   user: any
 }
 
-const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, user }) => {
+const HeroSection: React.FC<HeroSectionProps> = () => {
   return (
     <section className="hero-section">
       <div className="hero-content">
@@ -18,8 +18,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, user }) => {
             transition={{ duration: 0.8 }}
             className="hero-title"
           >
-            Where AI Meets <br/>
-            <span className="gradient-text">Architectural Marketing.</span>
+            Where AI Meets Architectural Marketing.
           </motion.h1>
           
           <motion.p

@@ -53,7 +53,7 @@ const LandingPage: React.FC = () => {
   return (
     <div className="landing-page">
       <nav className="main-nav">
-        <div className="nav-brand">PDF Studio</div>
+        <div className="nav-brand">Forma</div>
         <div className="nav-actions">
           {user ? (
             <div className="user-menu">
@@ -63,9 +63,14 @@ const LandingPage: React.FC = () => {
               </button>
             </div>
           ) : (
-            <button className="nav-button minimal" onClick={() => setShowAuth(true)}>
-              Sign In
-            </button>
+            <>
+              <button className="nav-button white-btn" onClick={() => setShowAuth(true)}>
+                Login
+              </button>
+              <button className="nav-button black-btn" onClick={() => setShowAuth(true)}>
+                Sign In
+              </button>
+            </>
           )}
         </div>
       </nav>
