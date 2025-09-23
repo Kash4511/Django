@@ -54,9 +54,6 @@ const LandingPage: React.FC = () => {
     <div className="landing-page">
       <nav className="main-nav">
         <div className="nav-brand">PDF Studio</div>
-        <div className="nav-center">
-          <span className="nav-breadcrumb">← Homepage</span>
-        </div>
         <div className="nav-actions">
           {user ? (
             <div className="user-menu">

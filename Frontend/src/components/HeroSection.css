@@ -8,22 +8,23 @@
 }
 
 .hero-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
-  max-width: 1400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 800px;
   width: 100%;
   min-height: 100vh;
-  align-items: center;
+  margin: 0 auto;
 }
 
 .hero-text {
-  padding: 4rem 3rem;
+  padding: 4rem 2rem;
   background: #ffffff;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 100vh;
+  text-align: center;
+  width: 100%;
 }
 
 .hero-title {

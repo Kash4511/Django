@@ -38,13 +38,8 @@ const FeaturesSection: React.FC = () => {
           className="features-header"
         >
           <h2 className="features-title">
-            Everything you need to create
-            <br />
-            <span className="gradient-text">powerful lead magnets</span>
-          </h2>
-          <p className="features-subtitle">
             Transform your architectural expertise into compelling marketing assets
-          </p>
+          </h2>
         </motion.div>
 
         <div className="features-grid">
