@@ -217,7 +217,7 @@ const HowItWorksSection: React.FC = () => {
         >
           <div className="badge">
             <FileText size={16} />
-            Easy as one, two, three.
+            From concept to conversion.
           </div>
           <h2 className="how-it-works-title">How it works</h2>
         </motion.div>
