@@ -50,6 +50,7 @@
   font-weight: 400;
   position: relative;
   z-index: 3;
+  --scroll-fade: 0;
 }
 
 .highlight-text::before {
@@ -60,16 +61,21 @@
   right: -30px;
   bottom: -20px;
   background: linear-gradient(135deg, 
-    rgba(74, 130, 153, 0.4) 0%, 
-    rgba(42, 87, 102, 0.6) 25%,
-    rgba(74, 130, 153, 0.3) 50%,
-    rgba(42, 87, 102, 0.5) 75%,
-    rgba(74, 130, 153, 0.4) 100%);
+    rgba(74, 130, 153, calc(0.4 * (1 - var(--scroll-fade)))) 0%, 
+    rgba(42, 87, 102, calc(0.6 * (1 - var(--scroll-fade)))) 25%,
+    rgba(74, 130, 153, calc(0.3 * (1 - var(--scroll-fade)))) 50%,
+    rgba(42, 87, 102, calc(0.5 * (1 - var(--scroll-fade)))) 75%,
+    rgba(74, 130, 153, calc(0.4 * (1 - var(--scroll-fade)))) 100%),
+    linear-gradient(135deg,
+    rgba(0, 0, 0, calc(0.8 * var(--scroll-fade))) 0%,
+    rgba(0, 0, 0, calc(0.9 * var(--scroll-fade))) 50%,
+    rgba(0, 0, 0, calc(0.8 * var(--scroll-fade))) 100%);
   border-radius: 20px;
   z-index: -1;
   filter: blur(15px);
   animation: background3D 4s ease-in-out infinite;
   transform-style: preserve-3d;
+  transition: background 0.3s ease-out;
 }
 
 .highlight-text::after {
@@ -80,14 +86,19 @@
   right: -25px;
   bottom: -15px;
   background: linear-gradient(225deg, 
-    rgba(74, 130, 153, 0.2) 0%, 
-    rgba(255, 255, 255, 0.1) 50%,
-    rgba(74, 130, 153, 0.3) 100%);
+    rgba(74, 130, 153, calc(0.2 * (1 - var(--scroll-fade)))) 0%, 
+    rgba(255, 255, 255, calc(0.1 * (1 - var(--scroll-fade)))) 50%,
+    rgba(74, 130, 153, calc(0.3 * (1 - var(--scroll-fade)))) 100%),
+    linear-gradient(225deg,
+    rgba(0, 0, 0, calc(0.6 * var(--scroll-fade))) 0%,
+    rgba(0, 0, 0, calc(0.4 * var(--scroll-fade))) 50%,
+    rgba(0, 0, 0, calc(0.7 * var(--scroll-fade))) 100%);
   border-radius: 16px;
   z-index: -2;
   filter: blur(8px);
   animation: backgroundPulse 3s ease-in-out infinite alternate;
   transform-style: preserve-3d;
+  transition: background 0.3s ease-out;
 }
 
 @keyframes background3D {
