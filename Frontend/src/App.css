@@ -49,14 +49,14 @@ body {
 }
 
 .cta-button.primary {
-  background: linear-gradient(135deg, #132e35 0%, #132e35 100%);
+  background: linear-gradient(135deg, #2a5766 0%, #2a5766 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(19, 46, 53, 0.4);
+  box-shadow: 0 4px 15px rgba(42, 87, 102, 0.4);
 }
 
 .cta-button.primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(19, 46, 53, 0.6);
+  box-shadow: 0 8px 25px rgba(42, 87, 102, 0.6);
 }
 
 .cta-button.secondary {
