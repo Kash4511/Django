@@ -18,7 +18,7 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
             transition={{ duration: 0.8 }}
             className="hero-title"
           >
-            Where AI Meets Architectural Marketing.
+            Where AI Meets <span className="highlight-text">Architectural Marketing</span>.
           </motion.h1>
           
           <motion.p
