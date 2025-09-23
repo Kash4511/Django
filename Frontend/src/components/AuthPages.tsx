@@ -34,6 +34,25 @@ const AuthPages: React.FC<AuthPagesProps> = ({ onLogin, onClose }) => {
     setLoading(true)
     setError('')
 
+    // Client-side validation for signup
+    if (!isLogin) {
+      if (formData.password !== formData.password_confirm) {
+        setError('Passwords do not match.')
+        setLoading(false)
+        return
+      }
+      if (!formData.name.trim()) {
+        setError('Full name is required.')
+        setLoading(false)
+        return
+      }
+      if (!formData.password_confirm.trim()) {
+        setError('Please confirm your password.')
+        setLoading(false)
+        return
+      }
+    }
+
     try {
       const endpoint = isLogin ? '/api/auth/login/' : '/api/auth/register/'
       const payload = isLogin 
@@ -41,6 +60,10 @@ const AuthPages: React.FC<AuthPagesProps> = ({ onLogin, onClose }) => {
         : formData
 
       const apiBase = import.meta.env.VITE_API_BASE_URL || window.location.protocol + '//' + window.location.hostname + ':8000'
+      
+      console.log('Making API request to:', `${apiBase}${endpoint}`)
+      console.log('Payload:', payload)
+      
       const response = await fetch(`${apiBase}${endpoint}`, {
         method: 'POST',
         headers: {
@@ -50,16 +73,29 @@ const AuthPages: React.FC<AuthPagesProps> = ({ onLogin, onClose }) => {
       })
 
       const data = await response.json()
+      console.log('API Response:', data)
 
       if (response.ok) {
         localStorage.setItem('access_token', data.access)
         localStorage.setItem('refresh_token', data.refresh)
         onLogin(data.user)
       } else {
-        setError(data.detail || Object.values(data)[0] || 'Authentication failed')
+        // Better error handling for backend validation errors
+        if (data.email && Array.isArray(data.email)) {
+          setError(data.email[0])
+        } else if (data.password && Array.isArray(data.password)) {
+          setError(data.password[0])
+        } else if (data.non_field_errors && Array.isArray(data.non_field_errors)) {
+          setError(data.non_field_errors[0])
+        } else if (data.detail) {
+          setError(data.detail)
+        } else {
+          setError('Registration failed. Please check your information.')
+        }
       }
     } catch (err) {
-      setError('Network error. Please try again.')
+      console.error('Network error:', err)
+      setError('Unable to connect to server. Please check your connection and try again.')
     } finally {
       setLoading(false)
     }
