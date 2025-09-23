@@ -163,24 +163,18 @@
   height: 80px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .ai-brain {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.75rem;
   color: #f59e0b;
   height: 24px;
   flex-shrink: 0;
-}
-
-.ai-loading-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 20px;
-  flex-shrink: 0;
+  margin-bottom: 1rem;
 }
 
 .thinking-dots {

@@ -90,9 +90,6 @@ const AIGeneratingAnimation: React.FC = () => {
     <div className="ai-demo">
       <div className="ai-brain">
         <Bot size={24} />
-      </div>
-      
-      <div className="ai-loading-center">
         {isGenerating && (
           <motion.div
             className="thinking-dots"
