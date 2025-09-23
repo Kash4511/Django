@@ -201,18 +201,23 @@
   height: 60px;
   overflow: hidden;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .content-line {
   font-size: 0.8rem;
   color: #6b7280;
-  text-align: left;
+  text-align: center;
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 0 0.75rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+  padding: 0;
 }
 
 /* Download Animation */
