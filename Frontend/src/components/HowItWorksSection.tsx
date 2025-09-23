@@ -1,6 +1,6 @@
-import React from 'react'
-import { motion } from 'framer-motion'
-import { FileText, Bot, Download, Edit3 } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { FileText, Bot, Download, Edit3, MousePointer } from 'lucide-react'
 import './HowItWorksSection.css'
 
 const steps = [
@@ -29,6 +29,165 @@ const steps = [
     iconColor: "#3b82f6"
   }
 ]
+
+// Animation components for each step
+const TypingAnimation: React.FC = () => {
+  const [currentText, setCurrentText] = useState('')
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const texts = ['Project Name...', 'Modern Villa Design', 'Target Audience: Homeowners', 'Brand Colors: #2563eb']
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const fullText = texts[currentIndex]
+      if (currentText.length < fullText.length) {
+        setCurrentText(fullText.substring(0, currentText.length + 1))
+      } else {
+        setTimeout(() => {
+          setCurrentText('')
+          setCurrentIndex((prev) => (prev + 1) % texts.length)
+        }, 2000)
+      }
+    }, 100)
+    return () => clearInterval(interval)
+  }, [currentText, currentIndex, texts])
+  
+  return (
+    <div className="typing-demo">
+      <div className="form-field">
+        <input type="text" value={currentText} readOnly />
+        <motion.div 
+          className="cursor"
+          animate={{ opacity: [1, 0] }}
+          transition={{ duration: 0.8, repeat: Infinity, repeatType: 'reverse' }}
+        />
+      </div>
+    </div>
+  )
+}
+
+const AIGeneratingAnimation: React.FC = () => {
+  const [lines, setLines] = useState<string[]>([])
+  const contentLines = [
+    'Sustainable Architecture Trends...',
+    'Energy-efficient design principles...',
+    'Modern materials and techniques...',
+    'Client presentation strategies...'
+  ]
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLines(prev => {
+        if (prev.length >= contentLines.length) {
+          return []
+        }
+        return [...prev, contentLines[prev.length]]
+      })
+    }, 1200)
+    return () => clearInterval(interval)
+  }, [])
+  
+  return (
+    <div className="ai-demo">
+      <div className="ai-brain">
+        <Bot size={24} />
+        <motion.div
+          className="thinking-dots"
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        >
+          <span>•</span><span>•</span><span>•</span>
+        </motion.div>
+      </div>
+      <div className="generated-content">
+        <AnimatePresence>
+          {lines.map((line, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0 }}
+              className="content-line"
+            >
+              {line}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+    </div>
+  )
+}
+
+const DownloadAnimation: React.FC = () => {
+  const [isClicking, setIsClicking] = useState(false)
+  const [progress, setProgress] = useState(0)
+  
+  useEffect(() => {
+    const sequence = async () => {
+      // Move cursor to button
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Click animation
+      setIsClicking(true)
+      await new Promise(resolve => setTimeout(resolve, 200))
+      setIsClicking(false)
+      
+      // Progress animation
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(progressInterval)
+            setTimeout(() => setProgress(0), 1000)
+            return 100
+          }
+          return prev + 5
+        })
+      }, 100)
+    }
+    
+    const interval = setInterval(sequence, 4000)
+    sequence() // Start immediately
+    
+    return () => clearInterval(interval)
+  }, [])
+  
+  return (
+    <div className="download-demo">
+      <motion.div
+        className="cursor-pointer"
+        animate={{
+          x: [0, 60, 60, 0],
+          y: [0, 0, 0, 0]
+        }}
+        transition={{ duration: 4, repeat: Infinity, repeatDelay: 0 }}
+      >
+        <MousePointer size={20} />
+      </motion.div>
+      
+      <motion.button
+        className="download-btn-demo"
+        animate={{
+          scale: isClicking ? 0.95 : 1
+        }}
+        transition={{ duration: 0.1 }}
+      >
+        <Download size={16} />
+        Download PDF
+      </motion.button>
+      
+      {progress > 0 && (
+        <div className="progress-bar">
+          <motion.div
+            className="progress-fill"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.1 }}
+          />
+          <span>{progress}%</span>
+        </div>
+      )}
+    </div>
+  )
+}
 
 const HowItWorksSection: React.FC = () => {
   return (
@@ -76,6 +235,12 @@ const HowItWorksSection: React.FC = () => {
                   >
                     <IconComponent size={32} />
                   </motion.div>
+                </div>
+                
+                <div className="step-animation">
+                  {index === 0 && <TypingAnimation />}
+                  {index === 1 && <AIGeneratingAnimation />}
+                  {index === 2 && <DownloadAnimation />}
                 </div>
 
                 <div className="step-content">

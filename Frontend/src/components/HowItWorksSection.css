@@ -112,6 +112,152 @@
   text-align: center;
 }
 
+/* Animation Styles */
+.step-animation {
+  margin: 1rem 0;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Typing Animation */
+.typing-demo {
+  width: 100%;
+  max-width: 240px;
+}
+
+.form-field {
+  position: relative;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: border-color 0.3s ease;
+}
+
+.form-field input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.cursor {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 20px;
+  background: #8b5cf6;
+}
+
+/* AI Generating Animation */
+.ai-demo {
+  width: 100%;
+  max-width: 260px;
+}
+
+.ai-brain {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  color: #f59e0b;
+}
+
+.thinking-dots {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.thinking-dots span {
+  font-size: 1.5rem;
+  color: #f59e0b;
+}
+
+.generated-content {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  padding: 0.75rem;
+  min-height: 60px;
+}
+
+.content-line {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+  text-align: left;
+}
+
+/* Download Animation */
+.download-demo {
+  position: relative;
+  width: 100%;
+  max-width: 200px;
+  height: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.cursor-pointer {
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  color: #374151;
+  pointer-events: none;
+}
+
+.download-btn-demo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.download-btn-demo:hover {
+  background: #2563eb;
+}
+
+.progress-bar {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  margin-top: 0.5rem;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border-radius: 3px;
+}
+
+.progress-bar span {
+  position: absolute;
+  top: -20px;
+  right: 0;
+  font-size: 0.7rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
 .step-title {
   font-size: 1.25rem;
   font-weight: 600;
@@ -166,6 +312,19 @@
   .step-icon svg {
     width: 28px;
     height: 28px;
+  }
+  
+  .typing-demo, .ai-demo, .download-demo {
+    max-width: 200px;
+  }
+  
+  .form-field {
+    padding: 0.6rem;
+  }
+  
+  .download-btn-demo {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
   }
 }
 
