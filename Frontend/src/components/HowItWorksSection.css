@@ -1,6 +1,6 @@
 .how-it-works-section {
   padding: 8rem 2rem;
-  background: #f8f8f8;
+  background: #1a1a1a;
   position: relative;
 }
 
@@ -16,20 +16,20 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(139, 92, 246, 0.1);
-  color: #8b5cf6;
+  background: rgba(255, 107, 53, 0.1);
+  color: #ff6b35;
   padding: 0.5rem 1rem;
   border-radius: 20px;
   font-size: 0.9rem;
   font-weight: 500;
   margin-bottom: 1rem;
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(255, 107, 53, 0.2);
 }
 
 .how-it-works-title {
   font-size: 3rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #ffffff;
   line-height: 1.2;
   letter-spacing: -0.02em;
   margin: 0;
@@ -44,15 +44,15 @@
 }
 
 .step-card {
-  background: #ffffff;
+  background: #2a2a2a;
   border-radius: 20px;
   padding: 2.5rem;
   position: relative;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  border: 1px solid #444444;
   backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   cursor: pointer;
 }
 
