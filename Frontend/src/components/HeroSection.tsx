@@ -51,9 +51,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, user }) => {
             transition={{ duration: 0.8 }}
             className="hero-title"
           >
-            AI-Powered PDF Lead Magnet Generator
+            Meet your first AI employee
             <br />
-            <span className="gradient-text">for Architects</span>
+            <span className="gradient-text">for PDF Generation</span>
           </motion.h1>
           
           <motion.p
@@ -62,25 +62,34 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, user }) => {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="hero-subtitle"
           >
-            Generate visually appealing, client-ready lead magnets in minutes.
-            Transform your architectural expertise into powerful marketing assets.
+            Simplest way for businesses to create, manage, and share PDF content. Now with just a prompt.
           </motion.p>
           
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="hero-cta"
+            className="hero-input-section"
           >
-            <button 
-              className="cta-button primary"
-              onClick={user ? undefined : onGetStarted}
-            >
-              {user ? 'Generate PDF' : 'Get Started'}
-            </button>
-            <button className="cta-button secondary">
-              Learn More
-            </button>
+            <div className="input-container">
+              <input 
+                type="text" 
+                placeholder="How can I help? Describe your PDF and I'll build it."
+                className="hero-input"
+              />
+              <button className="input-submit-btn">↑</button>
+            </div>
+            
+            <div className="action-tags">
+              <span className="action-tag">📊 Build reports</span>
+              <span className="action-tag">🏗️ Architecture plans</span>
+              <span className="action-tag">📋 Client proposals</span>
+              <span className="action-tag">📈 Lead magnets</span>
+              <span className="action-tag">📝 Case studies</span>
+              <span className="action-tag">🎯 Marketing materials</span>
+              <span className="action-tag">📑 Project docs</span>
+              <span className="action-tag">💼 Business cards</span>
+            </div>
           </motion.div>
         </div>
         

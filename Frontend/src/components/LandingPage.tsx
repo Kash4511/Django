@@ -52,8 +52,22 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className="landing-page">
+      {/* Promotional Banner */}
+      <div className="promo-banner">
+        <span className="promo-text">Introducing PDF AI Builder - Available Now</span>
+        <button className="promo-cta" onClick={() => setShowAuth(true)}>
+          Try now →
+        </button>
+      </div>
+
       <nav className="main-nav">
-        <div className="nav-brand">PDF Generator</div>
+        <div className="nav-brand">🤖 PDFy</div>
+        <div className="nav-links">
+          <a href="#solutions">Solutions</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#integrations">Integrations</a>
+          <a href="#resources">Resources</a>
+        </div>
         <div className="nav-actions">
           {user ? (
             <div className="user-menu">
@@ -63,9 +77,17 @@ const LandingPage: React.FC = () => {
               </button>
             </div>
           ) : (
-            <button className="nav-button primary" onClick={() => setShowAuth(true)}>
-              Sign In
-            </button>
+            <>
+              <button className="nav-button ghost" onClick={() => setShowAuth(true)}>
+                Log in
+              </button>
+              <button className="nav-button outline">
+                Talk to sales
+              </button>
+              <button className="nav-button primary" onClick={() => setShowAuth(true)}>
+                Try for free
+              </button>
+            </>
           )}
         </div>
       </nav>
