@@ -5,6 +5,112 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
+  --scroll-fade: 0;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: -20%;
+  right: -20%;
+  bottom: -20%;
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 40%,
+    rgba(74, 130, 153, calc(0.3 * (1 - var(--scroll-fade)))) 0%,
+    rgba(42, 87, 102, calc(0.4 * (1 - var(--scroll-fade)))) 25%,
+    rgba(74, 130, 153, calc(0.2 * (1 - var(--scroll-fade)))) 50%,
+    rgba(42, 87, 102, calc(0.3 * (1 - var(--scroll-fade)))) 75%,
+    transparent 100%
+  ),
+  radial-gradient(
+    ellipse 60% 80% at 30% 60%,
+    rgba(74, 130, 153, calc(0.2 * (1 - var(--scroll-fade)))) 0%,
+    rgba(42, 87, 102, calc(0.3 * (1 - var(--scroll-fade)))) 40%,
+    transparent 70%
+  ),
+  radial-gradient(
+    ellipse 70% 50% at 70% 70%,
+    rgba(74, 130, 153, calc(0.25 * (1 - var(--scroll-fade)))) 0%,
+    rgba(42, 87, 102, calc(0.35 * (1 - var(--scroll-fade)))) 50%,
+    transparent 100%
+  ),
+  linear-gradient(
+    180deg,
+    rgba(0, 0, 0, calc(0.7 * var(--scroll-fade))) 0%,
+    rgba(0, 0, 0, calc(0.8 * var(--scroll-fade))) 50%,
+    rgba(0, 0, 0, calc(0.9 * var(--scroll-fade))) 100%
+  );
+  filter: blur(80px);
+  z-index: 0;
+  animation: backgroundFlow 15s ease-in-out infinite;
+  transition: background 0.3s ease-out;
+}
+
+.hero-section::after {
+  content: '';
+  position: absolute;
+  top: -30%;
+  left: -30%;
+  right: -30%;
+  bottom: -30%;
+  background: radial-gradient(
+    ellipse 60% 40% at 60% 50%,
+    rgba(74, 130, 153, calc(0.15 * (1 - var(--scroll-fade)))) 0%,
+    rgba(42, 87, 102, calc(0.2 * (1 - var(--scroll-fade)))) 60%,
+    transparent 100%
+  ),
+  radial-gradient(
+    ellipse 40% 60% at 40% 30%,
+    rgba(74, 130, 153, calc(0.1 * (1 - var(--scroll-fade)))) 0%,
+    rgba(42, 87, 102, calc(0.15 * (1 - var(--scroll-fade)))) 80%,
+    transparent 100%
+  ),
+  linear-gradient(
+    45deg,
+    rgba(0, 0, 0, calc(0.5 * var(--scroll-fade))) 0%,
+    rgba(0, 0, 0, calc(0.6 * var(--scroll-fade))) 100%
+  );
+  filter: blur(120px);
+  z-index: 0;
+  animation: backgroundFlow2 20s ease-in-out infinite reverse;
+  transition: background 0.3s ease-out;
+}
+
+@keyframes backgroundFlow {
+  0%, 100% {
+    transform: translateX(0%) translateY(0%) scale(1);
+    opacity: 1;
+  }
+  25% {
+    transform: translateX(-5%) translateY(-3%) scale(1.05);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateX(3%) translateY(5%) scale(0.95);
+    opacity: 1;
+  }
+  75% {
+    transform: translateX(-3%) translateY(-2%) scale(1.02);
+    opacity: 0.9;
+  }
+}
+
+@keyframes backgroundFlow2 {
+  0%, 100% {
+    transform: translateX(0%) translateY(0%) scale(1);
+    opacity: 0.7;
+  }
+  33% {
+    transform: translateX(4%) translateY(-4%) scale(1.1);
+    opacity: 0.5;
+  }
+  66% {
+    transform: translateX(-2%) translateY(6%) scale(0.9);
+    opacity: 0.8;
+  }
 }
 
 .hero-content {
@@ -15,6 +121,8 @@
   width: 100%;
   min-height: 100vh;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
 .hero-text {

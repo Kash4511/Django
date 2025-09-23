@@ -9,6 +9,7 @@ interface HeroSectionProps {
 
 const HeroSection: React.FC<HeroSectionProps> = () => {
   const highlightRef = useRef<HTMLSpanElement>(null)
+  const heroSectionRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,9 +17,14 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
       const maxScroll = window.innerHeight * 0.8 // Fade completes at 80% of viewport height
       const fadeValue = Math.min(scrollPosition / maxScroll, 1)
 
-      // Update CSS custom property for the highlight background
+      // Update CSS custom property for the highlight text background
       if (highlightRef.current) {
         highlightRef.current.style.setProperty('--scroll-fade', fadeValue.toString())
+      }
+
+      // Update CSS custom property for the hero section background
+      if (heroSectionRef.current) {
+        heroSectionRef.current.style.setProperty('--scroll-fade', fadeValue.toString())
       }
     }
 
@@ -31,7 +37,7 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
   }, [])
 
   return (
-    <section className="hero-section">
+    <section className="hero-section" ref={heroSectionRef}>
       <div className="hero-content">
         <div className="hero-text">
           <motion.h1
