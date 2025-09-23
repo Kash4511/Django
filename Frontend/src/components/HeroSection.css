@@ -46,16 +46,23 @@
 }
 
 .highlight-text {
-  color: #ffffff;
+  color: #ff6b35;
   font-weight: 400;
   position: relative;
   z-index: 1;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #ff6b35 0%, #e55a2b 100%);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(255, 107, 53, 0.4), 0 0 30px rgba(255, 107, 53, 0.2);
-  display: inline-block;
-  margin: 0 8px;
+}
+
+.highlight-text::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -10px;
+  right: -10px;
+  bottom: -5px;
+  background: rgba(255, 107, 53, 0.1);
+  border-radius: 8px;
+  filter: blur(8px);
+  z-index: -1;
 }
 
 .hero-subtitle {
