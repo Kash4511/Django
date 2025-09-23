@@ -7,7 +7,7 @@ const Footer: React.FC = () => {
       <div className="container">
         <div className="footer-content">
           <div className="footer-brand">
-            <h3 className="footer-logo">PDF Generator</h3>
+            <h3 className="footer-logo">Forma</h3>
             <p className="footer-tagline">
               AI-powered lead magnets for architects
             </p>
@@ -47,7 +47,7 @@ const Footer: React.FC = () => {
         </div>
         
         <div className="footer-bottom">
-          <p>&copy; 2024 PDF Generator. All rights reserved.</p>
+          <p>&copy; 2024 Forma. All rights reserved.</p>
         </div>
       </div>
     </footer>
