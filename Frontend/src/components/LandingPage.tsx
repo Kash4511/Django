@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import HeroSection from './HeroSection'
+import HowItWorksSection from './HowItWorksSection'
 import FeaturesSection from './FeaturesSection'
 import DemoSection from './DemoSection'
 import Footer from './Footer'
@@ -76,6 +77,7 @@ const LandingPage: React.FC = () => {
       </nav>
       
       <HeroSection onGetStarted={() => setShowAuth(true)} user={user} />
+      <HowItWorksSection />
       <FeaturesSection />
       <DemoSection />
       <Footer />
