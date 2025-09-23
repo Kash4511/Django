@@ -83,7 +83,7 @@
 }
 
 .nav-button.black-btn {
-  background: #ff6b35;
+  background: #132e35;
   color: #ffffff;
   padding: 0.6rem 1.5rem;
   border-radius: 8px;
@@ -91,7 +91,7 @@
 }
 
 .nav-button.black-btn:hover {
-  background: #e55a2b;
+  background: #132e35;
   transform: translateY(-1px);
 }
 
@@ -106,8 +106,8 @@
 }
 
 .nav-button.white-btn:hover {
-  border-color: #ff6b35;
-  background: rgba(255, 107, 53, 0.1);
+  border-color: #132e35;
+  background: rgba(19, 46, 53, 0.1);
   transform: translateY(-1px);
 }
 

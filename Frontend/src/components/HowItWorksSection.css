@@ -16,14 +16,14 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(255, 107, 53, 0.1);
-  color: #ff6b35;
+  background: rgba(19, 46, 53, 0.1);
+  color: #132e35;
   padding: 0.5rem 1rem;
   border-radius: 20px;
   font-size: 0.9rem;
   font-weight: 500;
   margin-bottom: 1rem;
-  border: 1px solid rgba(255, 107, 53, 0.2);
+  border: 1px solid rgba(19, 46, 53, 0.2);
 }
 
 .how-it-works-title {
@@ -160,7 +160,7 @@
   transform: translateY(-50%);
   width: 2px;
   height: 20px;
-  background: #ff6b35;
+  background: #132e35;
 }
 
 /* AI Generating Animation */
@@ -274,7 +274,7 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #ff6b35, #e55a2b);
+  background: linear-gradient(90deg, #132e35, #132e35);
   border-radius: 3px;
 }
 
@@ -290,7 +290,7 @@
 .step-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #ff6b35;
+  color: #132e35;
   margin-bottom: 0.75rem;
   line-height: 1.3;
 }
