@@ -246,9 +246,9 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #000000;
-  color: #ff6b35;
-  border: 2px solid #ff6b35;
+  background: #ffffff;
+  color: #000000;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
   padding: 0.6rem 1.2rem;
   font-size: 0.9rem;
@@ -258,8 +258,8 @@
 }
 
 .download-btn-demo:hover {
-  background: #ff6b35;
-  color: #ffffff;
+  background: #f0f0f0;
+  color: #000000;
 }
 
 .progress-bar {

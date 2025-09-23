@@ -259,7 +259,7 @@ const HowItWorksSection: React.FC = () => {
                 </div>
 
                 <div className="step-content">
-                  <h3 className={`step-title ${index === 0 ? 'white-title' : ''}`}>{step.title}</h3>
+                  <h3 className="step-title white-title">{step.title}</h3>
                   <p className="step-subtitle">{step.subtitle}</p>
                 </div>
               </motion.div>
