@@ -65,8 +65,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: inherit;
-  opacity: 0.8;
+  background: linear-gradient(145deg, #3a3a3a 0%, #2c2c2c 25%, #1f1f1f 75%, #151515 100%);
+  opacity: 1;
   z-index: 0;
 }
 
@@ -155,7 +155,7 @@
   transform: translateY(-50%);
   width: 2px;
   height: 20px;
-  background: #8b5cf6;
+  background: #ff6b35;
 }
 
 /* AI Generating Animation */

@@ -34,22 +34,35 @@ const steps = [
 const TypingAnimation: React.FC = () => {
   const [currentText, setCurrentText] = useState('')
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [isTyping, setIsTyping] = useState(false)
   const texts = ['Project Name...', 'Modern Villa Design', 'Target Audience: Homeowners', 'Brand Colors: #2563eb']
   
   useEffect(() => {
-    const interval = setInterval(() => {
+    let timeout: NodeJS.Timeout
+    
+    const typeText = () => {
       const fullText = texts[currentIndex]
-      if (currentText.length < fullText.length) {
-        setCurrentText(fullText.substring(0, currentText.length + 1))
-      } else {
-        setTimeout(() => {
+      
+      if (!isTyping && currentText === '') {
+        setIsTyping(true)
+      }
+      
+      if (currentText.length < fullText.length && isTyping) {
+        timeout = setTimeout(() => {
+          setCurrentText(fullText.substring(0, currentText.length + 1))
+        }, 80)
+      } else if (currentText.length === fullText.length) {
+        timeout = setTimeout(() => {
+          setIsTyping(false)
           setCurrentText('')
           setCurrentIndex((prev) => (prev + 1) % texts.length)
         }, 2000)
       }
-    }, 100)
-    return () => clearInterval(interval)
-  }, [currentText, currentIndex, texts])
+    }
+    
+    typeText()
+    return () => clearTimeout(timeout)
+  }, [currentText, currentIndex, isTyping, texts])
   
   return (
     <div className="typing-demo">
