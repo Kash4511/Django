@@ -32,6 +32,8 @@ const SignupPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    console.log('Signup form submitted with data:', formData)
+    
     if (!formData.name || !formData.email || !formData.password || !formData.password_confirm) {
       setError('Please fill in all required fields')
       return
@@ -51,9 +53,12 @@ const SignupPage: React.FC = () => {
     setError('')
 
     try {
+      console.log('Calling signup function...')
       await signup(formData.email, formData.password, formData.name, formData.phone_number)
+      console.log('Signup successful, navigating to dashboard...')
       navigate('/dashboard')
     } catch (err: any) {
+      console.error('Signup error:', err)
       if (err.response?.data) {
         const errorData = err.response.data
         if (errorData.email && Array.isArray(errorData.email)) {
@@ -81,6 +86,9 @@ const SignupPage: React.FC = () => {
 
   return (
     <div className="auth-overlay">
+      <div style={{position: 'absolute', top: '10px', left: '10px', color: 'white', zIndex: 9999}}>
+        DEBUG: Signup page loaded
+      </div>
       <motion.div 
         className="auth-container"
         initial={{ opacity: 0, y: 20 }}
@@ -196,6 +204,7 @@ const SignupPage: React.FC = () => {
             type="submit"
             className="auth-submit"
             disabled={loading}
+            onClick={() => console.log('Signup button clicked!')}
           >
             {loading ? 'Creating Account...' : 'Create Account'}
           </button>

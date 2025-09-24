@@ -28,6 +28,8 @@ const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    console.log('Login form submitted with data:', { email: formData.email, password: '***' })
+    
     if (!formData.email || !formData.password) {
       setError('Please fill in all fields')
       return
@@ -37,9 +39,12 @@ const LoginPage: React.FC = () => {
     setError('')
 
     try {
+      console.log('Calling login function...')
       await login(formData.email, formData.password)
+      console.log('Login successful, navigating to dashboard...')
       navigate('/dashboard')
     } catch (err: any) {
+      console.error('Login error:', err)
       if (err.response?.data) {
         const errorData = err.response.data
         if (errorData.non_field_errors && Array.isArray(errorData.non_field_errors)) {
