@@ -491,11 +491,7 @@
 
 /* Selection Summary */
 .selection-summary {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background: #0f172a;
-  border-radius: 0.75rem;
-  border: 1px solid #334155;
+  display: none !important;
 }
 
 .selection-summary h4 {
@@ -520,12 +516,7 @@
 }
 
 .selected-item {
-  padding: 0.25rem 0.5rem;
-  background: linear-gradient(135deg, #14b8a6, #0d9488);
-  color: white;
-  border-radius: 0.375rem;
-  font-size: 0.75rem;
-  box-shadow: 0 2px 8px rgba(20, 184, 166, 0.3);
+  display: none !important;
 }
 
 /* Content Preview */

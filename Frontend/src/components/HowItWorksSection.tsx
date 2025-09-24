@@ -38,7 +38,7 @@ const TypingAnimation: React.FC = () => {
   const texts = ['Project Name...', 'Modern Villa Design', 'Brand Colors: #2563eb']
   
   useEffect(() => {
-    let timeout: NodeJS.Timeout
+    let timeout: ReturnType<typeof setTimeout>
     
     const typeText = () => {
       const fullText = texts[currentIndex]
