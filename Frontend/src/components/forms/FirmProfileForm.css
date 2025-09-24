@@ -1,0 +1,277 @@
+.firm-profile-form {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+.form-header {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.form-title {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #ffffff;
+}
+
+.form-progress {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background: #333;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #2a5766;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.form-step {
+  min-height: 400px;
+}
+
+.form-group {
+  margin-bottom: 2rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+  color: #ffffff;
+}
+
+.form-input {
+  width: 100%;
+  padding: 1rem;
+  background: #000000;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #2a5766;
+  box-shadow: 0 0 0 3px rgba(42, 87, 102, 0.1);
+}
+
+.form-input::placeholder {
+  color: #666;
+}
+
+.form-select {
+  width: 100%;
+  padding: 1rem;
+  background: #000000;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #2a5766;
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 1rem;
+  background: #000000;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 1rem;
+  resize: vertical;
+  min-height: 120px;
+  transition: border-color 0.2s ease;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: #2a5766;
+  box-shadow: 0 0 0 3px rgba(42, 87, 102, 0.1);
+}
+
+.form-textarea::placeholder {
+  color: #666;
+}
+
+/* Radio buttons */
+.radio-group {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.radio-option input[type="radio"] {
+  margin-right: 0.5rem;
+  accent-color: #2a5766;
+}
+
+.radio-label {
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+/* Checkboxes */
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.checkbox-option {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 0.75rem;
+  background: #262626;
+  border-radius: 8px;
+  border: 1px solid #333;
+  transition: all 0.2s ease;
+}
+
+.checkbox-option:hover {
+  background: #333;
+  border-color: #2a5766;
+}
+
+.checkbox-option input[type="checkbox"] {
+  margin-right: 0.75rem;
+  accent-color: #2a5766;
+}
+
+.checkbox-option input[type="checkbox"]:checked + .checkbox-label {
+  color: #2a5766;
+  font-weight: 500;
+}
+
+.checkbox-label {
+  color: #ffffff;
+  font-size: 0.95rem;
+}
+
+/* Color inputs */
+.color-input-group {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.color-input {
+  width: 60px;
+  height: 60px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  cursor: pointer;
+  background: none;
+}
+
+.color-text {
+  flex: 1;
+}
+
+/* Form actions */
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #333;
+}
+
+.btn {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.btn-primary {
+  background: #2a5766;
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: #1e404a;
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  background: #333;
+  color: #666;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid #444;
+}
+
+.btn-secondary:hover {
+  background: #333;
+  border-color: #555;
+}
+
+@media (max-width: 768px) {
+  .firm-profile-form {
+    padding: 1rem;
+  }
+  
+  .form-title {
+    font-size: 1.5rem;
+  }
+  
+  .radio-group {
+    flex-direction: column;
+  }
+  
+  .checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .color-input-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 1rem;
+  }
+}
