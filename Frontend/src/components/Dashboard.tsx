@@ -1,8 +1,10 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FileText, Download, Plus, Settings, LogOut, User } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { dashboardApi } from '../lib/dashboardApi'
+import type { DashboardStats, LeadMagnet } from '../lib/dashboardApi'
 import './Dashboard.css'
 
 interface DashboardProps {}
@@ -11,35 +13,38 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [projects, setProjects] = useState<LeadMagnet[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const handleLogout = () => {
     logout()
     navigate('/')
   }
   
-  const [projects] = useState([
-    {
-      id: 1,
-      title: 'Modern Office Complex Lead Magnet',
-      status: 'completed',
-      created: '2 days ago',
-      downloads: 42
-    },
-    {
-      id: 2,
-      title: 'Residential Design Trends 2024',
-      status: 'in-progress',
-      created: '1 day ago',
-      downloads: 26
-    },
-    {
-      id: 3,
-      title: 'Sustainable Architecture Trends',
-      status: 'draft',
-      created: '3 days ago',
-      downloads: 0
+  // Fetch dashboard data on component mount
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true)
+        const [statsData, projectsData] = await Promise.all([
+          dashboardApi.getStats(),
+          dashboardApi.getLeadMagnets()
+        ])
+        setStats(statsData)
+        setProjects(projectsData)
+        setError(null)
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err)
+        setError('Failed to load dashboard data')
+      } finally {
+        setLoading(false)
+      }
     }
-  ])
+
+    fetchDashboardData()
+  }, [])
 
   const filteredProjects = useMemo(() => {
     if (!searchQuery.trim()) return projects
@@ -49,6 +54,37 @@ const Dashboard: React.FC<DashboardProps> = () => {
       project.status.toLowerCase().includes(query)
     )
   }, [projects, searchQuery])
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
+    
+    if (diffInDays === 0) return 'Today'
+    if (diffInDays === 1) return '1 day ago'
+    if (diffInDays < 7) return `${diffInDays} days ago`
+    return date.toLocaleDateString()
+  }
+
+  if (loading) {
+    return (
+      <div className="dashboard">
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#ffffff' }}>
+          Loading dashboard...
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="dashboard">
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#ff6b6b' }}>
+          {error}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="dashboard">
@@ -154,7 +190,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
                 <span className="stat-label">Total Lead Magnets</span>
                 <FileText className="stat-icon" />
               </div>
-              <div className="stat-value">3</div>
+              <div className="stat-value">{stats?.total_lead_magnets || 0}</div>
             </motion.div>
 
             <motion.div
@@ -167,7 +203,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
                 <span className="stat-label">Active Lead Magnets</span>
                 <Download className="stat-icon" />
               </div>
-              <div className="stat-value">2</div>
+              <div className="stat-value">{stats?.active_lead_magnets || 0}</div>
             </motion.div>
 
             <motion.div
@@ -180,7 +216,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
                 <span className="stat-label">Total Downloads</span>
                 <Settings className="stat-icon" />
               </div>
-              <div className="stat-value">68</div>
+              <div className="stat-value">{stats?.total_downloads || 0}</div>
             </motion.div>
 
             <motion.div
@@ -193,7 +229,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
                 <span className="stat-label">Leads Generated</span>
                 <User className="stat-icon" />
               </div>
-              <div className="stat-value">290</div>
+              <div className="stat-value">{stats?.leads_generated || 0}</div>
             </motion.div>
           </div>
 
@@ -211,9 +247,16 @@ const Dashboard: React.FC<DashboardProps> = () => {
             </div>
 
             <div className="projects-grid">
-              {filteredProjects.length === 0 && searchQuery.trim() ? (
+              {filteredProjects.length === 0 ? (
                 <div className="no-results">
-                  <p>No lead magnets found matching "{searchQuery}"</p>
+                  {searchQuery.trim() ? (
+                    <p>No lead magnets found matching "{searchQuery}"</p>
+                  ) : (
+                    <div>
+                      <p>No lead magnets created yet</p>
+                      <p style={{ fontSize: '0.9rem', color: '#888', marginTop: '0.5rem' }}>Click "Create Lead Magnet" to get started</p>
+                    </div>
+                  )}
                 </div>
               ) : (
                 filteredProjects.map((project, index) => (
@@ -239,24 +282,25 @@ const Dashboard: React.FC<DashboardProps> = () => {
                     </div>
                     
                     <p className="project-description">
-                      {project.status === 'completed' ? 'Generates high-quality leads for architectural services' :
-                       project.status === 'in-progress' ? 'Converting prospects into qualified leads' : 
-                       'Draft lead magnet ready for review'}
+                      {project.description || 
+                       (project.status === 'completed' ? 'Generates high-quality leads for architectural services' :
+                        project.status === 'in-progress' ? 'Converting prospects into qualified leads' : 
+                        'Draft lead magnet ready for review')}
                     </p>
                     
                     <div className="project-metrics">
                       <div className="metric">
-                        <span className="metric-value">{project.downloads}</span>
+                        <span className="metric-value">{project.downloads_count}</span>
                         <span className="metric-label">Downloads</span>
                       </div>
                       <div className="metric">
-                        <span className="metric-value">{Math.floor(project.downloads * 0.3)}</span>
+                        <span className="metric-value">{project.leads_count}</span>
                         <span className="metric-label">Leads Generated</span>
                       </div>
                     </div>
                     
                     <div className="project-footer">
-                      <span className="project-last-activity">Last active: {project.created}</span>
+                      <span className="project-last-activity">Created: {formatDate(project.created_at)}</span>
                     </div>
                   </motion.div>
                 ))
