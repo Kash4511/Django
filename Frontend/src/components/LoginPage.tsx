@@ -7,7 +7,7 @@ import './AuthPages.css'
 
 const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState({
-    email: '',
+    username_or_email: '',
     password: '',
   })
   const [showPassword, setShowPassword] = useState(false)
@@ -32,9 +32,9 @@ const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    console.log('Login form submitted with data:', { email: formData.email, password: '***' })
+    console.log('Login form submitted with data:', { username_or_email: formData.username_or_email, password: '***' })
     
-    if (!formData.email || !formData.password) {
+    if (!formData.username_or_email || !formData.password) {
       setError('Please fill in all fields')
       return
     }
@@ -44,7 +44,7 @@ const LoginPage: React.FC = () => {
 
     try {
       console.log('Calling login function...')
-      await login(formData.email, formData.password)
+      await login(formData.username_or_email, formData.password)
       console.log('Login successful, navigating to dashboard...')
       navigate('/dashboard')
     } catch (err: any) {
@@ -114,10 +114,10 @@ const LoginPage: React.FC = () => {
             <div className="input-wrapper">
               <Mail className="input-icon" size={20} />
               <input
-                type="email"
-                name="email"
-                placeholder="Email address"
-                value={formData.email}
+                type="text"
+                name="username_or_email"
+                placeholder="Username or email address"
+                value={formData.username_or_email}
                 onChange={handleChange}
                 required
               />

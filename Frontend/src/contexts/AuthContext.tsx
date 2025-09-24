@@ -4,6 +4,7 @@ import { apiClient } from '../lib/apiClient'
 interface User {
   id: number
   email: string
+  username: string
   name: string
   phone_number?: string
 }
@@ -11,9 +12,9 @@ interface User {
 interface AuthContextType {
   user: User | null
   loading: boolean
-  login: (email: string, password: string) => Promise<void>
-  signup: (email: string, password: string, name: string, phone_number: string) => Promise<void>
-  register: (email: string, password: string, name: string, phone_number: string) => Promise<void>
+  login: (username_or_email: string, password: string) => Promise<void>
+  signup: (email: string, username: string, password: string, name: string, phone_number: string) => Promise<void>
+  register: (email: string, username: string, password: string, name: string, phone_number: string) => Promise<void>
   logout: () => void
   isAuthenticated: boolean
 }
@@ -51,10 +52,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuth()
   }, [])
 
-  const login = async (email: string, password: string) => {
+  const login = async (username_or_email: string, password: string) => {
     try {
       const response = await apiClient.post('/api/auth/login/', {
-        email,
+        username_or_email,
         password,
       })
 
@@ -71,10 +72,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }
 
-  const signup = async (email: string, password: string, name: string, phone_number: string) => {
+  const signup = async (email: string, username: string, password: string, name: string, phone_number: string) => {
     try {
       const response = await apiClient.post('/api/auth/register/', {
         email,
+        username,
         password,
         password_confirm: password,
         name,
@@ -94,10 +96,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }
 
-  const register = async (email: string, password: string, name: string, phone_number: string) => {
+  const register = async (email: string, username: string, password: string, name: string, phone_number: string) => {
     try {
       const response = await apiClient.post('/api/auth/register/', {
         email,
+        username,
         password,
         password_confirm: password,
         name,

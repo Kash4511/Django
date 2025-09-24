@@ -8,6 +8,7 @@ import './AuthPages.css'
 const SignupPage: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
+    username: '',
     email: '',
     phone_number: '',
     password: '',
@@ -34,8 +35,8 @@ const SignupPage: React.FC = () => {
     
     console.log('Signup form submitted with data:', formData)
     
-    if (!formData.name || !formData.email || !formData.password || !formData.password_confirm) {
-      setError('Please fill in all required fields')
+    if (!formData.name || !formData.username || !formData.email || !formData.password || !formData.password_confirm) {
+      setError('Please fill in all required fields (name, username, email, password)')
       return
     }
 
@@ -54,7 +55,7 @@ const SignupPage: React.FC = () => {
 
     try {
       console.log('Calling register function...')
-      await register(formData.email, formData.password, formData.name, formData.phone_number)
+      await register(formData.email, formData.username, formData.password, formData.name, formData.phone_number)
       console.log('Registration successful, navigating to login...')
       navigate('/login', { state: { message: 'Account created successfully! Please sign in with your credentials.' } })
     } catch (err: any) {
@@ -122,6 +123,20 @@ const SignupPage: React.FC = () => {
                 name="name"
                 placeholder="Full name"
                 value={formData.name}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="auth-field">
+            <div className="input-wrapper">
+              <User className="input-icon" size={20} />
+              <input
+                type="text"
+                name="username"
+                placeholder="Username"
+                value={formData.username}
                 onChange={handleChange}
                 required
               />
