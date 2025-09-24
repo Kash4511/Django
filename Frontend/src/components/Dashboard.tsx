@@ -68,7 +68,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
       <div className="dashboard-layout">
         <aside className="dashboard-sidebar">
           <div className="sidebar-brand">
-            <div className="brand-icon">🎯</div>
+            <div className="brand-icon">📄</div>
             <div className="brand-info">
               <h3>AI Lead Magnets</h3>
               <p>Your AI Workforce</p>
@@ -121,7 +121,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="main-title"
               >
-                🎯 My Lead Magnets
+                My Lead Magnets
               </motion.h1>
               <motion.button
                 initial={{ opacity: 0, y: 20 }}
