@@ -18,7 +18,7 @@ const SignupPage: React.FC = () => {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   
-  const { signup } = useAuth()
+  const { register } = useAuth()
   const navigate = useNavigate()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,10 +53,10 @@ const SignupPage: React.FC = () => {
     setError('')
 
     try {
-      console.log('Calling signup function...')
-      await signup(formData.email, formData.password, formData.name, formData.phone_number)
-      console.log('Signup successful, navigating to dashboard...')
-      navigate('/dashboard')
+      console.log('Calling register function...')
+      await register(formData.email, formData.password, formData.name, formData.phone_number)
+      console.log('Registration successful, navigating to login...')
+      navigate('/login', { state: { message: 'Account created successfully! Please sign in with your credentials.' } })
     } catch (err: any) {
       console.error('Signup error:', err)
       if (err.response?.data) {
@@ -86,9 +86,6 @@ const SignupPage: React.FC = () => {
 
   return (
     <div className="auth-overlay">
-      <div style={{position: 'absolute', top: '10px', left: '10px', color: 'white', zIndex: 9999}}>
-        DEBUG: Signup page loaded
-      </div>
       <motion.div 
         className="auth-container"
         initial={{ opacity: 0, y: 20 }}

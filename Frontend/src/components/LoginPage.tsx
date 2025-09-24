@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
@@ -16,6 +16,10 @@ const LoginPage: React.FC = () => {
   
   const { login } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  
+  // Get success message from navigation state
+  const successMessage = location.state?.message
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -86,6 +90,16 @@ const LoginPage: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
+          {successMessage && (
+            <motion.div 
+              className="auth-success"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              {successMessage}
+            </motion.div>
+          )}
+          
           {error && (
             <motion.div 
               className="auth-error"
