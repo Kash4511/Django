@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Check, FileText, Building, Target, Users, Zap } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FileText, Building, Target, Users, Zap } from 'lucide-react';
 import { 
   getFirmProfile, 
   createFirmProfile,
@@ -226,28 +226,39 @@ const LeadMagnetFormContent: React.FC<LeadMagnetFormContentProps> = ({ onClose, 
           <h1>Create Lead Magnet</h1>
         </div>
 
-        {/* Progress Steps */}
+        {/* Progress Bar */}
         <div className="progress-steps">
-          {STAGES.map((stage, index) => {
-            const Icon = stage.icon;
-            const isActive = index === currentStage;
-            const isCompleted = index < currentStage;
-            
-            return (
-              <div 
-                key={stage.id} 
-                className={`progress-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
-              >
-                <div className="step-icon">
-                  {isCompleted ? <Check size={16} /> : <Icon size={16} />}
-                </div>
-                <div className="step-info">
-                  <div className="step-name">{stage.name}</div>
-                  <div className="step-description">{stage.description}</div>
-                </div>
-              </div>
-            );
-          })}
+          <div className="progress-bar">
+            {STAGES.map((stage, index) => {
+              const isActive = index === currentStage;
+              const isCompleted = index < currentStage;
+              const isLast = index === STAGES.length - 1;
+              
+              return (
+                <React.Fragment key={stage.id}>
+                  {/* Progress Dot */}
+                  <div className="progress-step">
+                    <div className={`progress-dot ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`} />
+                    <div className="step-info">
+                      <div className="step-name">{stage.name}</div>
+                    </div>
+                  </div>
+                  
+                  {/* Progress Line between dots */}
+                  {!isLast && (
+                    <div className="progress-line">
+                      <div 
+                        className="progress-fill" 
+                        style={{ 
+                          width: isCompleted ? '100%' : '0%' 
+                        }} 
+                      />
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
         </div>
       </div>
 

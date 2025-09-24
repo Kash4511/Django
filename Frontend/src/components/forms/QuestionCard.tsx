@@ -61,7 +61,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
             disabled={nextDisabled}
             className="question-btn primary"
           >
-            {nextLabel || (isLastCard ? 'Complete' : 'Continue')}
+            {nextLabel || (isLastCard ? 'Complete' : 'Next')}
           </button>
         )}
       </div>
