@@ -1,5 +1,5 @@
 import React from 'react';
-import { LeadMagnetGeneration } from '../../lib/leadMagnetApi';
+import type { LeadMagnetGeneration } from '../../lib/leadMagnetApi';
 
 interface ContentFormProps {
   data: Partial<LeadMagnetGeneration>;

@@ -55,10 +55,17 @@ const LeadMagnetGenerator: React.FC = () => {
   const handleNext = async () => {
     setError('');
 
+    // Validate current stage before proceeding
+    if (!canProceed()) {
+      setError('Please fill in all required fields before continuing.');
+      return;
+    }
+
     try {
+      setLoading(true);
+      
       if (currentStage === 0 && !hasExistingProfile) {
         // Save firm profile
-        setLoading(true);
         await createFirmProfile(firmProfile);
         setHasExistingProfile(true);
       }

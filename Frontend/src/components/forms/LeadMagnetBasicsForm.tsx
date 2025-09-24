@@ -1,5 +1,6 @@
 import React from 'react';
-import { LeadMagnetGeneration, LEAD_MAGNET_TYPE_CHOICES, MAIN_TOPIC_CHOICES } from '../../lib/leadMagnetApi';
+import type { LeadMagnetGeneration } from '../../lib/leadMagnetApi';
+import { LEAD_MAGNET_TYPE_CHOICES, MAIN_TOPIC_CHOICES } from '../../lib/leadMagnetApi';
 
 interface LeadMagnetBasicsFormProps {
   data: Partial<LeadMagnetGeneration>;

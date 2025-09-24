@@ -1,5 +1,6 @@
 import React from 'react';
-import { FirmProfile, FIRM_SIZE_CHOICES, INDUSTRY_SPECIALTY_CHOICES, FONT_STYLE_CHOICES } from '../../lib/leadMagnetApi';
+import type { FirmProfile } from '../../lib/leadMagnetApi';
+import { FIRM_SIZE_CHOICES, INDUSTRY_SPECIALTY_CHOICES, FONT_STYLE_CHOICES } from '../../lib/leadMagnetApi';
 
 interface FirmProfileFormProps {
   data: Partial<FirmProfile>;

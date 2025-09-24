@@ -1,5 +1,6 @@
 import React from 'react';
-import { LeadMagnetGeneration, TARGET_AUDIENCE_CHOICES, PAIN_POINTS_CHOICES } from '../../lib/leadMagnetApi';
+import type { LeadMagnetGeneration } from '../../lib/leadMagnetApi';
+import { TARGET_AUDIENCE_CHOICES, PAIN_POINTS_CHOICES } from '../../lib/leadMagnetApi';
 
 interface AudienceFormProps {
   data: Partial<LeadMagnetGeneration>;
