@@ -1,7 +1,7 @@
 .dashboard {
   min-height: 100vh;
-  background: #1a1a1a;
-  color: #ffffff;
+  background: #f8f9fa;
+  color: #1a1a1a;
 }
 
 .dashboard-nav {
@@ -69,17 +69,17 @@
 .dashboard-title {
   font-size: 3rem;
   font-weight: 400;
-  color: #ffffff;
+  color: #1a1a1a;
   margin-bottom: 1rem;
   letter-spacing: -0.02em;
 }
 
 .dashboard-subtitle {
-  font-size: 1.1rem;
-  color: #cccccc;
-  font-weight: 300;
+  font-size: 1rem;
+  color: #888888;
+  font-weight: 400;
   max-width: 880px;
-  margin: 0 auto;
+  margin: 0;
 }
 
 .dashboard-stats {
@@ -93,14 +93,15 @@
 }
 
 .stat-card {
-  background: #2a2a2a;
-  border: 1px solid #333333;
-  padding: 2rem;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  padding: 1.5rem;
   border-radius: 12px;
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
   transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .stat-card:hover {
@@ -109,25 +110,26 @@
 }
 
 .stat-icon {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   color: #4a8299;
-  background: #1a1a1a;
-  padding: 12px;
-  border-radius: 12px;
+  background: #e3f2fd;
+  padding: 10px;
+  border-radius: 8px;
 }
 
 .stat-content h3 {
-  font-size: 2rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin: 0 0 0.5rem 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 0.25rem 0;
 }
 
 .stat-content p {
-  color: #cccccc;
+  color: #666666;
   margin: 0;
-  font-weight: 300;
+  font-weight: 500;
+  font-size: 0.875rem;
 }
 
 .dashboard-main {
@@ -136,6 +138,47 @@
 
 .projects-section {
   margin-bottom: 3rem;
+}
+
+.search-section {
+  margin-bottom: 2rem;
+}
+
+.search-wrapper {
+  max-width: 600px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #495057;
+  transition: all 0.3s ease;
+}
+
+.search-input::placeholder {
+  color: #6c757d;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #4a8299;
+  box-shadow: 0 0 0 3px rgba(74, 130, 153, 0.1);
+}
+
+.no-results {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #6c757d;
+}
+
+.no-results p {
+  font-size: 1rem;
+  margin: 0;
 }
 
 .section-header {
@@ -180,16 +223,18 @@
 }
 
 .project-card {
-  background: #2a2a2a;
-  border: 1px solid #333333;
-  padding: 2rem;
+  background: #ffffff;
+  border: 1px solid #e9ecef;
+  padding: 1.5rem;
   border-radius: 12px;
   transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .project-card:hover {
   border-color: #4a8299;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .project-card.completed {
@@ -206,15 +251,45 @@
 
 .project-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.project-avatar {
+  width: 40px;
+  height: 40px;
+  background: #e3f2fd;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .project-icon {
   color: #4a8299;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
+}
+
+.project-info {
+  flex: 1;
+}
+
+.project-menu {
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.project-menu:hover {
+  background: #f8f9fa;
+  color: #495057;
 }
 
 .status-badge {
@@ -226,26 +301,70 @@
 }
 
 .status-badge.completed {
-  background: #065f46;
-  color: #d1fae5;
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .status-badge.in-progress {
-  background: #92400e;
-  color: #fef3c7;
+  background: #dbeafe;
+  color: #1e40af;
 }
 
 .status-badge.draft {
-  background: #374151;
-  color: #d1d5db;
+  background: #f3f4f6;
+  color: #374151;
 }
 
 .project-title {
-  font-size: 1.25rem;
-  font-weight: 500;
-  color: #ffffff;
-  margin-bottom: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 0.25rem 0;
   line-height: 1.4;
+}
+
+.project-description {
+  color: #6c757d;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+.project-metrics {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1rem;
+}
+
+.metric {
+  text-align: center;
+}
+
+.metric-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1;
+}
+
+.metric-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+.project-footer {
+  border-top: 1px solid #e9ecef;
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+.project-last-activity {
+  color: #6c757d;
+  font-size: 0.75rem;
 }
 
 .project-stats {
