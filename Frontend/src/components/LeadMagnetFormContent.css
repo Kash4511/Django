@@ -155,30 +155,7 @@
 }
 
 .stage-form {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  border-radius: 1.5rem;
-  padding: 3rem;
-  border: 1px solid #14b8a6;
-  box-shadow: 0 8px 32px rgba(20, 184, 166, 0.1);
-  position: relative;
-  overflow: hidden;
-}
-
-.stage-form::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #14b8a6, #0d9488, #14b8a6);
-  background-size: 200% 100%;
-  animation: shimmer 3s infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  /* Remove all styling - just a transparent container */
 }
 
 .stage-form h2 {

@@ -1,8 +1,7 @@
 import React from 'react';
 import type { FirmProfile } from '../../lib/leadMagnetApi';
 import { FIRM_SIZE_CHOICES, INDUSTRY_SPECIALTY_CHOICES, FONT_STYLE_CHOICES } from '../../lib/leadMagnetApi';
-import QuestionCard from './QuestionCard';
-import './QuestionCard.css';
+import './SingleCard.css';
 
 interface FirmProfileFormProps {
   data: Partial<FirmProfile>;
@@ -44,15 +43,9 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({ data, onChange, onCom
   };
 
   return (
-    <div className="firm-profile-form">
-      <QuestionCard
-        title="Create Firm Profile"
-        description="Tell us about your architecture firm to personalize your lead magnets"
-        onNext={onComplete}
-        nextDisabled={!canComplete()}
-        showBack={false}
-        nextLabel="Complete Profile"
-      >
+    <div className="single-metallic-card">
+      <h2>Create Firm Profile</h2>
+      <p>Tell us about your architecture firm to personalize your lead magnets</p>
         {/* Basic Information */}
         <div className="form-section">
           <h4>Basic Information</h4>
@@ -216,7 +209,17 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({ data, onChange, onCom
             />
           </div>
         </div>
-      </QuestionCard>
+        
+        <div className="form-actions">
+          <button
+            type="button"
+            onClick={onComplete}
+            disabled={!canComplete()}
+            className="complete-btn"
+          >
+            Complete Profile
+          </button>
+        </div>
     </div>
   );
 };
