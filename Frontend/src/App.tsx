@@ -5,6 +5,7 @@ import LoginPage from './components/LoginPage'
 import SignupPage from './components/SignupPage'
 import Dashboard from './components/Dashboard'
 import ProtectedRoute from './components/ProtectedRoute'
+import LeadMagnetGenerator from './components/LeadMagnetGenerator'
 import './App.css'
 
 function App() {
@@ -20,6 +21,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/create-lead-magnet" 
+            element={
+              <ProtectedRoute>
+                <LeadMagnetGenerator />
               </ProtectedRoute>
             } 
           />

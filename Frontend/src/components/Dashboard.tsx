@@ -111,7 +111,10 @@ const Dashboard: React.FC<DashboardProps> = () => {
             </div>
           </div>
           
-          <button className="sidebar-create-btn">
+          <button 
+            className="sidebar-create-btn"
+            onClick={() => navigate('/create-lead-magnet')}
+          >
             <Plus size={20} />
             Create Lead Magnet
           </button>
@@ -164,6 +167,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
                 className="create-btn-header"
+                onClick={() => navigate('/create-lead-magnet')}
               >
                 <Plus size={20} />
                 Create Lead Magnet
