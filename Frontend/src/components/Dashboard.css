@@ -1,7 +1,9 @@
 .dashboard {
   min-height: 100vh;
+  width: 100%;
   background: #1a1a1a;
   color: #ffffff;
+  box-sizing: border-box;
 }
 
 .dashboard-nav {
@@ -11,6 +13,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .nav-brand {
@@ -57,7 +61,10 @@
 
 .dashboard-content {
   width: 100%;
+  max-width: none;
+  margin: 0;
   padding: 3rem 2rem;
+  box-sizing: border-box;
 }
 
 .dashboard-header {
@@ -86,6 +93,7 @@
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 2rem;
   margin-bottom: 4rem;
+  width: 100%;
 }
 
 .stat-card {
@@ -128,10 +136,12 @@
 
 .dashboard-main {
   margin-top: 3rem;
+  width: 100%;
 }
 
 .projects-section {
   margin-bottom: 3rem;
+  width: 100%;
 }
 
 .section-header {
@@ -171,6 +181,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 2rem;
+  width: 100%;
 }
 
 .project-card {
