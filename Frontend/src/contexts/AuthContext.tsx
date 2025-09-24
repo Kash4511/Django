@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { apiClient } from '../lib/apiClient'
 
 interface User {
