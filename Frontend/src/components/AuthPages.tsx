@@ -77,9 +77,32 @@ const AuthPages: React.FC<AuthPagesProps> = ({ onLogin, onClose, initialMode = '
       console.log('API Response:', data)
 
       if (response.ok) {
-        localStorage.setItem('access_token', data.access)
-        localStorage.setItem('refresh_token', data.refresh)
-        onLogin(data.user)
+        if (data.access && data.refresh) {
+          localStorage.setItem('access_token', data.access)
+          localStorage.setItem('refresh_token', data.refresh)
+          
+          // Fetch user profile after successful authentication
+          const apiBase = import.meta.env.VITE_API_BASE_URL || window.location.protocol + '//' + window.location.hostname + ':8000'
+          try {
+            const profileResponse = await fetch(`${apiBase}/api/auth/profile/`, {
+              headers: {
+                'Authorization': `Bearer ${data.access}`,
+                'Content-Type': 'application/json'
+              }
+            })
+            if (profileResponse.ok) {
+              const userData = await profileResponse.json()
+              onLogin(userData)
+            } else {
+              onLogin(data.user || { name: 'User', email: formData.email })
+            }
+          } catch (err) {
+            // Fallback to user data from response or minimal user object
+            onLogin(data.user || { name: 'User', email: formData.email })
+          }
+        } else {
+          setError('Invalid response from server. Please try again.')
+        }
       } else {
         // Better error handling for backend validation errors
         if (data.email && Array.isArray(data.email)) {

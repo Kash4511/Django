@@ -5,6 +5,7 @@ import FeaturesSection from './FeaturesSection'
 import DemoSection from './DemoSection'
 import Footer from './Footer'
 import AuthPages from './AuthPages'
+import Dashboard from './Dashboard'
 import './LandingPage.css'
 
 const LandingPage: React.FC = () => {
@@ -52,32 +53,26 @@ const LandingPage: React.FC = () => {
     setUser(null)
   }
 
+  // Show dashboard if user is logged in
+  if (user) {
+    return <Dashboard user={user} onLogout={handleLogout} />
+  }
+
   return (
     <div className="landing-page">
       <nav className="main-nav">
         <div className="nav-brand">Forma</div>
         <div className="nav-actions">
-          {user ? (
-            <div className="user-menu">
-              <span className="welcome-text">{user.name}</span>
-              <button className="nav-button minimal" onClick={handleLogout}>
-                Sign Out
-              </button>
-            </div>
-          ) : (
-            <>
-              <button className="nav-button white-btn" onClick={() => { setAuthMode('login'); setShowAuth(true) }}>
-                Login
-              </button>
-              <button className="nav-button black-btn" onClick={() => { setAuthMode('signup'); setShowAuth(true) }}>
-                Sign Up
-              </button>
-            </>
-          )}
+          <button className="nav-button white-btn" onClick={() => { setAuthMode('login'); setShowAuth(true) }}>
+            Login
+          </button>
+          <button className="nav-button black-btn" onClick={() => { setAuthMode('signup'); setShowAuth(true) }}>
+            Sign Up
+          </button>
         </div>
       </nav>
       
-      <HeroSection onGetStarted={() => setShowAuth(true)} user={user} />
+      <HeroSection onGetStarted={() => { setAuthMode('signup'); setShowAuth(true) }} user={user} />
       <HowItWorksSection />
       <FeaturesSection />
       <DemoSection />
