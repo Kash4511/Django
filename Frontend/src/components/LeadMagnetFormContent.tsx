@@ -81,6 +81,27 @@ const LeadMagnetFormContent: React.FC<LeadMagnetFormContentProps> = ({ onClose, 
     }
   };
 
+  const handleStageComplete = async () => {
+    if (currentStage === 0 && !hasExistingProfile) {
+      try {
+        setLoading(true);
+        await createFirmProfile(firmProfile);
+        setHasExistingProfile(true);
+      } catch (err: any) {
+        setError(err.response?.data?.detail || 'Failed to save firm profile. Please try again.');
+        return;
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    if (currentStage < STAGES.length - 1) {
+      setCurrentStage(currentStage + 1);
+    } else {
+      await handleGenerate();
+    }
+  };
+
   const handleBack = () => {
     if (currentStage > 0) {
       setCurrentStage(currentStage - 1);
@@ -140,6 +161,7 @@ const LeadMagnetFormContent: React.FC<LeadMagnetFormContentProps> = ({ onClose, 
             data={firmProfile}
             onChange={updateFirmProfileData}
             isExisting={hasExistingProfile}
+            onComplete={handleStageComplete}
           />
         );
       case 1:
@@ -252,39 +274,41 @@ const LeadMagnetFormContent: React.FC<LeadMagnetFormContentProps> = ({ onClose, 
         </div>
       )}
 
-      {/* Navigation Buttons */}
-      <div className="stage-navigation">
-        <button 
-          onClick={handleBack}
-          disabled={currentStage === 0 || loading}
-          className="nav-button secondary"
-        >
-          <ArrowLeft size={18} />
-          Back
-        </button>
+      {/* Navigation Buttons - Only show for non-firm profile stages */}
+      {currentStage > 0 && (
+        <div className="stage-navigation">
+          <button 
+            onClick={handleBack}
+            disabled={currentStage === 0 || loading}
+            className="nav-button secondary"
+          >
+            <ArrowLeft size={18} />
+            Back
+          </button>
 
-        <div className="nav-button-group">
-          {isLastStage ? (
-            <button 
-              onClick={handleGenerate}
-              disabled={!canProceed() || loading}
-              className="nav-button primary generate-button"
-            >
-              {loading ? 'Generating...' : 'Generate Lead Magnet'}
-              <Zap size={18} />
-            </button>
-          ) : (
-            <button 
-              onClick={handleNext}
-              disabled={!canProceed() || loading}
-              className="nav-button primary"
-            >
-              {loading ? 'Saving...' : 'Next'}
-              <ArrowRight size={18} />
-            </button>
-          )}
+          <div className="nav-button-group">
+            {isLastStage ? (
+              <button 
+                onClick={handleGenerate}
+                disabled={!canProceed() || loading}
+                className="nav-button primary generate-button"
+              >
+                {loading ? 'Generating...' : 'Generate Lead Magnet'}
+                <Zap size={18} />
+              </button>
+            ) : (
+              <button 
+                onClick={handleNext}
+                disabled={!canProceed() || loading}
+                className="nav-button primary"
+              >
+                {loading ? 'Saving...' : 'Next'}
+                <ArrowRight size={18} />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -1,14 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import type { FirmProfile } from '../../lib/leadMagnetApi';
 import { FIRM_SIZE_CHOICES, INDUSTRY_SPECIALTY_CHOICES, FONT_STYLE_CHOICES } from '../../lib/leadMagnetApi';
+import QuestionCard from './QuestionCard';
+import './QuestionCard.css';
 
 interface FirmProfileFormProps {
   data: Partial<FirmProfile>;
   onChange: (data: Partial<FirmProfile>) => void;
   isExisting?: boolean;
+  onComplete?: () => void;
 }
 
-const FirmProfileForm: React.FC<FirmProfileFormProps> = ({ data, onChange, isExisting }) => {
+const FirmProfileForm: React.FC<FirmProfileFormProps> = ({ data, onChange, isExisting, onComplete }) => {
+  const [currentCard, setCurrentCard] = useState(0);
+
   const handleInputChange = (field: keyof FirmProfile, value: any) => {
     onChange({ [field]: value });
   };
@@ -31,21 +37,39 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({ data, onChange, isExi
     }
   };
 
-  return (
-    <div className="firm-profile-form">
-      <h2>{isExisting ? 'Update Firm Profile' : 'Create Firm Profile'}</h2>
-      <p className="form-description">
-        {isExisting 
-          ? 'Review and update your firm information as needed.'
-          : 'This information will be saved and reused for all future lead magnets.'
-        }
-      </p>
+  const handleNext = () => {
+    if (currentCard < cards.length - 1) {
+      setCurrentCard(currentCard + 1);
+    } else {
+      onComplete?.();
+    }
+  };
 
-      <div className="form-grid">
-        {/* Basic Information */}
-        <div className="form-section">
-          <h3>Basic Information</h3>
-          
+  const handleBack = () => {
+    if (currentCard > 0) {
+      setCurrentCard(currentCard - 1);
+    }
+  };
+
+  const canProceed = (cardIndex: number) => {
+    switch (cardIndex) {
+      case 0: // Basic Info
+        return data.firm_name && data.work_email && data.firm_size && data.location_country;
+      case 1: // Industry
+        return data.industry_specialty_list?.length;
+      case 2: // Branding
+        return data.primary_brand_color;
+      default:
+        return true;
+    }
+  };
+
+  const cards = [
+    {
+      title: "Basic Information",
+      description: "Tell us about your architecture firm",
+      content: (
+        <div>
           <div className="form-field">
             <label htmlFor="firm_name">Firm Name *</label>
             <input
@@ -125,30 +149,31 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({ data, onChange, isExi
             </div>
           </div>
         </div>
-
-        {/* Industry Specialties */}
-        <div className="form-section">
-          <h3>Industry Specialties</h3>
-          <p className="field-description">Select all that apply to your practice</p>
-          
-          <div className="checkbox-grid">
-            {INDUSTRY_SPECIALTY_CHOICES.map(choice => (
-              <label key={choice.value} className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={data.industry_specialty_list?.includes(choice.value) || false}
-                  onChange={(e) => handleIndustryChange(choice.value, e.target.checked)}
-                />
-                <span className="checkbox-text">{choice.label}</span>
-              </label>
-            ))}
-          </div>
+      )
+    },
+    {
+      title: "Industry Specialties",
+      description: "What areas does your firm focus on?",
+      content: (
+        <div className="checkbox-grid">
+          {INDUSTRY_SPECIALTY_CHOICES.map(choice => (
+            <label key={choice.value} className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={data.industry_specialty_list?.includes(choice.value) || false}
+                onChange={(e) => handleIndustryChange(choice.value, e.target.checked)}
+              />
+              <span className="checkbox-text">{choice.label}</span>
+            </label>
+          ))}
         </div>
-
-        {/* Branding */}
-        <div className="form-section">
-          <h3>Branding</h3>
-          
+      )
+    },
+    {
+      title: "Brand Identity",
+      description: "Set up your visual branding for lead magnets",
+      content: (
+        <div>
           <div className="form-field">
             <label htmlFor="logo">Logo Upload</label>
             <input
@@ -166,7 +191,7 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({ data, onChange, isExi
               <input
                 type="color"
                 id="primary_brand_color"
-                value={data.primary_brand_color || '#000000'}
+                value={data.primary_brand_color || '#14b8a6'}
                 onChange={(e) => handleInputChange('primary_brand_color', e.target.value)}
                 required
               />
@@ -177,7 +202,7 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({ data, onChange, isExi
               <input
                 type="color"
                 id="secondary_brand_color"
-                value={data.secondary_brand_color || '#ffffff'}
+                value={data.secondary_brand_color || '#0f172a'}
                 onChange={(e) => handleInputChange('secondary_brand_color', e.target.value)}
               />
             </div>
@@ -208,19 +233,28 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({ data, onChange, isExi
               rows={4}
             />
           </div>
-
-          <div className="form-field">
-            <label htmlFor="preferred_cover_image">Preferred Cover Image</label>
-            <input
-              type="file"
-              id="preferred_cover_image"
-              accept=".png,.jpg,.jpeg"
-              onChange={(e) => handleFileUpload('preferred_cover_image', e.target.files?.[0] || null)}
-            />
-            <small>Optional background or cover image for lead magnets</small>
-          </div>
         </div>
-      </div>
+      )
+    }
+  ];
+
+  return (
+    <div className="firm-profile-form">
+      <AnimatePresence mode="wait">
+        <QuestionCard
+          key={currentCard}
+          title={cards[currentCard].title}
+          description={cards[currentCard].description}
+          onNext={handleNext}
+          onBack={currentCard > 0 ? handleBack : undefined}
+          nextDisabled={!canProceed(currentCard)}
+          isLastCard={currentCard === cards.length - 1}
+          showBack={currentCard > 0}
+          nextLabel={currentCard === cards.length - 1 ? "Complete Profile" : undefined}
+        >
+          {cards[currentCard].content}
+        </QuestionCard>
+      </AnimatePresence>
     </div>
   );
 };
