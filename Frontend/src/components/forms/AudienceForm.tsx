@@ -87,38 +87,6 @@ const AudienceForm: React.FC<AudienceFormProps> = ({ data, onChange }) => {
         </div>
       </div>
 
-      {/* Selection Summary */}
-      {(data.target_audience_list?.length || data.audience_pain_points_list?.length) && (
-        <div className="selection-summary">
-          <h4>Your Selection Summary</h4>
-          
-          {data.target_audience_list?.length && (
-            <div className="summary-section">
-              <strong>Target Audience:</strong>
-              <div className="selected-items">
-                {data.target_audience_list.map(audience => (
-                  <span key={audience} className="selected-item">
-                    {TARGET_AUDIENCE_CHOICES.find(c => c.value === audience)?.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {data.audience_pain_points_list?.length && (
-            <div className="summary-section">
-              <strong>Pain Points:</strong>
-              <div className="selected-items">
-                {data.audience_pain_points_list.map(painPoint => (
-                  <span key={painPoint} className="selected-item">
-                    {PAIN_POINTS_CHOICES.find(c => c.value === painPoint)?.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 };
