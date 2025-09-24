@@ -180,6 +180,8 @@
   padding: 2rem;
   background: #1a1a1a;
   overflow-y: auto;
+  width: 100%;
+  max-width: none;
 }
 
 .main-header {
@@ -278,6 +280,7 @@
 /* Content Section */
 .content-section {
   margin-top: 2rem;
+  width: 100%;
 }
 
 .search-section {
@@ -285,7 +288,8 @@
 }
 
 .search-wrapper {
-  max-width: 400px;
+  width: 100%;
+  max-width: 600px;
 }
 
 .search-input {
@@ -314,6 +318,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 1.5rem;
+  width: 100%;
 }
 
 .project-card {
