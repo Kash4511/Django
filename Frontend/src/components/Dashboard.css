@@ -4,6 +4,10 @@
   background: #1a1a1a;
   color: #ffffff;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  max-width: none;
 }
 
 /* Top Navigation */
@@ -289,7 +293,6 @@
 
 .search-wrapper {
   width: 100%;
-  max-width: 600px;
 }
 
 .search-input {
