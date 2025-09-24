@@ -31,6 +31,15 @@ We help architects turn ideas into polished, engaging lead magnets with the powe
           </motion.p>
           
         </div>
+        
+        <motion.img
+          src="/hero-3d.png"
+          alt="3D Architectural Render"
+          className="hero-3d-image"
+          initial={{ opacity: 0, x: 100 }}
+          animate={{ opacity: 0.3, x: 0 }}
+          transition={{ duration: 1, delay: 0.5 }}
+        />
       </div>
     </section>
   )
