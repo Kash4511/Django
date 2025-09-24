@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import axios from 'axios'
 import HeroSection from './HeroSection'
 import HowItWorksSection from './HowItWorksSection'
 import FeaturesSection from './FeaturesSection'
@@ -23,20 +24,18 @@ const LandingPage: React.FC = () => {
             (window.location.hostname.includes('replit.dev') 
               ? window.location.origin.replace(':5000', ':8000')
               : window.location.protocol + '//' + window.location.hostname + ':8000')
-          const response = await fetch(`${apiBase}/api/auth/profile/`, {
+          
+          const response = await axios.get(`${apiBase}/api/auth/profile/`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
-            }
+            },
+            timeout: 5000
           })
-          if (response.ok) {
-            const userData = await response.json()
-            setUser(userData)
-          } else {
-            localStorage.removeItem('access_token')
-            localStorage.removeItem('refresh_token')
-          }
-        } catch (err) {
+          
+          setUser(response.data)
+        } catch (err: any) {
+          console.error('Auth check failed:', err)
           localStorage.removeItem('access_token')
           localStorage.removeItem('refresh_token')
         }

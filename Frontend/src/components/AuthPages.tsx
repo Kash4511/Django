@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, User, Mail, Phone, Lock } from 'lucide-react'
+import axios from 'axios'
 import './AuthPages.css'
 
 interface AuthPagesProps {
@@ -69,64 +70,61 @@ const AuthPages: React.FC<AuthPagesProps> = ({ onLogin, onClose, initialMode = '
       console.log('Making API request to:', `${apiBase}${endpoint}`)
       console.log('Payload:', payload)
       
-      const response = await fetch(`${apiBase}${endpoint}`, {
-        method: 'POST',
+      const response = await axios.post(`${apiBase}${endpoint}`, payload, {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
+        timeout: 10000, // 10 second timeout
       })
 
-      const data = await response.json()
+      const data = response.data
       console.log('API Response:', data)
 
-      if (response.ok) {
-        if (data.access && data.refresh) {
-          localStorage.setItem('access_token', data.access)
-          localStorage.setItem('refresh_token', data.refresh)
-          
-          // Fetch user profile after successful authentication
-          const profileApiBase = import.meta.env.VITE_API_BASE_URL || 
-            (window.location.hostname.includes('replit.dev') 
-              ? window.location.origin.replace(':5000', ':8000')
-              : window.location.protocol + '//' + window.location.hostname + ':8000')
-          try {
-            const profileResponse = await fetch(`${profileApiBase}/api/auth/profile/`, {
-              headers: {
-                'Authorization': `Bearer ${data.access}`,
-                'Content-Type': 'application/json'
-              }
-            })
-            if (profileResponse.ok) {
-              const userData = await profileResponse.json()
-              onLogin(userData)
-            } else {
-              onLogin(data.user || { name: 'User', email: formData.email })
-            }
-          } catch (err) {
-            // Fallback to user data from response or minimal user object
-            onLogin(data.user || { name: 'User', email: formData.email })
-          }
-        } else {
-          setError('Invalid response from server. Please try again.')
+      if (data.access && data.refresh) {
+        localStorage.setItem('access_token', data.access)
+        localStorage.setItem('refresh_token', data.refresh)
+        
+        // Fetch user profile after successful authentication
+        try {
+          const profileResponse = await axios.get(`${apiBase}/api/auth/profile/`, {
+            headers: {
+              'Authorization': `Bearer ${data.access}`,
+              'Content-Type': 'application/json'
+            },
+            timeout: 5000
+          })
+          onLogin(profileResponse.data)
+        } catch (profileErr) {
+          // Fallback to user data from response or minimal user object
+          onLogin(data.user || { name: 'User', email: formData.email })
         }
       } else {
-        // Better error handling for backend validation errors
-        if (data.email && Array.isArray(data.email)) {
-          setError(data.email[0])
-        } else if (data.password && Array.isArray(data.password)) {
-          setError(data.password[0])
-        } else if (data.non_field_errors && Array.isArray(data.non_field_errors)) {
-          setError(data.non_field_errors[0])
-        } else if (data.detail) {
-          setError(data.detail)
-        } else {
-          setError('Registration failed. Please check your information.')
-        }
+        setError('Invalid response from server. Please try again.')
       }
-    } catch (err) {
-      console.error('Network error:', err)
-      setError('Unable to connect to server. Please check your connection and try again.')
+    } catch (err: any) {
+      console.error('API error:', err)
+      
+      if (err.response?.data) {
+        // Handle backend validation errors
+        const errorData = err.response.data
+        if (errorData.email && Array.isArray(errorData.email)) {
+          setError(errorData.email[0])
+        } else if (errorData.password && Array.isArray(errorData.password)) {
+          setError(errorData.password[0])
+        } else if (errorData.non_field_errors && Array.isArray(errorData.non_field_errors)) {
+          setError(errorData.non_field_errors[0])
+        } else if (errorData.detail) {
+          setError(errorData.detail)
+        } else {
+          setError('Authentication failed. Please check your information.')
+        }
+      } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+        setError('Request timed out. Please try again.')
+      } else if (err.request) {
+        setError('Unable to connect to server. Please check your connection and try again.')
+      } else {
+        setError('An unexpected error occurred. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
