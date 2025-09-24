@@ -56,7 +56,7 @@
 }
 
 .dashboard-content {
-  max-width: 1800px;
+  max-width: 1780px;
   margin: 0 auto;
   padding: 3rem 2rem;
 }
@@ -78,7 +78,7 @@
   font-size: 1.1rem;
   color: #cccccc;
   font-weight: 300;
-  max-width: 900px;
+  max-width: 880px;
   margin: 0 auto;
 }
 
@@ -87,7 +87,7 @@
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 2rem;
   margin-bottom: 4rem;
-  max-width: 1600px;
+  max-width: 1580px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -175,7 +175,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 2rem;
-  max-width: 1800px;
+  max-width: 1780px;
   margin: 0 auto;
 }
 
