@@ -34,11 +34,22 @@ We help architects turn ideas into polished, engaging lead magnets with the powe
         
         <motion.img
           src="/hero-3d.png"
-          alt="3D Architectural Render"
+          alt=""
+          aria-hidden="true"
           className="hero-3d-image"
           initial={{ opacity: 0, x: 100 }}
-          animate={{ opacity: 0.3, x: 0 }}
-          transition={{ duration: 1, delay: 0.5 }}
+          animate={{ 
+            opacity: 0.3, 
+            x: 0,
+            y: [0, -10, 0, 10, 0],
+            rotate: [0, 1, 0, -1, 0]
+          }}
+          transition={{ 
+            duration: 1, 
+            delay: 0.5,
+            y: { repeat: Infinity, duration: 12, ease: "easeInOut", delay: 1.5 },
+            rotate: { repeat: Infinity, duration: 12, ease: "easeInOut", delay: 1.5 }
+          }}
         />
       </div>
     </section>
