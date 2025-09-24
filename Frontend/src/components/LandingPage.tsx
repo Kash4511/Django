@@ -69,7 +69,7 @@ const LandingPage: React.FC = () => {
                 Login
               </button>
               <button className="nav-button black-btn" onClick={() => setShowAuth(true)}>
-                Sign In
+                Sign Up
               </button>
             </>
           )}
