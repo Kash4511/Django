@@ -1,3 +1,18 @@
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  margin-bottom: 2rem;
+  transition: color 0.3s ease;
+}
+
+.back-button:hover {
+  color: #4a8299;
+}
+
 .auth-overlay {
   position: fixed;
   top: 0;
@@ -13,7 +28,7 @@
   padding: 1rem;
 }
 
-.auth-modal {
+.auth-container {
   background: #1a1a1a;
   border-radius: 20px;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
@@ -202,7 +217,7 @@
 }
 
 @media (max-width: 480px) {
-  .auth-modal {
+  .auth-container {
     margin: 0;
     border-radius: 0;
     height: 100vh;

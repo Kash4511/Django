@@ -1,70 +1,30 @@
-import React, { useState } from 'react'
-import axios from 'axios'
+import React from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import HeroSection from './HeroSection'
 import HowItWorksSection from './HowItWorksSection'
 import FeaturesSection from './FeaturesSection'
 import DemoSection from './DemoSection'
 import Footer from './Footer'
-import AuthPages from './AuthPages'
-import Dashboard from './Dashboard'
 import './LandingPage.css'
 
 const LandingPage: React.FC = () => {
-  const [showAuth, setShowAuth] = useState(false)
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
-  const [user, setUser] = useState(null)
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
 
-  // Check for existing session on mount
+  // If user is already logged in, redirect to dashboard
   React.useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('access_token')
-      if (token) {
-        try {
-          let apiBase = import.meta.env.VITE_API_BASE_URL
-          
-          if (!apiBase) {
-            if (window.location.hostname.includes('replit.dev')) {
-              // In Replit environment, use the same domain but port 8000
-              apiBase = `${window.location.protocol}//${window.location.hostname}:8000`
-            } else {
-              // Local development
-              apiBase = `${window.location.protocol}//${window.location.hostname}:8000`
-            }
-          }
-          
-          const response = await axios.get(`${apiBase}/api/auth/profile/`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            timeout: 5000
-          })
-          
-          setUser(response.data)
-        } catch (err: any) {
-          console.error('Auth check failed:', err)
-          localStorage.removeItem('access_token')
-          localStorage.removeItem('refresh_token')
-        }
-      }
+    if (isAuthenticated) {
+      navigate('/dashboard')
     }
-    checkAuth()
-  }, [])
+  }, [isAuthenticated, navigate])
 
-  const handleLogin = (userData: any) => {
-    setUser(userData)
-    setShowAuth(false)
+  const handleLoginClick = () => {
+    navigate('/login')
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
-    setUser(null)
-  }
-
-  // Show dashboard if user is logged in
-  if (user) {
-    return <Dashboard user={user} onLogout={handleLogout} />
+  const handleSignupClick = () => {
+    navigate('/signup')
   }
 
   return (
@@ -72,28 +32,20 @@ const LandingPage: React.FC = () => {
       <nav className="main-nav">
         <div className="nav-brand">Forma</div>
         <div className="nav-actions">
-          <button className="nav-button white-btn" onClick={() => { setAuthMode('login'); setShowAuth(true) }}>
+          <button className="nav-button white-btn" onClick={handleLoginClick}>
             Login
           </button>
-          <button className="nav-button black-btn" onClick={() => { setAuthMode('signup'); setShowAuth(true) }}>
+          <button className="nav-button black-btn" onClick={handleSignupClick}>
             Sign Up
           </button>
         </div>
       </nav>
       
-      <HeroSection onGetStarted={() => { setAuthMode('signup'); setShowAuth(true) }} user={user} />
+      <HeroSection onGetStarted={handleSignupClick} />
       <HowItWorksSection />
       <FeaturesSection />
       <DemoSection />
       <Footer />
-      
-      {showAuth && (
-        <AuthPages
-          onLogin={handleLogin}
-          onClose={() => setShowAuth(false)}
-          initialMode={authMode}
-        />
-      )}
     </div>
   )
 }

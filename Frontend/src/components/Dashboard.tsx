@@ -1,14 +1,20 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FileText, Download, Plus, Settings, LogOut, User } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 import './Dashboard.css'
 
-interface DashboardProps {
-  user: any
-  onLogout: () => void
-}
+interface DashboardProps {}
 
-const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
+const Dashboard: React.FC<DashboardProps> = () => {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
   const [projects] = useState([
     {
       id: 1,
@@ -41,7 +47,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           <div className="user-menu">
             <User className="user-icon" size={20} />
             <span className="user-name">{user?.name}</span>
-            <button className="logout-btn" onClick={onLogout}>
+            <button className="logout-btn" onClick={handleLogout}>
               <LogOut size={18} />
             </button>
           </div>

@@ -4,10 +4,9 @@ import './HeroSection.css'
 
 interface HeroSectionProps {
   onGetStarted: () => void
-  user: any
 }
 
-const HeroSection: React.FC<HeroSectionProps> = () => {
+const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted }) => {
   return (
     <section className="hero-section">
       <div className="hero-content">
