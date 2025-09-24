@@ -16,20 +16,21 @@ const Dashboard: React.FC<DashboardProps> = () => {
     logout()
     navigate('/')
   }
+  
   const [projects] = useState([
     {
       id: 1,
       title: 'Modern Office Complex Lead Magnet',
       status: 'completed',
       created: '2 days ago',
-      downloads: 45
+      downloads: 42
     },
     {
-      id: 2, 
-      title: 'Residential Home Design Guide',
+      id: 2,
+      title: 'Residential Design Trends 2024',
       status: 'in-progress',
-      created: '1 week ago',
-      downloads: 23
+      created: '1 day ago',
+      downloads: 26
     },
     {
       id: 3,
@@ -64,79 +65,139 @@ const Dashboard: React.FC<DashboardProps> = () => {
         </div>
       </nav>
 
-      <div className="dashboard-content">
-        <div className="dashboard-header">
-          <div className="header-top">
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="dashboard-title"
-            >
-              🎯 My Lead Magnets
-            </motion.h1>
-            <motion.button
+      <div className="dashboard-layout">
+        <aside className="dashboard-sidebar">
+          <div className="sidebar-brand">
+            <div className="brand-icon">🎯</div>
+            <div className="brand-info">
+              <h3>AI Lead Magnets</h3>
+              <p>Your AI Workforce</p>
+            </div>
+          </div>
+          
+          <button className="sidebar-create-btn">
+            <Plus size={20} />
+            Create Lead Magnet
+          </button>
+
+          <div className="sidebar-section">
+            <h4>Navigation</h4>
+            <nav className="sidebar-nav">
+              <a href="#" className="nav-item active">
+                <FileText size={18} />
+                My Lead Magnets
+              </a>
+              <a href="#" className="nav-item">
+                <Download size={18} />
+                Active Campaigns
+              </a>
+              <a href="#" className="nav-item">
+                <Settings size={18} />
+                Integrations
+              </a>
+              <a href="#" className="nav-item">
+                <User size={18} />
+                Analytics
+              </a>
+            </nav>
+          </div>
+
+          <div className="sidebar-section">
+            <h4>Account</h4>
+            <nav className="sidebar-nav">
+              <a href="#" className="nav-item">
+                <Settings size={18} />
+                Settings
+              </a>
+            </nav>
+          </div>
+        </aside>
+
+        <main className="dashboard-main-content">
+          <div className="main-header">
+            <div className="header-top">
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="main-title"
+              >
+                🎯 My Lead Magnets
+              </motion.h1>
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="create-btn-header"
+              >
+                <Plus size={20} />
+                Create Lead Magnet
+              </motion.button>
+            </div>
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="create-btn-header"
+              transition={{ delay: 0.2 }}
+              className="main-subtitle"
             >
-              <Plus size={20} />
-              Create Lead Magnet
-            </motion.button>
+              Manage and interact with your AI-powered lead magnets
+            </motion.p>
           </div>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="dashboard-subtitle"
-          >
-            Manage and interact with your AI-powered lead magnets
-          </motion.p>
-        </div>
 
-        <div className="dashboard-stats">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="stat-card"
-          >
-            <FileText className="stat-icon" />
-            <div className="stat-content">
-              <h3>3</h3>
-              <p>Lead Magnets</p>
-            </div>
-          </motion.div>
+          <div className="stats-grid">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="stat-card"
+            >
+              <div className="stat-header">
+                <span className="stat-label">Total Lead Magnets</span>
+                <FileText className="stat-icon" />
+              </div>
+              <div className="stat-value">3</div>
+            </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="stat-card"
-          >
-            <Download className="stat-icon" />
-            <div className="stat-content">
-              <h3>68</h3>
-              <p>Total Downloads</p>
-            </div>
-          </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="stat-card"
+            >
+              <div className="stat-header">
+                <span className="stat-label">Active Lead Magnets</span>
+                <Download className="stat-icon" />
+              </div>
+              <div className="stat-value">2</div>
+            </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="stat-card"
-          >
-            <Settings className="stat-icon" />
-            <div className="stat-content">
-              <h3>1</h3>
-              <p>Active Campaigns</p>
-            </div>
-          </motion.div>
-        </div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="stat-card"
+            >
+              <div className="stat-header">
+                <span className="stat-label">Total Downloads</span>
+                <Settings className="stat-icon" />
+              </div>
+              <div className="stat-value">68</div>
+            </motion.div>
 
-        <div className="dashboard-main">
-          <div className="projects-section">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="stat-card"
+            >
+              <div className="stat-header">
+                <span className="stat-label">Leads Generated</span>
+                <User className="stat-icon" />
+              </div>
+              <div className="stat-value">290</div>
+            </motion.div>
+          </div>
+
+          <div className="content-section">
             <div className="search-section">
               <div className="search-wrapper">
                 <input
@@ -202,7 +263,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
               )}
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   )
