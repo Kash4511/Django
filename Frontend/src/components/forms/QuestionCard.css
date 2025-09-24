@@ -1,12 +1,12 @@
-/* Question Card Styles - Clean and Simple */
+/* Question Card Styles - Metallic Grey */
 .question-card {
-  background: #ffffff;
+  background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
   border-radius: 1rem;
   padding: 2.5rem;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #999999;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
   position: relative;
-  max-width: 600px;
+  max-width: 700px;
   margin: 0 auto;
 }
 
@@ -16,7 +16,7 @@
 }
 
 .question-title {
-  color: #111827;
+  color: #000000;
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
@@ -56,13 +56,13 @@
 }
 
 .question-btn.primary {
-  background: #3b82f6;
+  background: #14b8a6;
   color: white;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .question-btn.primary:hover:not(:disabled) {
-  background: #2563eb;
+  background: #0d9488;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
@@ -83,6 +83,20 @@
   transform: none;
 }
 
+/* Form Sections */
+.question-card .form-section {
+  margin-bottom: 2.5rem;
+}
+
+.question-card .form-section h4 {
+  color: #000000;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #999999;
+  padding-bottom: 0.5rem;
+}
+
 /* Form Fields in Question Cards */
 .question-card .form-field {
   margin-bottom: 1.5rem;
@@ -90,7 +104,7 @@
 
 .question-card .form-field label {
   display: block;
-  color: #374151;
+  color: #000000;
   font-weight: 500;
   margin-bottom: 0.5rem;
   font-size: 0.875rem;
@@ -216,7 +230,7 @@
 
 .question-card .checkbox-text {
   font-size: 0.875rem;
-  color: #374151;
+  color: #000000;
   font-weight: 400;
 }
 
