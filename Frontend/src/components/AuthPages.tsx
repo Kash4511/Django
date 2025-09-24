@@ -60,7 +60,11 @@ const AuthPages: React.FC<AuthPagesProps> = ({ onLogin, onClose, initialMode = '
         ? { email: formData.email, password: formData.password }
         : formData
 
-      const apiBase = import.meta.env.VITE_API_BASE_URL || window.location.protocol + '//' + window.location.hostname + ':8000'
+      // Construct API base URL - use current origin in Replit environment
+      const apiBase = import.meta.env.VITE_API_BASE_URL || 
+        (window.location.hostname.includes('replit.dev') 
+          ? window.location.origin.replace(':5000', ':8000')
+          : window.location.protocol + '//' + window.location.hostname + ':8000')
       
       console.log('Making API request to:', `${apiBase}${endpoint}`)
       console.log('Payload:', payload)
@@ -82,9 +86,12 @@ const AuthPages: React.FC<AuthPagesProps> = ({ onLogin, onClose, initialMode = '
           localStorage.setItem('refresh_token', data.refresh)
           
           // Fetch user profile after successful authentication
-          const apiBase = import.meta.env.VITE_API_BASE_URL || window.location.protocol + '//' + window.location.hostname + ':8000'
+          const profileApiBase = import.meta.env.VITE_API_BASE_URL || 
+            (window.location.hostname.includes('replit.dev') 
+              ? window.location.origin.replace(':5000', ':8000')
+              : window.location.protocol + '//' + window.location.hostname + ':8000')
           try {
-            const profileResponse = await fetch(`${apiBase}/api/auth/profile/`, {
+            const profileResponse = await fetch(`${profileApiBase}/api/auth/profile/`, {
               headers: {
                 'Authorization': `Bearer ${data.access}`,
                 'Content-Type': 'application/json'

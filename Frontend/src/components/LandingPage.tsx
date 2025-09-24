@@ -19,7 +19,10 @@ const LandingPage: React.FC = () => {
       const token = localStorage.getItem('access_token')
       if (token) {
         try {
-          const apiBase = import.meta.env.VITE_API_BASE_URL || window.location.protocol + '//' + window.location.hostname + ':8000'
+          const apiBase = import.meta.env.VITE_API_BASE_URL || 
+            (window.location.hostname.includes('replit.dev') 
+              ? window.location.origin.replace(':5000', ':8000')
+              : window.location.protocol + '//' + window.location.hostname + ':8000')
           const response = await fetch(`${apiBase}/api/auth/profile/`, {
             headers: {
               'Authorization': `Bearer ${token}`,
