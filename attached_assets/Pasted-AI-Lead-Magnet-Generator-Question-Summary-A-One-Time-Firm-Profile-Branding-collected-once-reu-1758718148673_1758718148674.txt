@@ -1,0 +1,80 @@
+AI Lead Magnet Generator – Question Summary
+A. One-Time Firm Profile / Branding (collected once, reusable)
+
+Firm Name
+
+Work Email Address
+
+Phone Number (optional)
+
+Firm Website (optional)
+
+Firm Size
+
+1–2
+
+3–5
+
+6–10
+
+11+
+
+Industry Specialty (multi-select)
+
+Residential, Commercial, Mixed Practice, Sustainable/Green, Educational/Civic, Hospitality, Healthcare, Interiors, Urban Design, Other
+
+Upload Logo (PNG/JPEG/SVG)
+
+Primary Brand Color (hex)
+
+Secondary Brand Color (optional, hex)
+
+Preferred Font Style
+
+Modern Sans-Serif, Classic Serif, Creative/Display, No Preference
+
+Additional Branding Guidelines (optional, text or file)
+
+Preferred Cover Image (optional)
+
+Location / Country
+
+B. Per-Lead Magnet PDF (collected every time)
+
+Lead Magnet Type
+
+Guide, Case Study, Checklist, ROI Calculator, Trends Report, Client Onboarding Flow, Design Portfolio, Custom
+
+Main Topic
+
+Sustainable Architecture, Smart Homes, Adaptive Reuse, Wellness/Biophilic, Modular/Prefab, Urban Placemaking, Passive House/Net-Zero, Climate-Resilient, Project ROI, Branding & Differentiation, Custom
+
+Target Audience (multi-select)
+
+Homeowners, Developers, Commercial Clients, Government, Architects/Peers, Contractors, Real Estate Agents, Nonprofits, Facility Managers, Other
+
+Audience Pain Points / Challenges (multi-select)
+
+High costs, ROI uncertainty, Compliance issues, Sustainability demands, Risk management, Long timelines, Tech complexity, Poor communication, Competition, Approvals, Energy efficiency, Health/Wellness, Vendor reliability, Other
+
+Desired Outcome / Solution (short text)
+
+Call-to-Action (e.g. Schedule Consultation, Download Portfolio)
+
+Special Requests or Additional Sections (optional free text)
+
+Preferred Layout/Template (optional, future)
+
+Workflow (Simplified)
+
+Registration: User fills Firm Profile (saved to database).
+
+Dashboard: Profile can be updated anytime.
+
+Generate Lead Magnet: User answers Per-PDF questions.
+
+Processing: Backend merges profile + per-PDF inputs → sends to AI + PDF generator.
+
+Delivery: User downloads PDF / receives by email.
+
+Updates: Any profile change applies to future PDFs.
