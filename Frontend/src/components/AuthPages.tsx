@@ -221,7 +221,7 @@ const AuthPages: React.FC<AuthPagesProps> = ({ onLogin, onClose }) => {
           )}
 
           <button type="submit" className="auth-submit" disabled={loading}>
-            {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
+            {loading ? 'Please wait...' : (isLogin ? 'Login' : 'Create Account')}
           </button>
         </form>
 
@@ -233,7 +233,7 @@ const AuthPages: React.FC<AuthPagesProps> = ({ onLogin, onClose }) => {
               onClick={() => setIsLogin(!isLogin)}
               className="auth-switch-btn"
             >
-              {isLogin ? 'Sign Up' : 'Sign In'}
+              {isLogin ? 'Sign Up' : 'Login'}
             </button>
           </p>
         </div>
