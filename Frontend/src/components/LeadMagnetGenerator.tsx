@@ -4,12 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Check, FileText, Building, Target, Users, Zap } from 'lucide-react';
 import { 
   getFirmProfile, 
-  createFirmProfile, 
-  updateFirmProfile,
-  createLeadMagnetGeneration,
-  FirmProfile,
-  LeadMagnetGeneration
+  createFirmProfile,
+  createLeadMagnetGeneration
 } from '../lib/leadMagnetApi';
+import type { FirmProfile, LeadMagnetGeneration } from '../lib/leadMagnetApi';
 import FirmProfileForm from './forms/FirmProfileForm';
 import LeadMagnetBasicsForm from './forms/LeadMagnetBasicsForm';
 import AudienceForm from './forms/AudienceForm';
