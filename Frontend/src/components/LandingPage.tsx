@@ -9,6 +9,7 @@ import './LandingPage.css'
 
 const LandingPage: React.FC = () => {
   const [showAuth, setShowAuth] = useState(false)
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
   const [user, setUser] = useState(null)
 
   // Check for existing session on mount
@@ -65,10 +66,10 @@ const LandingPage: React.FC = () => {
             </div>
           ) : (
             <>
-              <button className="nav-button white-btn" onClick={() => setShowAuth(true)}>
+              <button className="nav-button white-btn" onClick={() => { setAuthMode('login'); setShowAuth(true) }}>
                 Login
               </button>
-              <button className="nav-button black-btn" onClick={() => setShowAuth(true)}>
+              <button className="nav-button black-btn" onClick={() => { setAuthMode('signup'); setShowAuth(true) }}>
                 Sign Up
               </button>
             </>
@@ -86,6 +87,7 @@ const LandingPage: React.FC = () => {
         <AuthPages
           onLogin={handleLogin}
           onClose={() => setShowAuth(false)}
+          initialMode={authMode}
         />
       )}
     </div>

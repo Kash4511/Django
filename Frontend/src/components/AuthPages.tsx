@@ -6,10 +6,11 @@ import './AuthPages.css'
 interface AuthPagesProps {
   onLogin: (userData: any) => void
   onClose: () => void
+  initialMode?: 'login' | 'signup'
 }
 
-const AuthPages: React.FC<AuthPagesProps> = ({ onLogin, onClose }) => {
-  const [isLogin, setIsLogin] = useState(true)
+const AuthPages: React.FC<AuthPagesProps> = ({ onLogin, onClose, initialMode = 'login' }) => {
+  const [isLogin, setIsLogin] = useState(initialMode === 'login')
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
