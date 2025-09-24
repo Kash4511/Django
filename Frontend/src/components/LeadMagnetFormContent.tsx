@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, FileText, Building, Target, Users, Zap } from 'lucide-react';
 import { 
   getFirmProfile, 
@@ -264,18 +263,7 @@ const LeadMagnetFormContent: React.FC<LeadMagnetFormContentProps> = ({ onClose, 
 
       {/* Stage Content */}
       <div className="stage-content">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentStage}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            className="stage-form"
-          >
-            {renderStageContent()}
-          </motion.div>
-        </AnimatePresence>
+        {renderStageContent()}
       </div>
 
       {/* Error Message */}

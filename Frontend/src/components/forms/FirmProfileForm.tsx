@@ -43,7 +43,7 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({ data, onChange, onCom
   };
 
   return (
-    <div className="single-metallic-card">
+    <>
       <h2>Create Firm Profile</h2>
       <p>Tell us about your architecture firm to personalize your lead magnets</p>
         {/* Basic Information */}
@@ -220,7 +220,7 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({ data, onChange, onCom
             Complete Profile
           </button>
         </div>
-    </div>
+    </>
   );
 };
 

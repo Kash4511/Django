@@ -1,33 +1,33 @@
-/* ONE SINGLE METALLIC GREY CARD */
-.single-metallic-card {
+/* DIRECT METALLIC FORM - NO EXTRA CONTAINERS */
+.direct-metallic-form {
   background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
   border-radius: 1rem;
   padding: 2rem;
   border: 1px solid #999999;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: 700px;
-  margin: 0 auto;
+  width: 100%;
+  height: 100%;
 }
 
-.single-metallic-card h2 {
+.direct-metallic-form h2 {
   color: #000000;
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
 }
 
-.single-metallic-card p {
+.direct-metallic-form p {
   color: #333333;
   font-size: 0.95rem;
   margin-bottom: 2rem;
 }
 
 /* Form Sections */
-.single-metallic-card .form-section {
+.direct-metallic-form .form-section {
   margin-bottom: 2rem;
 }
 
-.single-metallic-card .form-section h4 {
+.direct-metallic-form .form-section h4 {
   color: #000000;
   font-size: 1rem;
   font-weight: 600;
@@ -37,11 +37,11 @@
 }
 
 /* Form Fields */
-.single-metallic-card .form-field {
+.direct-metallic-form .form-field {
   margin-bottom: 1rem;
 }
 
-.single-metallic-card .form-field label {
+.direct-metallic-form .form-field label {
   display: block;
   color: #000000;
   font-weight: 500;
@@ -49,9 +49,9 @@
   font-size: 0.875rem;
 }
 
-.single-metallic-card .form-field input,
-.single-metallic-card .form-field select,
-.single-metallic-card .form-field textarea {
+.direct-metallic-form .form-field input,
+.direct-metallic-form .form-field select,
+.direct-metallic-form .form-field textarea {
   width: 100%;
   padding: 0.75rem;
   background: #ffffff;
@@ -61,15 +61,15 @@
   font-size: 0.875rem;
 }
 
-.single-metallic-card .form-field input:focus,
-.single-metallic-card .form-field select:focus,
-.single-metallic-card .form-field textarea:focus {
+.direct-metallic-form .form-field input:focus,
+.direct-metallic-form .form-field select:focus,
+.direct-metallic-form .form-field textarea:focus {
   outline: none;
   border-color: #14b8a6;
   box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.2);
 }
 
-.single-metallic-card .form-field small {
+.direct-metallic-form .form-field small {
   display: block;
   color: #666666;
   font-size: 0.75rem;
@@ -77,20 +77,20 @@
 }
 
 /* Form Row */
-.single-metallic-card .form-row {
+.direct-metallic-form .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
 
 /* Checkbox Grid */
-.single-metallic-card .checkbox-grid {
+.direct-metallic-form .checkbox-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 0.5rem;
 }
 
-.single-metallic-card .checkbox-label {
+.direct-metallic-form .checkbox-label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -101,11 +101,11 @@
   background: rgba(255, 255, 255, 0.5);
 }
 
-.single-metallic-card .checkbox-label:hover {
+.direct-metallic-form .checkbox-label:hover {
   background: rgba(255, 255, 255, 0.8);
 }
 
-.single-metallic-card .checkbox-text {
+.direct-metallic-form .checkbox-text {
   font-size: 0.875rem;
   color: #000000;
 }
