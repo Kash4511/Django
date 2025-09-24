@@ -5,7 +5,6 @@ import { FileText, Download, Plus, Settings, LogOut, User } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { dashboardApi } from '../lib/dashboardApi'
 import type { DashboardStats, LeadMagnet } from '../lib/dashboardApi'
-import LeadMagnetFormContent from './LeadMagnetFormContent'
 import './Dashboard.css'
 
 interface DashboardProps {}
@@ -18,7 +17,6 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const [projects, setProjects] = useState<LeadMagnet[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [showLeadMagnetForm, setShowLeadMagnetForm] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -113,10 +111,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
             </div>
           </div>
           
-          <button 
-            className="sidebar-create-btn"
-            onClick={() => setShowLeadMagnetForm(true)}
-          >
+          <button className="sidebar-create-btn">
             <Plus size={20} />
             Create Lead Magnet
           </button>
@@ -155,49 +150,25 @@ const Dashboard: React.FC<DashboardProps> = () => {
         </aside>
 
         <main className="dashboard-main-content">
-          {showLeadMagnetForm ? (
-            <LeadMagnetFormContent 
-              onClose={() => setShowLeadMagnetForm(false)}
-              onSuccess={(message) => {
-                setShowLeadMagnetForm(false);
-                // Refresh dashboard data
-                const fetchDashboardData = async () => {
-                  try {
-                    const [statsData, projectsData] = await Promise.all([
-                      dashboardApi.getStats(),
-                      dashboardApi.getLeadMagnets()
-                    ])
-                    setStats(statsData)
-                    setProjects(projectsData)
-                  } catch (err) {
-                    console.error('Failed to refresh dashboard data:', err)
-                  }
-                }
-                fetchDashboardData();
-              }}
-            />
-          ) : (
-            <>
-              <div className="main-header">
-                <div className="header-top">
-                  <motion.h1
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="main-title"
-                  >
-                    My Lead Magnets
-                  </motion.h1>
-                  <motion.button
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="create-btn-header"
-                    onClick={() => setShowLeadMagnetForm(true)}
-                  >
-                    <Plus size={20} />
-                    Create Lead Magnet
-                  </motion.button>
-                </div>
+          <div className="main-header">
+            <div className="header-top">
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="main-title"
+              >
+                My Lead Magnets
+              </motion.h1>
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="create-btn-header"
+              >
+                <Plus size={20} />
+                Create Lead Magnet
+              </motion.button>
+            </div>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -335,9 +306,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
                 ))
               )}
             </div>
-              </div>
-            </>
-          )}
+          </div>
         </main>
       </div>
     </div>
