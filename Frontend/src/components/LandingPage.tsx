@@ -20,10 +20,17 @@ const LandingPage: React.FC = () => {
       const token = localStorage.getItem('access_token')
       if (token) {
         try {
-          const apiBase = import.meta.env.VITE_API_BASE_URL || 
-            (window.location.hostname.includes('replit.dev') 
-              ? window.location.origin.replace(':5000', ':8000')
-              : window.location.protocol + '//' + window.location.hostname + ':8000')
+          let apiBase = import.meta.env.VITE_API_BASE_URL
+          
+          if (!apiBase) {
+            if (window.location.hostname.includes('replit.dev')) {
+              // In Replit environment, use the same domain but port 8000
+              apiBase = `${window.location.protocol}//${window.location.hostname}:8000`
+            } else {
+              // Local development
+              apiBase = `${window.location.protocol}//${window.location.hostname}:8000`
+            }
+          }
           
           const response = await axios.get(`${apiBase}/api/auth/profile/`, {
             headers: {
