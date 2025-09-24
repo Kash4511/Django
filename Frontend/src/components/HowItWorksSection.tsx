@@ -35,7 +35,7 @@ const TypingAnimation: React.FC = () => {
   const [currentText, setCurrentText] = useState('')
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isTyping, setIsTyping] = useState(false)
-  const texts = ['Project Name...', 'Modern Villa Design', 'Target Audience: Homeowners', 'Brand Colors: #2563eb']
+  const texts = ['Project Name...', 'Modern Villa Design', 'Brand Colors: #2563eb']
   
   useEffect(() => {
     let timeout: NodeJS.Timeout
