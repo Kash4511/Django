@@ -169,6 +169,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://0ab169f4-4651-4b7b-b1d4-4fa37876b314-00-3nh6i484buitd.kirk.replit.dev:5000",
+    "https://0ab169f4-4651-4b7b-b1d4-4fa37876b314-00-3nh6i484buitd.kirk.replit.dev",
 ]
 
 if os.environ.get("REPLIT_DOMAINS"):
@@ -177,3 +179,4 @@ if os.environ.get("REPLIT_DOMAINS"):
     ])
 
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = False
