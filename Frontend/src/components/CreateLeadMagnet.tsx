@@ -59,11 +59,38 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
     setCurrentStep('lead-magnet-generation')
   }
 
+  const humanizeTitle = (topic: string, type: string) => {
+    const topicMap: Record<string, string> = {
+      'sustainable-architecture': 'Sustainable Architecture',
+      'smart-homes': 'Smart Homes',
+      'adaptive-reuse': 'Adaptive Reuse',
+      'wellness-biophilic': 'Wellness & Biophilic Design',
+      'modular-prefab': 'Modular & Prefab',
+      'urban-placemaking': 'Urban Placemaking',
+      'passive-house': 'Passive House & Net-Zero',
+      'climate-resilient': 'Climate-Resilient Design',
+      'project-roi': 'Project ROI',
+      'branding-differentiation': 'Branding & Differentiation'
+    }
+    
+    const typeMap: Record<string, string> = {
+      'guide': 'Guide',
+      'case-study': 'Case Study',
+      'checklist': 'Checklist',
+      'roi-calculator': 'ROI Calculator',
+      'trends-report': 'Trends Report',
+      'onboarding-flow': 'Client Onboarding Flow',
+      'design-portfolio': 'Design Portfolio'
+    }
+    
+    return `${topicMap[topic] || topic} ${typeMap[type] || type}`
+  }
+
   const handleGenerationSubmit = async (data: LeadMagnetGeneration) => {
     setLoading(true)
     try {
       const createRequest: CreateLeadMagnetRequest = {
-        title: `${data.main_topic} ${data.lead_magnet_type}`,
+        title: humanizeTitle(data.main_topic, data.lead_magnet_type),
         description: data.desired_outcome,
         firm_profile: hasExistingProfile ? undefined : firmProfile,
         generation_data: data
@@ -73,6 +100,7 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
       navigate('/dashboard')
     } catch (err) {
       console.error('Failed to create lead magnet:', err)
+      // Could add user-facing error handling here
     } finally {
       setLoading(false)
     }

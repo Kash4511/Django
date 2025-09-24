@@ -2,6 +2,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db.models import Count, Q
+from django.db import transaction
 from .models import LeadMagnet, Lead, Download, FirmProfile, LeadMagnetGeneration
 from .serializers import (
     LeadMagnetSerializer, LeadSerializer, DashboardStatsSerializer,
@@ -71,6 +72,7 @@ class FirmProfileView(generics.RetrieveUpdateAPIView):
 class CreateLeadMagnetView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
+    @transaction.atomic
     def post(self, request):
         serializer = CreateLeadMagnetSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
