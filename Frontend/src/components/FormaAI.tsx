@@ -119,10 +119,6 @@ const FormaAI: React.FC = () => {
           </div>
 
           <div className="chat-container">
-            <div className="chat-welcome">
-              <h2 className="welcome-title">Welcome to Forma AI</h2>
-            </div>
-
             <div className="chat-messages">
               {/* Chat messages will go here in the future */}
             </div>

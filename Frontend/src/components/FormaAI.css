@@ -76,18 +76,6 @@
   width: 100%;
 }
 
-.chat-welcome {
-  text-align: center;
-  margin-bottom: 2rem;
-  flex-shrink: 0;
-}
-
-.welcome-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin: 0;
-}
 
 .chat-messages {
   flex: 1;
