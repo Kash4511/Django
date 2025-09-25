@@ -96,13 +96,9 @@ const BrandAssets: React.FC = () => {
       <nav className="dashboard-nav">
         <div className="nav-brand">Forma</div>
         <div className="nav-actions">
-          <div className="user-menu">
-            <User className="user-icon" size={20} />
-            <span className="user-name">{user?.name}</span>
-            <button className="logout-btn" onClick={handleLogout}>
-              <LogOut size={18} />
-            </button>
-          </div>
+          <button className="logout-btn" onClick={handleLogout}>
+            <LogOut size={18} />
+          </button>
         </div>
       </nav>
 
@@ -128,6 +124,10 @@ const BrandAssets: React.FC = () => {
                 <FileText size={18} />
                 My Lead Magnets
               </a>
+              <a href="/forma-ai" className="nav-item">
+                <Settings size={18} />
+                Forma AI
+              </a>
               <a href="#" className="nav-item">
                 <Download size={18} />
                 Active Campaigns
@@ -140,22 +140,9 @@ const BrandAssets: React.FC = () => {
                 <Settings size={18} />
                 Settings
               </a>
-              <a href="#" className="nav-item">
-                <User size={18} />
-                Analytics
-              </a>
             </nav>
           </div>
 
-          <div className="sidebar-section">
-            <h4>Account</h4>
-            <nav className="sidebar-nav">
-              <a href="#" className="nav-item">
-                <Settings size={18} />
-                Settings
-              </a>
-            </nav>
-          </div>
         </aside>
 
         <main className="brand-content">

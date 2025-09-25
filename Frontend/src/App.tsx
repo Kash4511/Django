@@ -6,6 +6,7 @@ import SignupPage from './components/SignupPage'
 import Dashboard from './components/Dashboard'
 import CreateLeadMagnet from './components/CreateLeadMagnet'
 import BrandAssets from './components/BrandAssets'
+import FormaAI from './components/FormaAI'
 import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
 
@@ -38,6 +39,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <BrandAssets />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/forma-ai" 
+            element={
+              <ProtectedRoute>
+                <FormaAI />
               </ProtectedRoute>
             } 
           />
