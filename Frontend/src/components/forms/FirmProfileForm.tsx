@@ -29,12 +29,6 @@ const INDUSTRY_SPECIALTIES = [
   'Other'
 ]
 
-const FONT_STYLES = [
-  { value: 'modern-sans', label: 'Modern Sans-Serif' },
-  { value: 'classic-serif', label: 'Classic Serif' },
-  { value: 'creative', label: 'Creative/Display' },
-  { value: 'no-preference', label: 'No Preference' }
-]
 
 const FirmProfileForm: React.FC<FirmProfileFormProps> = ({ 
   initialData = {}, 
@@ -60,9 +54,7 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({
 
   const steps = [
     'Basic Information',
-    'Industry & Size',
-    'Branding',
-    'Additional Details'
+    'Industry & Size'
   ]
 
   const handleInputChange = (field: keyof FirmProfile, value: any) => {
@@ -97,10 +89,6 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({
         return formData.firm_name && formData.work_email
       case 1:
         return formData.firm_size && (formData.industry_specialties?.length || 0) > 0
-      case 2:
-        return true // Optional fields
-      case 3:
-        return true // Optional fields
       default:
         return false
     }
@@ -224,114 +212,6 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({
           </div>
         )
 
-      case 2:
-        return (
-          <div className="form-step">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="form-group"
-            >
-              <label className="form-label">Primary Brand Color</label>
-              <div className="color-input-group">
-                <input
-                  type="color"
-                  className="color-input"
-                  value={formData.primary_brand_color || '#2a5766'}
-                  onChange={(e) => handleInputChange('primary_brand_color', e.target.value)}
-                />
-                <input
-                  type="text"
-                  className="form-input color-text"
-                  value={formData.primary_brand_color || ''}
-                  onChange={(e) => handleInputChange('primary_brand_color', e.target.value)}
-                  placeholder="#2a5766"
-                />
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="form-group"
-            >
-              <label className="form-label">Secondary Brand Color</label>
-              <div className="color-input-group">
-                <input
-                  type="color"
-                  className="color-input"
-                  value={formData.secondary_brand_color || '#ffffff'}
-                  onChange={(e) => handleInputChange('secondary_brand_color', e.target.value)}
-                />
-                <input
-                  type="text"
-                  className="form-input color-text"
-                  value={formData.secondary_brand_color || ''}
-                  onChange={(e) => handleInputChange('secondary_brand_color', e.target.value)}
-                  placeholder="#ffffff"
-                />
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="form-group"
-            >
-              <label className="form-label">Preferred Font Style</label>
-              <select
-                className="form-select"
-                value={formData.preferred_font_style || 'no-preference'}
-                onChange={(e) => handleInputChange('preferred_font_style', e.target.value)}
-              >
-                {FONT_STYLES.map((font) => (
-                  <option key={font.value} value={font.value}>
-                    {font.label}
-                  </option>
-                ))}
-              </select>
-            </motion.div>
-          </div>
-        )
-
-      case 3:
-        return (
-          <div className="form-step">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="form-group"
-            >
-              <label className="form-label">Additional Branding Guidelines</label>
-              <textarea
-                className="form-textarea"
-                value={formData.branding_guidelines || ''}
-                onChange={(e) => handleInputChange('branding_guidelines', e.target.value)}
-                placeholder="Any specific branding requirements, style guides, or preferences..."
-                rows={4}
-              />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="form-group"
-            >
-              <label className="form-label">Location / Country</label>
-              <input
-                type="text"
-                className="form-input"
-                value={formData.location || ''}
-                onChange={(e) => handleInputChange('location', e.target.value)}
-                placeholder="City, State/Province, Country"
-              />
-            </motion.div>
-          </div>
-        )
-
       default:
         return null
     }
@@ -341,7 +221,7 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({
     <div className="firm-profile-form">
       <div className="form-header">
         <h1 className="form-title">
-          {isUpdate ? 'Update Firm Profile' : 'Create Firm Profile'}
+          {isUpdate ? 'Update Firm Information' : 'Firm Information'}
         </h1>
         <div className="form-progress">
           <div className="progress-bar">

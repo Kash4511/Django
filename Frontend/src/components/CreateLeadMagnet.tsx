@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, User } from 'lucide-react'
+import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, User, Palette } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { dashboardApi } from '../lib/dashboardApi'
 import type { FirmProfile, LeadMagnetGeneration, CreateLeadMagnetRequest } from '../lib/dashboardApi'
@@ -55,7 +55,17 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
   }, [])
 
   const handleFirmProfileNext = (data: Partial<FirmProfile>) => {
-    setFirmProfile(data)
+    // Filter to only include basic business info, never branding fields
+    const basicInfoOnly = {
+      firm_name: data.firm_name,
+      work_email: data.work_email,
+      phone_number: data.phone_number,
+      firm_website: data.firm_website,
+      firm_size: data.firm_size,
+      industry_specialties: data.industry_specialties,
+      location: data.location
+    }
+    setFirmProfile(basicInfoOnly)
     setCurrentStep('lead-magnet-generation')
   }
 
@@ -146,6 +156,10 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
               <a href="#" className="nav-item">
                 <Download size={18} />
                 Active Campaigns
+              </a>
+              <a href="/brand-assets" className="nav-item">
+                <Palette size={18} />
+                Brand Assets
               </a>
               <a href="#" className="nav-item">
                 <Settings size={18} />

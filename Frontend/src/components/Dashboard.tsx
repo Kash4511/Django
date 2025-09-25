@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FileText, Download, Plus, Settings, LogOut, User } from 'lucide-react'
+import { FileText, Download, Plus, Settings, LogOut, User, Palette } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { dashboardApi } from '../lib/dashboardApi'
 import type { DashboardStats, LeadMagnet } from '../lib/dashboardApi'
@@ -130,6 +130,10 @@ const Dashboard: React.FC<DashboardProps> = () => {
               <a href="#" className="nav-item">
                 <Download size={18} />
                 Active Campaigns
+              </a>
+              <a href="/brand-assets" className="nav-item">
+                <Palette size={18} />
+                Brand Assets
               </a>
               <a href="#" className="nav-item">
                 <Settings size={18} />

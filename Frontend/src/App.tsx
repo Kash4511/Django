@@ -5,6 +5,7 @@ import LoginPage from './components/LoginPage'
 import SignupPage from './components/SignupPage'
 import Dashboard from './components/Dashboard'
 import CreateLeadMagnet from './components/CreateLeadMagnet'
+import BrandAssets from './components/BrandAssets'
 import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
 
@@ -29,6 +30,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <CreateLeadMagnet />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/brand-assets" 
+            element={
+              <ProtectedRoute>
+                <BrandAssets />
               </ProtectedRoute>
             } 
           />
