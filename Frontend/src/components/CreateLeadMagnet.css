@@ -1,9 +1,9 @@
 .create-lead-magnet {
   min-height: 100vh;
+  width: 100vw;
   background: #1a1a1a;
   color: #ffffff;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  width: calc(100vw - 10px);
   margin: 0;
   padding: 0;
   max-width: none;
