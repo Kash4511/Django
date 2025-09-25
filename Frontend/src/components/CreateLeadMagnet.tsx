@@ -163,7 +163,7 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
               </a>
               <a href="#" className="nav-item">
                 <Settings size={18} />
-                Integrations
+                Settings
               </a>
               <a href="#" className="nav-item">
                 <User size={18} />
