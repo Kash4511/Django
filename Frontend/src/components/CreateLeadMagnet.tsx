@@ -1,24 +1,25 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, User, Palette } from 'lucide-react'
+import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, Palette } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { dashboardApi } from '../lib/dashboardApi'
-import type { FirmProfile, LeadMagnetGeneration, CreateLeadMagnetRequest } from '../lib/dashboardApi'
+import type { FirmProfile, LeadMagnetGeneration, CreateLeadMagnetRequest, TemplateSelectionRequest } from '../lib/dashboardApi'
 import FirmProfileForm from './forms/FirmProfileForm'
 import LeadMagnetGenerationForm from './forms/LeadMagnetGenerationForm'
+import TemplateSelectionForm from './forms/TemplateSelectionForm'
 import './CreateLeadMagnet.css'
 
 interface CreateLeadMagnetProps {}
 
-type FormStep = 'firm-profile' | 'lead-magnet-generation' | 'summary'
+type FormStep = 'firm-profile' | 'lead-magnet-generation' | 'template-selection'
 
 const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
-  const { user, logout } = useAuth()
+  const { logout } = useAuth()
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState<FormStep>('firm-profile')
   const [firmProfile, setFirmProfile] = useState<Partial<FirmProfile>>({})
-  const [generationData, setGenerationData] = useState<Partial<LeadMagnetGeneration>>({})
+  const [createdLeadMagnetId, setCreatedLeadMagnetId] = useState<number | null>(null)
+  const [capturedAnswers, setCapturedAnswers] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(false)
   const [hasExistingProfile, setHasExistingProfile] = useState(false)
 
@@ -28,7 +29,9 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
   }
 
   const handleBack = () => {
-    if (currentStep === 'lead-magnet-generation') {
+    if (currentStep === 'template-selection') {
+      setCurrentStep('lead-magnet-generation')
+    } else if (currentStep === 'lead-magnet-generation') {
       setCurrentStep('firm-profile')
     } else {
       navigate('/dashboard')
@@ -106,11 +109,39 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
         generation_data: data
       }
 
-      await dashboardApi.createLeadMagnetWithData(createRequest)
-      navigate('/dashboard')
+      const leadMagnet = await dashboardApi.createLeadMagnetWithData(createRequest)
+      
+      setCreatedLeadMagnetId(leadMagnet.id)
+      setCapturedAnswers({
+        ...firmProfile,
+        ...data
+      })
+      setCurrentStep('template-selection')
     } catch (err) {
       console.error('Failed to create lead magnet:', err)
-      // Could add user-facing error handling here
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleTemplateSubmit = async (templateId: string, templateName: string, templateThumbnail?: string) => {
+    if (!createdLeadMagnetId) return
+    
+    setLoading(true)
+    try {
+      const selectionRequest: TemplateSelectionRequest = {
+        lead_magnet_id: createdLeadMagnetId,
+        template_id: templateId,
+        template_name: templateName,
+        template_thumbnail: templateThumbnail,
+        captured_answers: capturedAnswers,
+        source: 'create-lead-magnet'
+      }
+
+      await dashboardApi.selectTemplate(selectionRequest)
+      navigate('/dashboard')
+    } catch (err) {
+      console.error('Failed to select template:', err)
     } finally {
       setLoading(false)
     }
@@ -190,8 +221,11 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
               <div className={`step ${currentStep === 'firm-profile' ? 'active' : 'completed'}`}>
                 1. {hasExistingProfile ? 'Profile' : 'Firm Profile'}
               </div>
-              <div className={`step ${currentStep === 'lead-magnet-generation' ? 'active' : ''}`}>
+              <div className={`step ${currentStep === 'lead-magnet-generation' ? 'active' : currentStep === 'template-selection' ? 'completed' : ''}`}>
                 2. Lead Magnet Details
+              </div>
+              <div className={`step ${currentStep === 'template-selection' ? 'active' : ''}`}>
+                3. Choose Template
               </div>
             </div>
           </div>
@@ -208,6 +242,13 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
             {currentStep === 'lead-magnet-generation' && (
               <LeadMagnetGenerationForm
                 onSubmit={handleGenerationSubmit}
+                loading={loading}
+              />
+            )}
+
+            {currentStep === 'template-selection' && createdLeadMagnetId && (
+              <TemplateSelectionForm
+                onSubmit={handleTemplateSubmit}
                 loading={loading}
               />
             )}

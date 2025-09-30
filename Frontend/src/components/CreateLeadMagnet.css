@@ -80,6 +80,157 @@
   color: #ffffff;
 }
 
+/* Template Selection Styles */
+.template-selection-form {
+  width: 100%;
+}
+
+.template-selection-form .form-header {
+  margin-bottom: 2rem;
+}
+
+.template-selection-form .form-header h2 {
+  font-size: 1.75rem;
+  margin: 0 0 0.5rem 0;
+  color: #ffffff;
+}
+
+.template-selection-form .form-header p {
+  color: #888;
+  margin: 0;
+}
+
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.template-card {
+  background: #2a2a2a;
+  border: 2px solid #333;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.template-card:hover {
+  border-color: #2a5766;
+  transform: translateY(-2px);
+}
+
+.template-card.selected {
+  border-color: #2a5766;
+  background: #2a3840;
+}
+
+.template-thumbnail {
+  width: 100%;
+  height: 200px;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.template-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.template-thumbnail.placeholder {
+  color: #555;
+}
+
+.template-info {
+  padding: 1rem;
+}
+
+.template-info h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  color: #ffffff;
+}
+
+.template-info p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #888;
+}
+
+.selected-indicator {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
+  background: #2a5766;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.template-loading,
+.template-error,
+.template-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  color: #888;
+}
+
+.template-loading .spinner {
+  animation: spin 1s linear infinite;
+  color: #2a5766;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.template-error {
+  color: #ff6b6b;
+}
+
+.template-error h3 {
+  color: #ff6b6b;
+  margin: 1rem 0;
+}
+
+.template-empty h3 {
+  color: #ffffff;
+  margin: 1rem 0;
+}
+
+.retry-btn {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: #2a5766;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retry-btn:hover {
+  background: #366d7f;
+}
+
 @media (max-width: 768px) {
   .create-content {
     padding: 1rem;
@@ -94,5 +245,9 @@
   .step-indicator {
     width: 100%;
     justify-content: center;
+  }
+
+  .template-grid {
+    grid-template-columns: 1fr;
   }
 }

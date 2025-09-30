@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FileText, Loader2, AlertCircle } from 'lucide-react'
-import { dashboardApi, PDFTemplate } from '../../lib/dashboardApi'
+import { dashboardApi } from '../../lib/dashboardApi'
+import type { PDFTemplate } from '../../lib/dashboardApi'
 import '../CreateLeadMagnet.css'
 
 interface TemplateSelectionFormProps {
-  leadMagnetId: number
-  capturedAnswers: Record<string, any>
   onSubmit: (templateId: string, templateName: string, templateThumbnail?: string) => void
   loading?: boolean
 }
 
 const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
-  leadMagnetId,
-  capturedAnswers,
   onSubmit,
   loading = false
 }) => {
