@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FileText, Download, Plus, Settings, LogOut, User, Palette } from 'lucide-react'
+import { FileText, Download, Plus, Settings, LogOut, User, Palette, Trash2 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { dashboardApi } from '../lib/dashboardApi'
 import type { DashboardStats, LeadMagnet } from '../lib/dashboardApi'
@@ -17,6 +17,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const [projects, setProjects] = useState<LeadMagnet[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
 
   const handleLogout = () => {
     logout()
@@ -25,6 +26,29 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
   const handleCreateLeadMagnet = () => {
     navigate('/create-lead-magnet')
+  }
+
+  const handleDeleteLeadMagnet = async (id: number, title: string) => {
+    if (!confirm(`Are you sure you want to delete "${title}"? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      setDeletingId(id)
+      await dashboardApi.deleteLeadMagnet(id)
+      
+      setProjects(projects.filter(p => p.id !== id))
+      
+      const [statsData] = await Promise.all([
+        dashboardApi.getStats()
+      ])
+      setStats(statsData)
+    } catch (err) {
+      console.error('Failed to delete lead magnet:', err)
+      alert('Failed to delete lead magnet. Please try again.')
+    } finally {
+      setDeletingId(null)
+    }
   }
   
   // Fetch dashboard data on component mount
@@ -274,7 +298,16 @@ const Dashboard: React.FC<DashboardProps> = () => {
                            project.status === 'completed' ? 'Completed' : 'Draft'}
                         </span>
                       </div>
-                      <button className="project-menu">⋮</button>
+                      {project.status === 'in-progress' && (
+                        <button 
+                          className="delete-btn"
+                          onClick={() => handleDeleteLeadMagnet(project.id, project.title)}
+                          disabled={deletingId === project.id}
+                          title="Delete lead magnet"
+                        >
+                          {deletingId === project.id ? '...' : <Trash2 size={18} />}
+                        </button>
+                      )}
                     </div>
                     
                     <p className="project-description">
