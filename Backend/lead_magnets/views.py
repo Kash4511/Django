@@ -121,6 +121,17 @@ class ListTemplatesView(APIView):
             template_service = APITemplateService()
             templates = template_service.list_templates()
             
+            # Log the raw template data to help understand the structure
+            if templates:
+                print("=" * 80)
+                print("RAW TEMPLATE DATA FROM APITEMPLATE.IO:")
+                print("=" * 80)
+                for i, template in enumerate(templates[:2]):  # Log first 2 templates
+                    print(f"\nTemplate {i+1}:")
+                    print(f"Available fields: {list(template.keys())}")
+                    print(f"Full data: {template}")
+                print("=" * 80)
+            
             return Response({
                 'success': True,
                 'templates': templates,
