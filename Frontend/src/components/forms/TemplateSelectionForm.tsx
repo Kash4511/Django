@@ -44,7 +44,11 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (selectedTemplate) {
-      onSubmit(selectedTemplate.id, selectedTemplate.name, selectedTemplate.thumbnail)
+      onSubmit(
+        selectedTemplate.id, 
+        selectedTemplate.name, 
+        selectedTemplate.preview_url || selectedTemplate.thumbnail
+      )
     }
   }
 
@@ -99,13 +103,47 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            {template.thumbnail ? (
+            {(template.preview_url || template.thumbnail) ? (
               <div className="template-thumbnail">
-                <img src={template.thumbnail} alt={template.name} />
+                {(template.preview_url && template.preview_url.endsWith('.pdf')) ? (
+                  <iframe 
+                    src={template.preview_url}
+                    title={template.name}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      border: 'none',
+                      borderRadius: '8px 8px 0 0'
+                    }}
+                  />
+                ) : (
+                  <>
+                    <img 
+                      src={template.preview_url || template.thumbnail} 
+                      alt={template.name}
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                        const placeholder = e.currentTarget.parentElement?.querySelector('.placeholder-fallback')
+                        if (placeholder) {
+                          (placeholder as HTMLElement).style.display = 'flex'
+                        }
+                      }}
+                    />
+                    <div className="placeholder-fallback" style={{ display: 'none' }}>
+                      <FileText size={48} />
+                      <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#888' }}>
+                        Preview loading...
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             ) : (
               <div className="template-thumbnail placeholder">
                 <FileText size={48} />
+                <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#888' }}>
+                  Generating preview...
+                </p>
               </div>
             )}
             <div className="template-info">

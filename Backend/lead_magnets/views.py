@@ -113,24 +113,13 @@ class CreateLeadMagnetView(APIView):
         )
 
 class ListTemplatesView(APIView):
-    """Get all available PDF templates from APITemplate.io"""
+    """Get all available PDF templates from APITemplate.io with preview images"""
     permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request):
         try:
             template_service = APITemplateService()
-            templates = template_service.list_templates()
-            
-            # Log the raw template data to help understand the structure
-            if templates:
-                print("=" * 80)
-                print("RAW TEMPLATE DATA FROM APITEMPLATE.IO:")
-                print("=" * 80)
-                for i, template in enumerate(templates[:2]):  # Log first 2 templates
-                    print(f"\nTemplate {i+1}:")
-                    print(f"Available fields: {list(template.keys())}")
-                    print(f"Full data: {template}")
-                print("=" * 80)
+            templates = template_service.list_templates(include_previews=True)
             
             return Response({
                 'success': True,
