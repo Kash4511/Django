@@ -18,8 +18,7 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState<FormStep>('firm-profile')
   const [firmProfile, setFirmProfile] = useState<Partial<FirmProfile>>({})
-  const [createdLeadMagnetId, setCreatedLeadMagnetId] = useState<number | null>(null)
-  const [capturedAnswers, setCapturedAnswers] = useState<Record<string, any>>({})
+  const [capturedAnswers, setCapturedAnswers] = useState<LeadMagnetGeneration & { title?: string; description?: string }>({} as LeadMagnetGeneration)
   const [loading, setLoading] = useState(false)
   const [hasExistingProfile, setHasExistingProfile] = useState(false)
 
@@ -100,37 +99,33 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
   }
 
   const handleGenerationSubmit = async (data: LeadMagnetGeneration) => {
+    // Just capture the data and move to template selection
+    // Don't create the lead magnet yet
+    setCapturedAnswers({
+      ...firmProfile,
+      ...data,
+      title: humanizeTitle(data.main_topic, data.lead_magnet_type),
+      description: data.desired_outcome
+    })
+    setCurrentStep('template-selection')
+  }
+
+  const handleTemplateSubmit = async (templateId: string, templateName: string, templateThumbnail?: string) => {
     setLoading(true)
     try {
+      // Create the lead magnet with all captured data + template selection
       const createRequest: CreateLeadMagnetRequest = {
-        title: humanizeTitle(data.main_topic, data.lead_magnet_type),
-        description: data.desired_outcome,
+        title: capturedAnswers.title,
+        description: capturedAnswers.description,
         firm_profile: hasExistingProfile ? undefined : firmProfile,
-        generation_data: data
+        generation_data: capturedAnswers
       }
 
       const leadMagnet = await dashboardApi.createLeadMagnetWithData(createRequest)
       
-      setCreatedLeadMagnetId(leadMagnet.id)
-      setCapturedAnswers({
-        ...firmProfile,
-        ...data
-      })
-      setCurrentStep('template-selection')
-    } catch (err) {
-      console.error('Failed to create lead magnet:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleTemplateSubmit = async (templateId: string, templateName: string, templateThumbnail?: string) => {
-    if (!createdLeadMagnetId) return
-    
-    setLoading(true)
-    try {
+      // Now save template selection
       const selectionRequest: TemplateSelectionRequest = {
-        lead_magnet_id: createdLeadMagnetId,
+        lead_magnet_id: leadMagnet.id,
         template_id: templateId,
         template_name: templateName,
         template_thumbnail: templateThumbnail,
@@ -141,7 +136,7 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
       await dashboardApi.selectTemplate(selectionRequest)
       navigate('/dashboard')
     } catch (err) {
-      console.error('Failed to select template:', err)
+      console.error('Failed to create lead magnet with template:', err)
     } finally {
       setLoading(false)
     }

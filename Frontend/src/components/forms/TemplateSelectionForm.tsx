@@ -99,9 +99,9 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            {template.thumbnail ? (
+            {template.preview_url ? (
               <div className="template-thumbnail">
-                <img src={template.thumbnail} alt={template.name} />
+                <img src={template.preview_url} alt={template.name} />
               </div>
             ) : (
               <div className="template-thumbnail placeholder">

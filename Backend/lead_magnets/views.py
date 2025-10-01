@@ -1,8 +1,10 @@
+import os
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db.models import Count, Q
 from django.db import transaction
+from django.conf import settings
 from .models import (
     LeadMagnet, Lead, Download, FirmProfile, LeadMagnetGeneration,
     FormaAIConversation, TemplateSelection
@@ -120,6 +122,17 @@ class ListTemplatesView(APIView):
         try:
             template_service = APITemplateService()
             templates = template_service.list_templates()
+            
+            # Check if previews already exist, don't generate on the fly
+            for template in templates:
+                template_id = template['id']
+                preview_filename = f"{template_id}.jpg"
+                preview_path = os.path.join(settings.MEDIA_ROOT, 'template_previews', preview_filename)
+                
+                if os.path.exists(preview_path):
+                    template['preview_url'] = f"{settings.MEDIA_URL}template_previews/{preview_filename}"
+                else:
+                    template['preview_url'] = None
             
             return Response({
                 'success': True,
