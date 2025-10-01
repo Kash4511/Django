@@ -102,7 +102,7 @@
 
 .template-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -129,22 +129,25 @@
 
 .template-thumbnail {
   width: 100%;
-  height: 200px;
+  height: 300px;
   background: #1a1a1a;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  position: relative;
 }
 
 .template-thumbnail img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: #ffffff;
 }
 
 .template-thumbnail.placeholder {
   color: #555;
+  flex-direction: column;
 }
 
 .template-info {

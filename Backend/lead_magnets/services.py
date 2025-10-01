@@ -86,7 +86,7 @@ class APITemplateService:
     
     def _generate_preview(self, template_id: str, template_format: str = 'PDF') -> Optional[str]:
         """
-        Generate a preview image for a template using empty/minimal data
+        Generate a preview image for a template using sample/minimal data
         
         Args:
             template_id: The template ID
@@ -96,12 +96,25 @@ class APITemplateService:
             Preview image URL or None if generation fails
         """
         try:
-            # Generate with minimal/empty data - template will use its defaults
-            # Request JPEG output for image preview (works for both PDF and Image templates)
+            # Generate with sample data that covers common field names
             url = f"{self.BASE_URL}/create?template_id={template_id}&expiration=0&output_image_type=jpegOnly"
             
-            # Empty data object - let template use its default values
-            payload = {}
+            # Comprehensive sample data covering common template fields
+            payload = {
+                "title": "Sample Lead Magnet",
+                "name": "Sample Name",
+                "company": "Architecture Firm",
+                "author": "Your Firm",
+                "heading": "Sample Heading",
+                "subheading": "Sample Subheading",
+                "text": "Sample content text",
+                "description": "Sample description",
+                "date": "2025",
+                "sales": "0",
+                "revenue": "0",
+                "value": "Sample Value",
+                "content": "Sample content"
+            }
             
             response = requests.post(url, json=payload, headers=self._get_headers(), timeout=30)
             response.raise_for_status()

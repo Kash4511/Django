@@ -18,6 +18,7 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
   const [selectedTemplate, setSelectedTemplate] = useState<PDFTemplate | null>(null)
   const [fetchingTemplates, setFetchingTemplates] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [failedPreviews, setFailedPreviews] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -105,37 +106,34 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
           >
             {(template.preview_url || template.thumbnail) ? (
               <div className="template-thumbnail">
-                {(template.preview_url && template.preview_url.endsWith('.pdf')) ? (
-                  <iframe 
-                    src={template.preview_url}
-                    title={template.name}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      border: 'none',
-                      borderRadius: '8px 8px 0 0'
+                {failedPreviews.has(template.id) ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#888' }}>
+                    <FileText size={48} />
+                    <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>PDF Preview</p>
+                    <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', opacity: 0.7 }}>{template.name}</p>
+                  </div>
+                ) : (template.preview_url && template.preview_url.toLowerCase().endsWith('.pdf')) ? (
+                  <img 
+                    src={`https://image.thum.io/get/width/400/crop/600/noanimate/${encodeURIComponent(template.preview_url)}`}
+                    alt={template.name}
+                    onError={() => {
+                      setFailedPreviews(prev => new Set(prev).add(template.id))
                     }}
                   />
+                ) : failedPreviews.has(template.id) ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#888' }}>
+                    <FileText size={48} />
+                    <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>Preview Unavailable</p>
+                    <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', opacity: 0.7 }}>{template.name}</p>
+                  </div>
                 ) : (
-                  <>
-                    <img 
-                      src={template.preview_url || template.thumbnail} 
-                      alt={template.name}
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none'
-                        const placeholder = e.currentTarget.parentElement?.querySelector('.placeholder-fallback')
-                        if (placeholder) {
-                          (placeholder as HTMLElement).style.display = 'flex'
-                        }
-                      }}
-                    />
-                    <div className="placeholder-fallback" style={{ display: 'none' }}>
-                      <FileText size={48} />
-                      <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#888' }}>
-                        Preview loading...
-                      </p>
-                    </div>
-                  </>
+                  <img 
+                    src={template.preview_url || template.thumbnail} 
+                    alt={template.name}
+                    onError={() => {
+                      setFailedPreviews(prev => new Set(prev).add(template.id))
+                    }}
+                  />
                 )}
               </div>
             ) : (
