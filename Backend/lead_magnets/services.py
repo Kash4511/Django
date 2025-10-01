@@ -14,6 +14,8 @@ class APITemplateService:
     
     def _get_headers(self) -> Dict[str, str]:
         """Get headers for API requests"""
+        if not self.api_key:
+            raise ValueError("API key is not set")
         return {
             'X-API-KEY': self.api_key,
             'Content-Type': 'application/json'
