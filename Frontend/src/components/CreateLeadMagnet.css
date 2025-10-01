@@ -102,21 +102,9 @@
 
 .template-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
-}
-
-@media (max-width: 1200px) {
-  .template-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .template-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 .template-card {
@@ -141,25 +129,22 @@
 
 .template-thumbnail {
   width: 100%;
-  height: 300px;
+  height: 200px;
   background: #1a1a1a;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  position: relative;
 }
 
 .template-thumbnail img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  background: #ffffff;
+  object-fit: cover;
 }
 
 .template-thumbnail.placeholder {
   color: #555;
-  flex-direction: column;
 }
 
 .template-info {

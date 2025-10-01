@@ -18,7 +18,6 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
   const [selectedTemplate, setSelectedTemplate] = useState<PDFTemplate | null>(null)
   const [fetchingTemplates, setFetchingTemplates] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [failedPreviews, setFailedPreviews] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -45,11 +44,7 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (selectedTemplate) {
-      onSubmit(
-        selectedTemplate.id, 
-        selectedTemplate.name, 
-        selectedTemplate.preview_url || selectedTemplate.thumbnail
-      )
+      onSubmit(selectedTemplate.id, selectedTemplate.name, selectedTemplate.thumbnail)
     }
   }
 
@@ -104,44 +99,13 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            {(template.preview_url || template.thumbnail) ? (
+            {template.thumbnail ? (
               <div className="template-thumbnail">
-                {failedPreviews.has(template.id) ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#888' }}>
-                    <FileText size={48} />
-                    <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>PDF Preview</p>
-                    <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', opacity: 0.7 }}>{template.name}</p>
-                  </div>
-                ) : (template.preview_url && template.preview_url.toLowerCase().endsWith('.pdf')) ? (
-                  <img 
-                    src={`https://image.thum.io/get/width/400/crop/600/noanimate/${encodeURIComponent(template.preview_url)}`}
-                    alt={template.name}
-                    onError={() => {
-                      setFailedPreviews(prev => new Set(prev).add(template.id))
-                    }}
-                  />
-                ) : failedPreviews.has(template.id) ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#888' }}>
-                    <FileText size={48} />
-                    <p style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>Preview Unavailable</p>
-                    <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', opacity: 0.7 }}>{template.name}</p>
-                  </div>
-                ) : (
-                  <img 
-                    src={template.preview_url || template.thumbnail} 
-                    alt={template.name}
-                    onError={() => {
-                      setFailedPreviews(prev => new Set(prev).add(template.id))
-                    }}
-                  />
-                )}
+                <img src={template.thumbnail} alt={template.name} />
               </div>
             ) : (
               <div className="template-thumbnail placeholder">
                 <FileText size={48} />
-                <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#888' }}>
-                  Generating preview...
-                </p>
               </div>
             )}
             <div className="template-info">
