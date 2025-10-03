@@ -25,19 +25,7 @@ SECRET_KEY = 'django-insecure-4ju2n@$f9d0c=h)_g0lbb%k9&@rf(xa$d$g$&5ri$uf)*gev^4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = os.environ.get("REPLIT_DOMAINS", "localhost,127.0.0.1").split(',') + [
-    'localhost', 
-    '127.0.0.1',
-    '0.0.0.0',
-    os.environ.get('HOSTNAME', ''),
-    '*.replit.dev',
-    '.replit.dev'
-]
-# Remove empty strings
-ALLOWED_HOSTS = [host for host in ALLOWED_HOSTS if host]
-CSRF_TRUSTED_ORIGINS = [
-    "https://" + domain for domain in os.environ.get("REPLIT_DOMAINS", "").split(',')
-] if os.environ.get("REPLIT_DOMAINS") else []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Application definition
 
@@ -63,12 +51,8 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-# Only use clickjacking protection in deployments because the Development Web View uses
-# iframes and needs to be a cross origin.
-if ("REPLIT_DEPLOYMENT" in os.environ):
-    MIDDLEWARE.append('django.middleware.clickjacking.XFrameOptionsMiddleware')
 
 ROOT_URLCONF = 'django_project.urls'
 
@@ -170,14 +154,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://0ab169f4-4651-4b7b-b1d4-4fa37876b314-00-3nh6i484buitd.kirk.replit.dev:5000",
-    "https://0ab169f4-4651-4b7b-b1d4-4fa37876b314-00-3nh6i484buitd.kirk.replit.dev",
 ]
-
-if os.environ.get("REPLIT_DOMAINS"):
-    CORS_ALLOWED_ORIGINS.extend([
-        f"https://{domain}" for domain in os.environ["REPLIT_DOMAINS"].split(',')
-    ])
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False
