@@ -17,14 +17,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop('password_confirm')
-        user = User.objects.create_user(
-            email=validated_data['email'],
-            password=validated_data['password'],
-            name=validated_data['name'],
-            phone_number=validated_data.get('phone_number', '')
-        )
-        return user
+        password = validated_data.pop('password')
 
+        user = User(**validated_data)   # create instance without saving yet
+        user.set_password(password)     # hash the password
+        user.save()
+        return user
 class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
