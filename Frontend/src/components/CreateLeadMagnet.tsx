@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, Palette } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { dashboardApi } from '../lib/dashboardApi'
-import type { FirmProfile, LeadMagnetGeneration, CreateLeadMagnetRequest, TemplateSelectionRequest } from '../lib/dashboardApi'
+import type { FirmProfile, CreateLeadMagnetRequest, TemplateSelectionRequest } from '../lib/dashboardApi'
 import FirmProfileForm from './forms/FirmProfileForm'
 import LeadMagnetGenerationForm from './forms/LeadMagnetGenerationForm'
 import TemplateSelectionForm from './forms/TemplateSelectionForm'
 import './CreateLeadMagnet.css'
+import type { LeadMagnetGeneration } from '../lib/dashboardApi';
+
 
 interface CreateLeadMagnetProps {}
 
@@ -241,12 +243,13 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
               />
             )}
 
-            {currentStep === 'template-selection' && createdLeadMagnetId && (
-              <TemplateSelectionForm
-                onSubmit={handleTemplateSubmit}
-                loading={loading}
-              />
-            )}
+            {currentStep === 'template-selection' && (
+  <TemplateSelectionForm
+    onSubmit={handleTemplateSubmit}
+    loading={loading}
+  />
+)}
+
           </div>
         </main>
       </div>

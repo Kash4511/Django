@@ -12,6 +12,15 @@ export interface FirmProfile {
   branding_guidelines: string;
   logo?: File | null;
 }
+// Define type for Lead Magnet generation form
+export interface LeadMagnetGeneration {
+  main_topic: string;
+  lead_magnet_type: string;
+  desired_outcome: string;
+  target_audience: string;
+  tone_of_voice: string;
+  additional_instructions?: string;
+}
 
 // Define types for templates
 export interface PDFTemplate {
@@ -23,13 +32,14 @@ export interface PDFTemplate {
 }
 
 export interface CreateLeadMagnetRequest {
-  title: string;
+  main_topic: string;
+  lead_magnet_type: string;
+  desired_outcome: string;
   target_audience: string;
-  content_type: string;
-  topic: string;
-  tone: string;
+  tone_of_voice: string;
   additional_instructions?: string;
 }
+
 
 export interface TemplateSelectionRequest {
   lead_magnet_id: number;
@@ -64,7 +74,7 @@ export const dashboardApi = {
   // Templates
   getTemplates: async (): Promise<PDFTemplate[]> => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/templates/`, {
+      const response = await axios.get(`${API_BASE_URL}/lead-magnets/templates/`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('access_token')}`
         }
@@ -78,7 +88,7 @@ export const dashboardApi = {
   
   selectTemplate: async (request: TemplateSelectionRequest) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/select-template/`, request, {
+      const response = await axios.post(`${API_BASE_URL}/lead-magnets/select-template/`, request, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('access_token')}`,
           'Content-Type': 'application/json'
@@ -93,7 +103,7 @@ export const dashboardApi = {
   
   createLeadMagnet: async (data: CreateLeadMagnetRequest) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/create-lead-magnet/`, data, {
+      const response = await axios.post(`${API_BASE_URL}/lead-magnets/create-lead-magnet/`, data, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('access_token')}`,
           'Content-Type': 'application/json'
