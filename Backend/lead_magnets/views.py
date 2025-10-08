@@ -114,45 +114,55 @@ class CreateLeadMagnetView(APIView):
             status=status.HTTP_201_CREATED
         )
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status, permissions
+import traceback
+import os
+from django.conf import settings
+from .services import APITemplateService
+
 class ListTemplatesView(APIView):
-    """Get all available PDF templates from APITemplate.io"""
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get(self, request):
+        print("🟢 [ListTemplatesView] Fetching templates...")
+
+        template_service = APITemplateService()
+        templates = []
+        warning = None
+
         try:
-            template_service = APITemplateService()
             templates = template_service.list_templates()
-            
-            # Check if previews already exist, don't generate on the fly
-            for template in templates:
-                template_id = template['id']
-                preview_filename = f"{template_id}.jpg"
-                preview_path = os.path.join(settings.MEDIA_ROOT, 'template_previews', preview_filename)
-                
-                if os.path.exists(preview_path):
-                    template['preview_url'] = f"{settings.MEDIA_URL}template_previews/{preview_filename}"
-                else:
-                    template['preview_url'] = None
-            
-            return Response({
-                'success': True,
-                'templates': templates,
-                'count': len(templates)
-            })
-        except ValueError as e:
-            # API key not configured
-            return Response({
-                'success': False,
-                'error': 'API configuration error',
-                'details': str(e)
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            print(f"✅ [ListTemplatesView] Got {len(templates)} templates from API")
+
         except Exception as e:
-            # Network or API errors
-            return Response({
-                'success': False,
-                'error': 'Failed to fetch templates from APITemplate.io',
-                'details': str(e)
-            }, status=status.HTTP_502_BAD_GATEWAY)
+            warning = f"API fetch failed: {str(e)}"
+            print("❌ [ListTemplatesView] Error fetching templates:")
+            traceback.print_exc()
+
+            # Try fallback templates
+            try:
+                templates = template_service._fallback_templates()
+                print(f"⚠️ [ListTemplatesView] Using fallback templates ({len(templates)})")
+            except Exception as fallback_error:
+                print("🚨 [ListTemplatesView] Fallback templates also failed:")
+                traceback.print_exc()
+                templates = []
+
+        # Ensure we always return 200 OK
+        response_data = {
+            "success": True,
+            "templates": templates,
+            "count": len(templates),
+        }
+
+        if warning:
+            response_data["warning"] = warning
+
+        print("🔵 [ListTemplatesView] Final response:", response_data)
+        return Response(response_data, status=status.HTTP_200_OK)
+
 
 class SelectTemplateView(APIView):
     """Handle template selection for a lead magnet"""
