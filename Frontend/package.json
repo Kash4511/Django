@@ -4,14 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "start": "react-scripts start",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@react-three/drei": "^10.7.6",
-    "@react-three/fiber": "^9.3.0",
+    "@react-three/drei": "^9.56.26",
+    "@react-three/fiber": "^8.15.10",
     "@types/three": "^0.180.0",
     "axios": "^1.12.2",
     "framer-motion": "^12.23.19",

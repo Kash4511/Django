@@ -13,9 +13,8 @@ class APITemplateService:
     BASE_URL = "https://api.apitemplate.io/v1"
     
     def __init__(self):
-        self.api_key = os.environ.get('APITEMPLATE_API_KEY')
-        if not self.api_key:
-            raise ValueError("APITEMPLATE_API_KEY environment variable is not set")
+        # Use the provided API key directly
+        self.api_key = "9ea6MzkyMTY6MzY0MTM6UDdQblZlaUZkWmlaM2ZVUA="
     
     def _get_headers(self) -> Dict[str, str]:
         """Get headers for API requests"""
