@@ -117,42 +117,51 @@ class CreateLeadMagnetView(APIView):
 class ListTemplatesView(APIView):
     """Get all available PDF templates from APITemplate.io"""
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get(self, request):
         try:
             template_service = APITemplateService()
             templates = template_service.list_templates()
-            
-            # Check if previews already exist, don't generate on the fly
+
+            # Ensure preview folder exists
+            preview_dir = os.path.join(settings.MEDIA_ROOT, 'template_previews')
+            os.makedirs(preview_dir, exist_ok=True)
+
             for template in templates:
                 template_id = template['id']
                 preview_filename = f"{template_id}.jpg"
-                preview_path = os.path.join(settings.MEDIA_ROOT, 'template_previews', preview_filename)
-                
+                preview_path = os.path.join(preview_dir, preview_filename)
+
                 if os.path.exists(preview_path):
-                    template['preview_url'] = f"{settings.MEDIA_URL}template_previews/{preview_filename}"
+                    template['preview_url'] = request.build_absolute_uri(
+                        f"{settings.MEDIA_URL}template_previews/{preview_filename}"
+                    )
                 else:
-                    template['preview_url'] = None
-            
+                        # fallback to temp.jpg if specific preview is missing
+                        template['preview_url'] = request.build_absolute_uri(
+                            f"{settings.MEDIA_URL}template_previews/temp.jpg"
+                        )
+
             return Response({
                 'success': True,
                 'templates': templates,
                 'count': len(templates)
             })
+
         except ValueError as e:
-            # API key not configured
             return Response({
                 'success': False,
                 'error': 'API configuration error',
                 'details': str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         except Exception as e:
-            # Network or API errors
             return Response({
                 'success': False,
                 'error': 'Failed to fetch templates from APITemplate.io',
                 'details': str(e)
             }, status=status.HTTP_502_BAD_GATEWAY)
+
 
 class SelectTemplateView(APIView):
     """Handle template selection for a lead magnet"""
