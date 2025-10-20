@@ -1,159 +1,172 @@
 import os
-import requests
-import hashlib
-import io
-from typing import Dict, List, Optional
-from PIL import Image
-from pdf2image import convert_from_bytes
+import docraptor
+import json
 from django.conf import settings
+from django.template.loader import get_template
+from django.template import Context, Template
+from dotenv import load_dotenv
+from .perplexity import PerplexityClient
 
-class APITemplateService:
-    """Service to interact with APITemplate.io API"""
-    
-    BASE_URL = "https://api.apitemplate.io/v1"
+load_dotenv()
+
+class DocRaptorService:
+    """Service for handling PDF generation with DocRaptor"""
     
     def __init__(self):
-        # Use the provided API key directly
-        self.api_key = "9ea6MzkyMTY6MzY0MTM6UDdQblZlaUZkWmlaM2ZVUA="
+        self.api_key = os.getenv("DOCRAPTOR_API_KEY")
+        # Initialize client only if API key exists; allow non-PDF operations without key
+        self.client = None
+        if self.api_key:
+            self.client = docraptor.DocApi()
+            self.client.api_client.configuration.username = self.api_key
+        self.perplexity_client = PerplexityClient()
     
-    def _get_headers(self) -> Dict[str, str]:
-        """Get headers for API requests"""
-        if not self.api_key:
-            raise ValueError("API key is not set")
-        return {
-            'X-API-KEY': self.api_key,
-            'Content-Type': 'application/json'
-        }
+    def list_templates(self):
+        """Return available PDF templates - now using the single Template.html"""
+        return [
+            {
+                "id": "professional-guide",
+                "name": "Professional Guide Template",
+                "description": "AI-powered professional guide template with dynamic content generation",
+                "category": "Professional",
+                "thumbnail": "/media/template_previews/professional-guide.jpg",
+                "preview_url": "/media/template_previews/professional-guide.jpg",
+                "variables": {
+                    "primaryColor": {"type": "color", "default": "#8B4513", "label": "Primary Color"},
+                    "secondaryColor": {"type": "color", "default": "#D2691E", "label": "Secondary Color"},
+                    "accentColor": {"type": "color", "default": "#F4A460", "label": "Accent Color"},
+                    "companyName": {"type": "text", "default": "Your Company", "label": "Company Name"},
+                    "mainTitle": {"type": "text", "default": "PROFESSIONAL GUIDE", "label": "Main Title"}
+                }
+            }
+        ]
     
-    def list_templates(self) -> List[Dict]:
-        """
-        Fetch all available templates from APITemplate.io
+    def generate_pdf_with_ai_content(self, template_id, user_answers, firm_profile=None, output_filename=None):
+        """Generate PDF using AI-generated content based on user answers"""
+        if not output_filename:
+            company_name = (firm_profile or {}).get('firm_name', 'Document')
+            output_filename = f"{template_id}_{company_name.replace(' ', '_')}.pdf"
         
-        Returns:
-            List of template objects with id, name, and other metadata
-            
-        Raises:
-            requests.exceptions.RequestException: If API request fails
-        """
-        url = f"{self.BASE_URL}/list-templates"
-        response = requests.get(url, headers=self._get_headers())
-        response.raise_for_status()
-        
-        data = response.json()
-        
-        # APITemplate.io returns templates in different formats
-        # Handle both array and object responses
-        if isinstance(data, list):
-            return data
-        elif isinstance(data, dict) and 'templates' in data:
-            return data['templates']
-        else:
-            return []
-    
-    def get_template_by_id(self, template_id: str) -> Optional[Dict]:
-        """
-        Get a specific template by ID
-        
-        Args:
-            template_id: The template ID from APITemplate.io
-            
-        Returns:
-            Template object or None if not found
-        """
-        templates = self.list_templates()
-        for template in templates:
-            if template.get('id') == template_id:
-                return template
-        return None
-    
-    def create_pdf(self, template_id: str, data: Dict) -> Optional[Dict]:
-        """
-        Create a PDF using a template and data
-        
-        Args:
-            template_id: The template ID to use
-            data: Dictionary of data to populate the template
-            
-        Returns:
-            Response with PDF URL and metadata
-        """
         try:
-            url = f"{self.BASE_URL}/create"
-            payload = {
-                'template_id': template_id,
-                'data': data
+            # Require DocRaptor client for PDF generation
+            if not self.client:
+                raise ValueError("DocRaptor API key missing. Set DOCRAPTOR_API_KEY in environment to generate PDFs.")
+
+            # Generate AI content using Perplexity
+            ai_content = self.perplexity_client.generate_lead_magnet_json(user_answers, firm_profile or {})
+            
+            # Map AI content to template variables (aligned with Template.html)
+            template_variables = self.perplexity_client.map_to_template_vars(ai_content, firm_profile or {})
+            
+            # Get template HTML
+            template_html = self._get_template_html()
+            
+            # Replace variables in template
+            for key, value in template_variables.items():
+                placeholder = "{{" + key + "}}"
+                template_html = template_html.replace(placeholder, str(value))
+            
+            # Generate PDF with DocRaptor
+            response = self.client.create_doc({
+                "test": True,  # Set to False for production
+                "document_content": template_html,
+                "name": output_filename,
+                "document_type": "pdf",
+            })
+            
+            return {
+                "success": True,
+                "pdf_content": response,
+                "filename": output_filename,
+                "ai_content": ai_content,
+                "template_variables": template_variables
             }
-            
-            response = requests.post(url, json=payload, headers=self._get_headers())
-            response.raise_for_status()
-            
-            return response.json()
-            
-        except requests.exceptions.RequestException as e:
-            print(f"Error creating PDF: {str(e)}")
-            return None
-    
-    def generate_template_preview(self, template_id: str, template_name: str) -> Optional[str]:
-        """
-        Generate a preview image for a template by creating a sample PDF
-        
-        Args:
-            template_id: The template ID
-            template_name: The template name for placeholder data
-            
-        Returns:
-            URL to the preview image or None if generation fails
-        """
-        try:
-            # Create preview directory if it doesn't exist
-            preview_dir = os.path.join(settings.MEDIA_ROOT, 'template_previews')
-            os.makedirs(preview_dir, exist_ok=True)
-            
-            # Check if preview already exists
-            preview_filename = f"{template_id}.jpg"
-            preview_path = os.path.join(preview_dir, preview_filename)
-            
-            if os.path.exists(preview_path):
-                return f"/media/template_previews/{preview_filename}"
-            
-            # Generate sample PDF with placeholder data
-            sample_data = {
-                "title": template_name,
-                "subtitle": "Lead Magnet Preview",
-                "content": "This is a sample preview of your template",
-                "author": "Forma AI"
-            }
-            
-            # Create PDF
-            url = f"{self.BASE_URL}/create"
-            params = {
-                'template_id': template_id,
-                'export_type': 'file'  # Get binary data instead of URL
-            }
-            
-            response = requests.post(
-                url,
-                json=sample_data,
-                headers=self._get_headers(),
-                params=params
-            )
-            response.raise_for_status()
-            
-            # Convert PDF to image
-            pdf_bytes = response.content
-            images = convert_from_bytes(pdf_bytes, first_page=1, last_page=1, dpi=150)
-            
-            if images:
-                # Save first page as preview
-                image = images[0]
-                # Resize to thumbnail size
-                image.thumbnail((400, 600), Image.Resampling.LANCZOS)
-                image.save(preview_path, 'JPEG', quality=85)
-                
-                return f"/media/template_previews/{preview_filename}"
-            
-            return None
             
         except Exception as e:
-            print(f"Error generating preview for template {template_id}: {str(e)}")
-            return None
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
+    def generate_pdf(self, template_id, variables, output_filename=None):
+        """Generate PDF using provided variables (legacy method)"""
+        if not output_filename:
+            output_filename = f"{template_id}_{variables.get('companyName', 'document').replace(' ', '_')}.pdf"
+        
+        # Get template HTML
+        template_html = self._get_template_html()
+        
+        # Replace variables in template
+        for key, value in variables.items():
+            placeholder = "{{" + key + "}}"
+            template_html = template_html.replace(placeholder, str(value))
+        
+        try:
+            if not self.client:
+                raise ValueError("DocRaptor API key missing. Set DOCRAPTOR_API_KEY in environment to generate PDFs.")
+            # Generate PDF with DocRaptor
+            response = self.client.create_doc({
+                "test": True,  # Set to False for production
+                "document_content": template_html,
+                "name": output_filename,
+                "document_type": "pdf",
+            })
+            
+            return {
+                "success": True,
+                "pdf_content": response,
+                "filename": output_filename
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    def _get_template_html(self):
+        """Get the actual Template.html content"""
+        try:
+            # Load the Template.html file
+            template_path = os.path.join(settings.BASE_DIR, 'lead_magnets', 'templates', 'Template.html')
+            with open(template_path, 'r', encoding='utf-8') as file:
+                return file.read()
+        except FileNotFoundError:
+            # Fallback to a basic template if Template.html is not found
+            return """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    :root {
+                        --primary-color: {{primaryColor}};
+                        --secondary-color: {{secondaryColor}};
+                        --accent-color: {{accentColor}};
+                    }
+                    body { font-family: Arial, sans-serif; }
+                    .header { color: var(--primary-color); }
+                </style>
+            </head>
+            <body>
+                <h1 class="header">{{mainTitle}}</h1>
+                <h2>by {{companyName}}</h2>
+                <div class="content">
+                    {{customContent1}}
+                </div>
+            </body>
+            </html>
+            """
+    
+    def preview_template(self, template_id, variables=None):
+        """Generate a preview of the template with given variables"""
+        if not variables:
+            variables = {}
+        
+        template_html = self._get_template_html()
+        
+        # Replace variables for preview
+        for key, value in variables.items():
+            placeholder = "{{" + key + "}}"
+            template_html = template_html.replace(placeholder, str(value))
+        
+        return template_html

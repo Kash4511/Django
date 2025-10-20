@@ -1,18 +1,19 @@
 from django.urls import path
-from .views import (
-    DashboardStatsView, LeadMagnetListCreateView, LeadMagnetDetailView,
-    FirmProfileView, CreateLeadMagnetView, ListTemplatesView,
-    SelectTemplateView, FormaAIConversationView
-)
+from . import views
 
 urlpatterns = [
-    path('stats/', DashboardStatsView.as_view(), name='dashboard-stats'),
-    path('lead-magnets/', LeadMagnetListCreateView.as_view(), name='lead-magnet-list'),
-    path('lead-magnets/<int:pk>/', LeadMagnetDetailView.as_view(), name='lead-magnet-detail'),
-    path('firm-profile/', FirmProfileView.as_view(), name='firm-profile'),
-    path('create-lead-magnet/', CreateLeadMagnetView.as_view(), name='create-lead-magnet'),
-    path('lead-magnets/templates/', ListTemplatesView.as_view(), name='list-templates'),
-
-    path('select-template/', SelectTemplateView.as_view(), name='select-template'),
-    path('forma-ai/chat/', FormaAIConversationView.as_view(), name='forma-ai-chat'),
+    path('dashboard/stats/', views.DashboardStatsView.as_view(), name='dashboard-stats'),
+    path('lead-magnets/', views.LeadMagnetListCreateView.as_view(), name='lead-magnet-list-create'),
+    path('lead-magnets/<int:pk>/', views.LeadMagnetDetailView.as_view(), name='lead-magnet-detail'),
+    path('firm-profile/', views.FirmProfileView.as_view(), name='firm-profile'),
+    path('create-lead-magnet/', views.CreateLeadMagnetView.as_view(), name='create-lead-magnet'),
+    
+    # Template management
+    path('templates/', views.ListTemplatesView.as_view(), name='list-templates'),
+    path('select-template/', views.SelectTemplateView.as_view(), name='select-template'),
+    path('generate-pdf/', views.GeneratePDFView.as_view(), name='generate-pdf'),
+    path('preview-template/', views.PreviewTemplateView.as_view(), name='preview-template'),
+    
+    # AI Conversation
+    path('ai-conversation/', views.FormaAIConversationView.as_view(), name='ai-conversation'),
 ]

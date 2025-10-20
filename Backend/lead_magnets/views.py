@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from django.db.models import Count, Q
 from django.db import transaction
 from django.conf import settings
+from django.http import HttpResponse
 from .models import (
     LeadMagnet, Lead, Download, FirmProfile, LeadMagnetGeneration,
     FormaAIConversation, TemplateSelection
@@ -13,7 +14,7 @@ from .serializers import (
     LeadMagnetSerializer, LeadSerializer, DashboardStatsSerializer,
     FirmProfileSerializer, LeadMagnetGenerationSerializer, CreateLeadMagnetSerializer
 )
-from .services import APITemplateService
+from .services import DocRaptorService
 
 class DashboardStatsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -74,39 +75,59 @@ class FirmProfileView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         profile, created = FirmProfile.objects.get_or_create(user=self.request.user)
         return profile
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .models import LeadMagnet
+from .serializers import CreateLeadMagnetSerializer, LeadMagnetSerializer
+
 
 class CreateLeadMagnetView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    
-    @transaction.atomic
+
     def post(self, request):
-        serializer = CreateLeadMagnetSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        serializer = CreateLeadMagnetSerializer(data=request.data, context={"request": request})
+
+        if serializer.is_valid():
+            lead_magnet = serializer.save()
+            return Response(
+                LeadMagnetSerializer(lead_magnet).data,
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# class CreateLeadMagnetView(APIView):
+#     permission_classes = [permissions.IsAuthenticated]
+    
+#     @transaction.atomic
+#     def post(self, request):
+#         serializer = CreateLeadMagnetSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
         
-        user = request.user
-        data = serializer.validated_data
+#         user = request.user
+#         data = serializer.validated_data
         
-        # Update or create firm profile if provided
-        if 'firm_profile' in data:
-            profile, created = FirmProfile.objects.get_or_create(user=user)
-            firm_serializer = FirmProfileSerializer(profile, data=data['firm_profile'], partial=True)
-            if firm_serializer.is_valid():
-                firm_serializer.save()
+#         # Update or create firm profile if provided
+#         if 'firm_profile' in data:
+#             profile, created = FirmProfile.objects.get_or_create(user=user)
+#             firm_serializer = FirmProfileSerializer(profile, data=data['firm_profile'], partial=True)
+#             if firm_serializer.is_valid():
+#                 firm_serializer.save()
         
-        # Create the lead magnet
-        lead_magnet = LeadMagnet.objects.create(
-            title=data['title'],
-            description=data.get('description', ''),
-            owner=user,
-            status='in-progress'
-        )
+#         # Create the lead magnet
+#         lead_magnet = LeadMagnet.objects.create(
+#             title=data['title'],
+#             description=data.get('description', ''),
+#             owner=user,
+#             status='in-progress'
+#         )
         
-        # Create the generation data
-        generation_data = data['generation_data']
-        LeadMagnetGeneration.objects.create(
-            lead_magnet=lead_magnet,
-            **generation_data
-        )
+#         # Create the generation data
+#         generation_data = data['generation_data']
+#         LeadMagnetGeneration.objects.create(
+#             lead_magnet=lead_magnet,
+#             **generation_data
+#         )
         
         # Return the created lead magnet
         return Response(
@@ -115,32 +136,29 @@ class CreateLeadMagnetView(APIView):
         )
 
 class ListTemplatesView(APIView):
-    """Get all available PDF templates from APITemplate.io"""
+    """Get all available PDF templates from DocRaptor service"""
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         try:
-            template_service = APITemplateService()
+            template_service = DocRaptorService()
             templates = template_service.list_templates()
 
-            # Ensure preview folder exists
-            preview_dir = os.path.join(settings.MEDIA_ROOT, 'template_previews')
-            os.makedirs(preview_dir, exist_ok=True)
-
+            # Add preview URLs
             for template in templates:
                 template_id = template['id']
                 preview_filename = f"{template_id}.jpg"
-                preview_path = os.path.join(preview_dir, preview_filename)
+                preview_path = os.path.join(settings.MEDIA_ROOT, 'template_previews', preview_filename)
 
                 if os.path.exists(preview_path):
                     template['preview_url'] = request.build_absolute_uri(
                         f"{settings.MEDIA_URL}template_previews/{preview_filename}"
                     )
                 else:
-                        # fallback to temp.jpg if specific preview is missing
-                        template['preview_url'] = request.build_absolute_uri(
-                            f"{settings.MEDIA_URL}template_previews/temp.jpg"
-                        )
+                    # fallback to default preview
+                    template['preview_url'] = request.build_absolute_uri(
+                        f"{settings.MEDIA_URL}template_previews/default.jpg"
+                    )
 
             return Response({
                 'success': True,
@@ -158,10 +176,9 @@ class ListTemplatesView(APIView):
         except Exception as e:
             return Response({
                 'success': False,
-                'error': 'Failed to fetch templates from APITemplate.io',
+                'error': 'Failed to fetch templates',
                 'details': str(e)
             }, status=status.HTTP_502_BAD_GATEWAY)
-
 
 class SelectTemplateView(APIView):
     """Handle template selection for a lead magnet"""
@@ -216,6 +233,164 @@ class SelectTemplateView(APIView):
             return Response({
                 'error': 'Lead magnet not found'
             }, status=status.HTTP_404_NOT_FOUND)
+
+class GeneratePDFView(APIView):
+    """Generate PDF with selected template and AI-generated content"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request):
+        template_id = request.data.get('template_id')
+        lead_magnet_id = request.data.get('lead_magnet_id')
+        use_ai_content = request.data.get('use_ai_content', True)
+        variables = request.data.get('variables', {})
+        
+        if not template_id:
+            return Response({
+                'error': 'template_id is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            template_service = DocRaptorService()
+            
+            if use_ai_content and lead_magnet_id:
+                # Get lead magnet and its generation data
+                try:
+                    lead_magnet = LeadMagnet.objects.get(
+                        id=lead_magnet_id, 
+                        owner=request.user
+                    )
+                    
+                    # Get generation data and firm profile
+                    generation_data = LeadMagnetGeneration.objects.filter(
+                        lead_magnet=lead_magnet
+                    ).first()
+                    
+                    firm_profile = FirmProfile.objects.filter(
+                        user=request.user
+                    ).first()
+                    
+                    if generation_data:
+                        # Convert generation data to dictionary for AI processing
+                        user_answers = {
+                            'main_topic': generation_data.main_topic,
+                            'lead_magnet_type': generation_data.lead_magnet_type,
+                            'target_audience': generation_data.target_audience,
+                            'desired_outcome': generation_data.desired_outcome,
+                            'key_challenges': generation_data.key_challenges,
+                            'unique_value_proposition': generation_data.unique_value_proposition,
+                            'content_depth': generation_data.content_depth,
+                            'call_to_action': generation_data.call_to_action,
+                        }
+                        
+                        # Convert firm profile to dictionary
+                        firm_profile_dict = {}
+                        if firm_profile:
+                            firm_profile_dict = {
+                                'firm_name': firm_profile.firm_name,
+                                'work_email': firm_profile.work_email,
+                                'phone_number': firm_profile.phone_number,
+                                'firm_website': firm_profile.firm_website,
+                                'firm_size': firm_profile.firm_size,
+                                'industry_specialties': firm_profile.industry_specialties,
+                                'location': firm_profile.location,
+                            }
+                        
+                        # Generate PDF with AI content
+                        result = template_service.generate_pdf_with_ai_content(
+                            template_id, 
+                            user_answers, 
+                            firm_profile_dict
+                        )
+                    else:
+                        # Fallback to regular PDF generation
+                        result = template_service.generate_pdf(template_id, variables)
+                        
+                except LeadMagnet.DoesNotExist:
+                    return Response({
+                        'error': 'Lead magnet not found'
+                    }, status=status.HTTP_404_NOT_FOUND)
+            else:
+                # Generate PDF with provided variables
+                result = template_service.generate_pdf(template_id, variables)
+            
+            if result['success']:
+                # Update lead magnet status if provided
+                if lead_magnet_id:
+                    try:
+                        lead_magnet = LeadMagnet.objects.get(
+                            id=lead_magnet_id, 
+                            owner=request.user
+                        )
+                        lead_magnet.status = 'completed'
+                        
+                        # Store AI-generated content if available
+                        if 'ai_content' in result:
+                            # Create or update template selection with AI content
+                            template_selection, created = TemplateSelection.objects.get_or_create(
+                                lead_magnet=lead_magnet,
+                                defaults={
+                                    'user': request.user,
+                                    'template_id': template_id,
+                                    'template_name': 'Professional Guide Template',
+                                    'ai_generated_content': result['ai_content'],
+                                    'status': 'pdf-generated'
+                                }
+                            )
+                            if not created:
+                                template_selection.ai_generated_content = result['ai_content']
+                                template_selection.status = 'pdf-generated'
+                                template_selection.save()
+                        
+                        lead_magnet.save()
+                    except LeadMagnet.DoesNotExist:
+                        pass
+                
+                # Return PDF as downloadable response
+                response = HttpResponse(
+                    result['pdf_content'],
+                    content_type='application/pdf'
+                )
+                response['Content-Disposition'] = f'attachment; filename="{result["filename"]}"'
+                return response
+            else:
+                return Response({
+                    'error': 'PDF generation failed',
+                    'details': result['error']
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                
+        except Exception as e:
+            return Response({
+                'error': 'PDF generation failed',
+                'details': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class PreviewTemplateView(APIView):
+    """Preview template with custom variables"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request):
+        template_id = request.data.get('template_id')
+        variables = request.data.get('variables', {})
+        
+        if not template_id:
+            return Response({
+                'error': 'template_id is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            template_service = DocRaptorService()
+            preview_html = template_service.preview_template(template_id, variables)
+            
+            return Response({
+                'success': True,
+                'preview_html': preview_html
+            })
+            
+        except Exception as e:
+            return Response({
+                'error': 'Preview generation failed',
+                'details': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class FormaAIConversationView(APIView):
     """Handle Forma AI conversations"""

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, Palette } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { dashboardApi } from '../lib/dashboardApi'
-import type { FirmProfile, CreateLeadMagnetRequest, TemplateSelectionRequest } from '../lib/dashboardApi'
+import type { FirmProfile, TemplateSelectionRequest } from '../lib/dashboardApi'
 import FirmProfileForm from './forms/FirmProfileForm'
 import LeadMagnetGenerationForm from './forms/LeadMagnetGenerationForm'
 import TemplateSelectionForm from './forms/TemplateSelectionForm'
@@ -20,9 +20,11 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState<FormStep>('firm-profile')
   const [firmProfile, setFirmProfile] = useState<Partial<FirmProfile>>({})
-  const [capturedAnswers, setCapturedAnswers] = useState<LeadMagnetGeneration & { title?: string; description?: string }>({} as LeadMagnetGeneration)
+  const [capturedAnswers, setCapturedAnswers] = useState<LeadMagnetGeneration & { title?: string }>({} as LeadMagnetGeneration)
   const [loading, setLoading] = useState(false)
   const [hasExistingProfile, setHasExistingProfile] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const handleLogout = () => {
     logout()
@@ -30,6 +32,8 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
   }
 
   const handleBack = () => {
+    setErrorMessage(null)
+    setSuccessMessage(null)
     if (currentStep === 'template-selection') {
       setCurrentStep('lead-magnet-generation')
     } else if (currentStep === 'lead-magnet-generation') {
@@ -106,26 +110,61 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
     setCapturedAnswers({
       ...firmProfile,
       ...data,
-      title: humanizeTitle(data.main_topic, data.lead_magnet_type),
-      description: data.desired_outcome
+      title: humanizeTitle(data.main_topic, data.lead_magnet_type)
     })
     setCurrentStep('template-selection')
   }
 
+  const getFilenameFromHeaders = (headers: Record<string, any>) => {
+    const cd = headers['content-disposition'] || headers['Content-Disposition']
+    if (!cd) return 'lead-magnet.pdf'
+
+    // Try RFC 5987
+    const starMatch = cd.match(/filename\*=([^;]+)/i)
+    if (starMatch) {
+      let value = starMatch[1].trim()
+      if (value.startsWith("UTF-8''")) {
+        value = value.replace("UTF-8''", '')
+      }
+      try {
+        return decodeURIComponent(value.replace(/\"/g, ''))
+      } catch {
+        return value.replace(/\"/g, '')
+      }
+    }
+
+    // Fallback to simple filename="..."
+    const simpleMatch = cd.match(/filename="?([^";]+)"?/i)
+    if (simpleMatch) return simpleMatch[1]
+
+    return 'lead-magnet.pdf'
+  }
+
   const handleTemplateSubmit = async (templateId: string, templateName: string, templateThumbnail?: string) => {
     setLoading(true)
+    setErrorMessage(null)
+    setSuccessMessage(null)
     try {
       // Create the lead magnet with all captured data + template selection
-      const createRequest: CreateLeadMagnetRequest = {
-        title: capturedAnswers.title,
-        description: capturedAnswers.description,
-        firm_profile: hasExistingProfile ? undefined : firmProfile,
-        generation_data: capturedAnswers
+      const generationData: LeadMagnetGeneration = {
+        main_topic: capturedAnswers.main_topic,
+        lead_magnet_type: capturedAnswers.lead_magnet_type,
+        target_audience: capturedAnswers.target_audience,
+        audience_pain_points: capturedAnswers.audience_pain_points,
+        desired_outcome: capturedAnswers.desired_outcome,
+        call_to_action: capturedAnswers.call_to_action,
+        special_requests: capturedAnswers.special_requests,
       }
 
-      const leadMagnet = await dashboardApi.createLeadMagnetWithData(createRequest)
+      const leadMagnet = await dashboardApi.createLeadMagnetWithData({
+        title: capturedAnswers.title || 'Untitled Lead Magnet',
+        firm_profile: hasExistingProfile ? undefined : firmProfile,
+        generation_data: generationData,
+      })
+
+      setSuccessMessage('Lead magnet created. Saving template selection...')
       
-      // Now save template selection
+      // Now save template selection and generate PDF with AI content
       const selectionRequest: TemplateSelectionRequest = {
         lead_magnet_id: leadMagnet.id,
         template_id: templateId,
@@ -136,9 +175,40 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
       }
 
       await dashboardApi.selectTemplate(selectionRequest)
-      navigate('/dashboard')
+      setSuccessMessage('Template selected. Generating PDF with AI...')
+      
+      // Generate PDF with AI content using the new endpoint
+      try {
+        const pdfResponse = await dashboardApi.generatePDFWithAI({
+          template_id: templateId,
+          lead_magnet_id: leadMagnet.id,
+          use_ai_content: true
+        })
+        
+        // Attempt to trigger download
+        const filename = getFilenameFromHeaders(pdfResponse.headers)
+        const blob = new Blob([pdfResponse.data], { type: 'application/pdf' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename || 'lead-magnet.pdf'
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        window.URL.revokeObjectURL(url)
+        
+        setSuccessMessage('PDF generated. Download should start automatically.')
+        navigate('/dashboard')
+      } catch (pdfError) {
+        console.error('🔴 PDF generation failed:', pdfError)
+        setErrorMessage('PDF generation failed. You can retry from dashboard.')
+        // Still navigate to dashboard even if PDF generation fails
+        navigate('/dashboard')
+      }
+      
     } catch (err) {
       console.error('Failed to create lead magnet with template:', err)
+      setErrorMessage('Failed to create lead magnet. Please review inputs and try again.')
     } finally {
       setLoading(false)
     }
@@ -225,6 +295,13 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
                 3. Choose Template
               </div>
             </div>
+
+            {errorMessage && (
+              <div className="status-message error" style={{ marginTop: '8px', color: '#b00020' }}>{errorMessage}</div>
+            )}
+            {successMessage && (
+              <div className="status-message success" style={{ marginTop: '8px', color: '#0b7a0b' }}>{successMessage}</div>
+            )}
           </div>
 
           <div className="form-container">
