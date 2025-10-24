@@ -17,6 +17,15 @@ from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load environment variables from .env near manage.py
+try:
+    from dotenv import load_dotenv
+    load_dotenv(BASE_DIR / '.env')
+    print("🔑 DEBUG: DocRaptor Key:", os.getenv('DOCRAPTOR_API_KEY'))
+    print("🔑 DEBUG: Key exists:", bool(os.getenv('DOCRAPTOR_API_KEY')))
+except Exception as e:
+    print(f"⚠️ DEBUG: dotenv load failed: {e}")
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 

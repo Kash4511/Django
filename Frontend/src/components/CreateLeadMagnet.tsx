@@ -178,27 +178,21 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
       setSuccessMessage('Template selected. Generating PDF with AI...')
       
       // Generate PDF with AI content using the new endpoint
+      // Pass the user's answers to the AI content generation process
       try {
         const pdfResponse = await dashboardApi.generatePDFWithAI({
           template_id: templateId,
           lead_magnet_id: leadMagnet.id,
-          use_ai_content: true
+          use_ai_content: true,
+          user_answers: capturedAnswers // Pass user answers to AI content generation
         })
         
-        // Attempt to trigger download
-        const filename = getFilenameFromHeaders(pdfResponse.headers)
-        const blob = new Blob([pdfResponse.data], { type: 'application/pdf' })
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = filename || 'lead-magnet.pdf'
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-        window.URL.revokeObjectURL(url)
-        
-        setSuccessMessage('PDF generated. Download should start automatically.')
-        navigate('/dashboard')
+        // Remove duplicate manual download; dashboardApi already triggers download
+        setSuccessMessage('PDF generated. Your download should start automatically.')
+        // Auto-navigate shortly after triggering download to avoid interrupting it
+        setTimeout(() => {
+          navigate('/dashboard')
+        }, 1200)
       } catch (pdfError) {
         console.error('🔴 PDF generation failed:', pdfError)
         setErrorMessage('PDF generation failed. You can retry from dashboard.')
@@ -206,9 +200,10 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
         navigate('/dashboard')
       }
       
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to create lead magnet with template:', err)
-      setErrorMessage('Failed to create lead magnet. Please review inputs and try again.')
+      const msg = err?.message ? err.message : 'Failed to create lead magnet. Please review inputs and try again.'
+      setErrorMessage(msg)
     } finally {
       setLoading(false)
     }

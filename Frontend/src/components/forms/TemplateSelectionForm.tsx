@@ -41,6 +41,16 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
     setSelectedTemplate(template)
   }
 
+  const [elapsed, setElapsed] = useState(0)
+  useEffect(() => {
+    let timer: any
+    if (loading) {
+      setElapsed(0)
+      timer = setInterval(() => setElapsed((s) => s + 1), 1000)
+    }
+    return () => timer && clearInterval(timer)
+  }, [loading])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (selectedTemplate) {
@@ -128,13 +138,23 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
           {loading ? (
             <>
               <Loader2 className="spinner" size={18} />
-              Processing...
+              Processing... ({elapsed}s)
             </>
           ) : (
             'Continue'
           )}
         </button>
       </div>
+
+      {loading && (
+        <div className="template-loading-overlay">
+          <div className="overlay-content">
+            <Loader2 className="spinner" size={32} />
+            <p>Creating lead magnet… this can take up to 30s.</p>
+            <p>Elapsed: {elapsed}s</p>
+          </div>
+        </div>
+      )}
     </form>
   )
 }

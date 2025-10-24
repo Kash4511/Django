@@ -67,6 +67,14 @@ const handleApiError = (error: any, context: string) => {
       `Details: ${JSON.stringify(error.response.data, null, 2)}`
     );
   } else if (error.request) {
+    if (error.code === 'ECONNABORTED') {
+      console.error(`${context} - Timeout after ${error.config?.timeout}ms`);
+      throw new Error(`${context} failed: Request timed out after ${error.config?.timeout || 30000}ms. The server may still be processing. Please wait a moment and retry.`);
+    }
+    if (typeof navigator !== 'undefined' && navigator && navigator.onLine === false) {
+      console.error(`${context} - Offline: Browser appears offline`);
+      throw new Error(`${context} failed: You appear to be offline. Check your network connection.`);
+    }
     console.error(`${context} - No Response:`, error.request);
     throw new Error(`${context} failed: No response from server`);
   } else {
@@ -218,6 +226,31 @@ export const dashboardApi = {
     }
   },
 
+  // Add missing function used by CreateLeadMagnet.tsx
+  createLeadMagnetWithData: async (data: { 
+    title: string; 
+    description?: string; 
+    firm_profile?: number | Partial<FirmProfile>; 
+    generation_data: LeadMagnetGeneration; 
+  }): Promise<any> => {
+    try {
+      console.log('🚀 Creating lead magnet with data:', JSON.stringify(data, null, 2));
+      
+      const response = await axios.post(`${API_BASE_URL}/create-lead-magnet/`, data, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 30000
+      });
+      
+      console.log('✅ Lead magnet created successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      handleApiError(error, 'Creating lead magnet with data');
+    }
+  },
+
   // Firm profile
   getFirmProfile: async (): Promise<any> => {
     try {
@@ -259,9 +292,14 @@ export const dashboardApi = {
   },
 
   // Lead magnets - THIS GENERATES THE PDF
-  generatePDFWithAI: async (request: { template_id: string; lead_magnet_id: number; use_ai_content: boolean }): Promise<any> => {
+  generatePDFWithAI: async (request: { 
+    template_id: string; 
+    lead_magnet_id: number; 
+    use_ai_content: boolean;
+    user_answers?: any; // Add user_answers parameter
+  }): Promise<any> => {
     try {
-      console.log('🔄 Generating PDF...', request);
+      console.log('🔄 Generating PDF with user answers...', request);
       
       const response = await axios.post(`${API_BASE_URL}/generate-pdf/`, request, {
         headers: {
@@ -378,6 +416,20 @@ export const dashboardApi = {
     } catch (error) {
       console.error('❌ Workflow failed:', error);
       throw error;
+    }
+  },
+
+  // Delete lead magnet
+  deleteLeadMagnet: async (id: number): Promise<any> => {
+    try {
+      const response = await axios.delete(`${API_BASE_URL}/lead-magnets/${id}/`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      handleApiError(error, `Deleting lead magnet ${id}`);
     }
   }
 };

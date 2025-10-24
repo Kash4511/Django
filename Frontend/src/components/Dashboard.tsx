@@ -298,16 +298,14 @@ const Dashboard: React.FC<DashboardProps> = () => {
                            project.status === 'completed' ? 'Completed' : 'Draft'}
                         </span>
                       </div>
-                      {project.status === 'in-progress' && (
-                        <button 
-                          className="delete-btn"
-                          onClick={() => handleDeleteLeadMagnet(project.id, project.title)}
-                          disabled={deletingId === project.id}
-                          title="Delete lead magnet"
-                        >
-                          {deletingId === project.id ? '...' : <Trash2 size={18} />}
-                        </button>
-                      )}
+                      <button 
+                        className="delete-btn"
+                        onClick={() => handleDeleteLeadMagnet(project.id, project.title)}
+                        disabled={deletingId === project.id}
+                        title="Delete lead magnet"
+                      >
+                        {deletingId === project.id ? '...' : <Trash2 size={18} />}
+                      </button>
                     </div>
                     
                     <p className="project-description">
