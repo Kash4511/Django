@@ -533,7 +533,7 @@ class PerplexityClient:
             "contactTitle": truncate_title(contact.get("title", "Get in Touch")),
             "contactDescription": truncate_content(contact.get("description", "")),
             "differentiatorTitle": truncate_title(contact.get("differentiator_title", f"Why Choose {company_name or 'Us'}")),
-            "differentiator": truncate_content(contact.get("differentiator", "")),
+            "differentiator": truncate_subcontent(contact.get("differentiator", "")),
         }
 
         # Debug mapping summary
