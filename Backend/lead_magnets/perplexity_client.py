@@ -128,12 +128,20 @@ class PerplexityClient:
         desired_outcome = (user_answers.get('desired_outcome') or '').strip()
         audience_pain_points = user_answers.get('audience_pain_points') or []
         call_to_action = (user_answers.get('call_to_action') or '').strip()
+        industry = (user_answers.get('industry') or '').strip()
+
+        # AI customization: tone, section count, and colors based on industry
+        if industry == "Commercial":
+            prompt_style = "Use a sleek, modern color palette and emphasize adaptive reuse."
+        else:
+            prompt_style = "Use natural tones and focus on sustainable materials."
 
         # Compose a strict instruction. Model must output ONLY JSON with the exact schema.
         prompt = (
             "You are a senior content strategist. Generate a comprehensive, professional lead magnet in JSON. "
             "Follow ALL requirements. Output MUST be valid JSON ONLY (no Markdown, no prose). "
             "Do not include any test or placeholder text. Use the inputs exactly.\n\n"
+            "Style Instructions: " + prompt_style + "\n\n" +
             "Inputs:\n" +
             json.dumps({
                 "firm_profile": {
@@ -153,6 +161,7 @@ class PerplexityClient:
                     "desired_outcome": desired_outcome,
                     "audience_pain_points": audience_pain_points,
                     "call_to_action": call_to_action,
+                    "industry": industry,
                 }
             }, ensure_ascii=False) + "\n\n" +
             "Output Schema (keys must match EXACTLY):\n" +
@@ -325,10 +334,16 @@ class PerplexityClient:
             # Always cut at word boundaries to avoid mid-word truncation
             last_space = truncated.rfind(' ')
             if last_space > 0:  # Ensure we found a space
-                return truncated[:last_space].rstrip() + "..."
+                # Try to complete by expanding to the next sentence end within a reasonable buffer
+                next_zone = text[max_chars:]
+                m = re.search(r"[.!?]", next_zone)
+                if m:
+                    return text[:max_chars + m.start() + 1].strip()
+                # Otherwise, end cleanly at word boundary without ellipsis
+                return truncated[:last_space].rstrip()
                 
-            # Absolute fallback (should rarely happen)
-            return truncated.rstrip() + "..."
+            # Absolute fallback: no ellipsis to avoid abrupt stops
+            return truncated.rstrip()
 
         def truncate_title(text: str) -> str:
             """Limit title length"""
@@ -344,7 +359,7 @@ class PerplexityClient:
 
         def truncate_description(text: str) -> str:
             """Limit description to 1-2 lines (about 80 chars)"""
-            return truncate_text(text, 80)
+            return truncate_text(text, 120)
 
         def clean_subtitle(text: str) -> str:
             """Remove stray dots or punctuation-only subtitles."""

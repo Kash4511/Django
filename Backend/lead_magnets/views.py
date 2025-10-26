@@ -16,6 +16,7 @@ from .serializers import (
 )
 from .services import DocRaptorService
 from .perplexity_client import PerplexityClient
+from .services import render_template
 
 class DashboardStatsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -523,3 +524,43 @@ class FormaAIConversationView(APIView):
             'response': ai_response,
             'messages': conversation.messages
         })
+
+class GenerateDocumentPreviewView(APIView):
+    """Generate dynamic HTML preview using AI JSON and Jinja2 without fallbacks"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            user_answers = request.data.get('user_answers')
+            firm_profile = request.data.get('firm_profile')
+            template_id = request.data.get('template_id', 'modern-guide')
+
+            if not isinstance(user_answers, dict) or not isinstance(firm_profile, dict):
+                return Response({'error': 'user_answers and firm_profile must be provided as objects'}, status=status.HTTP_400_BAD_REQUEST)
+
+            ai_client = PerplexityClient()
+            ai_data = ai_client.generate_lead_magnet_json(user_answers=user_answers, firm_profile=firm_profile)
+            template_vars = ai_client.map_to_template_vars(ai_data, firm_profile)
+
+            # Load template HTML
+            templates_dir = os.path.join(settings.BASE_DIR, 'lead_magnets', 'templates')
+            template_path = os.path.join(templates_dir, 'Template.html')
+            with open(template_path, 'r', encoding='utf-8') as f:
+                template_html = f.read()
+
+            final_html = render_template(template_html, template_vars)
+
+            # Optionally save preview HTML alongside existing preview method
+            service = DocRaptorService()
+            preview_path = service._save_preview_html(template_id, final_html)
+
+            return Response({
+                'success': True,
+                'preview_html': final_html,
+                'preview_path': preview_path
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            import traceback
+            print(f"❌ GenerateDocumentPreviewView error: {e}")
+            print(traceback.format_exc())
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

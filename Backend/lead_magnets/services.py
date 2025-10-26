@@ -3,6 +3,7 @@ import re
 import requests
 from typing import Dict, Any, List
 from django.conf import settings
+from jinja2 import Template
 
 
 class DocRaptorService:
@@ -50,6 +51,8 @@ class DocRaptorService:
         print(f"🧪 DEBUG: Rendered HTML sample: {snippet}")
         print(f"🧪 DEBUG: Rendered HTML length: {len(rendered_html)}")
 
+        # Clean empty bullets, boxes, quotes
+        rendered_html = clean_rendered_html(rendered_html)
         return rendered_html
 
     def _save_preview_html(self, template_id: str, rendered_html: str) -> str:
@@ -142,3 +145,37 @@ class DocRaptorService:
         html = self.render_template_with_vars(template_id, variables)
         self._save_preview_html(template_id, html)
         return html
+
+# --- Jinja2 Rendering ---
+
+def clean_rendered_html(html: str) -> str:
+    """Remove empty list items, content boxes without text, empty quotes, and stray empty paragraphs."""
+    if not html:
+        return html
+    cleaned = html
+    # Remove empty <li>
+    cleaned = re.sub(r"<li>\s*</li>", "", cleaned)
+    # Remove empty paragraphs
+    cleaned = re.sub(r"<p>\s*</p>", "", cleaned)
+    # Remove content-box blocks where both h3 and p are empty
+    def _drop_empty_box(m):
+        h3 = re.sub(r"<.*?>", "", m.group(1)).strip()
+        p = re.sub(r"<.*?>", "", m.group(2)).strip()
+        return "" if not h3 and not p else m.group(0)
+    cleaned = re.sub(r"<div class=\"content-box[^\"]*\">[\s\S]*?<h3>(.*?)</h3>[\s\S]*?<p>(.*?)</p>[\s\S]*?</div>", _drop_empty_box, cleaned)
+    # Remove blockquotes with no alphanumeric content
+    def _drop_empty_quote(m):
+        inner = re.sub(r"<.*?>", "", m.group(0))
+        normalized = re.sub(r"[\s\"“”‘’—\-•]+", "", inner)
+        return "" if not re.search(r"[A-Za-z0-9]", normalized) else m.group(0)
+    cleaned = re.sub(r"<blockquote>[\s\S]*?</blockquote>", _drop_empty_quote, cleaned)
+    return cleaned
+
+def render_template(template_html: str, ai_data: Dict[str, Any]) -> str:
+    """
+    Fills Template.html with AI-generated data dynamically using Jinja2.
+    Expects ai_data keys to match placeholders in the HTML.
+    """
+    template = Template(template_html)
+    filled_html = template.render(**ai_data)
+    return clean_rendered_html(filled_html)
