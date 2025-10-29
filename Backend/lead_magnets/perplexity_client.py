@@ -1,17 +1,30 @@
 import os
+from pathlib import Path
 import json
 import requests
 import re
 from typing import Dict, Any, Optional, List
 from datetime import datetime
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
 
 
 class PerplexityClient:
     """Client for interacting with Perplexity AI API for lead magnet content generation"""
     
     def __init__(self):
+        # Ensure .env is loaded in server context
+        if load_dotenv:
+            env_path = Path(__file__).resolve().parents[1] / '.env'
+            try:
+                load_dotenv(env_path)
+            except Exception:
+                pass
         self.api_key = os.getenv('PERPLEXITY_API_KEY')
         self.base_url = "https://api.perplexity.ai/chat/completions"
+        print(f"DEBUG: PerplexityClient initialized; key present: {bool(self.api_key)}")
         
     def generate_lead_magnet_json(self, user_answers: Dict[str, Any], firm_profile: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -22,52 +35,120 @@ class PerplexityClient:
             print("❌ PERPLEXITY_API_KEY missing")
             raise Exception("PERPLEXITY_API_KEY is not configured; cannot generate AI content")
         
-        try:
-            print("Generating AI content...")
-            response = requests.post(
-                self.base_url,
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": "sonar-pro",
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": "You are an expert content creator specializing in professional lead magnets. Generate comprehensive, valuable content in strict JSON format. Your response must be valid JSON only, no other text."
-                        },
-                        {
-                            "role": "user",
-                            "content": self._create_content_prompt(user_answers, firm_profile)
-                        }
-                    ],
-                    "max_tokens": 4000,
-                    "temperature": 0.7
-                },
-                timeout=25
-            )
-            print(f"Perplexity response status: {response.status_code}")
+        # Retry logic for API calls with fallback model
+        max_retries = 2
+        retry_count = 0
+        models_to_try = ["sonar-pro", "sonar"]  # Fallback to simpler model if needed
+        
+        while retry_count <= max_retries:
+            # Use fallback model on final retry
+            model_to_use = models_to_try[1] if retry_count == max_retries else models_to_try[0]
             
-            if response.status_code != 200:
-                print(f"❌ Perplexity API error: {response.status_code} - {response.text}")
-                raise Exception(f"Perplexity API error: {response.status_code} - {response.text}")
-            
-            result = response.json()
-            message_content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
             try:
-                content = json.loads(message_content)
-                return content
-            except json.JSONDecodeError:
-                print("❌ Failed to parse JSON from Perplexity response")
-                raise Exception("Invalid JSON returned from Perplexity API")
+                if retry_count > 0:
+                    print(f"🔄 Retrying AI content generation (attempt {retry_count + 1}/{max_retries + 1}) with model: {model_to_use}...")
+                else:
+                    print(f"Generating AI content with model: {model_to_use}...")
                 
-        except requests.exceptions.Timeout:
-            print("❌ Perplexity API timeout after 25s")
-            raise Exception("Perplexity API timeout after 25 seconds")
-        except Exception as e:
-            print(f"❌ Error calling Perplexity API: {str(e)}")
-            raise
+                response = requests.post(
+                    self.base_url,
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    json={
+                        "model": model_to_use,
+                        "messages": [
+                            {
+                                "role": "system",
+                                "content": "You are an expert content creator specializing in professional lead magnets. Generate comprehensive, valuable content in strict JSON format. Your response must be valid JSON only, no other text."
+                            },
+                            {
+                                "role": "user",
+                                "content": self._create_content_prompt(user_answers, firm_profile)
+                            }
+                        ],
+                        "max_tokens": 4000,
+                        "temperature": 0.7
+                    },
+                    timeout=60  # Increased timeout to 60 seconds
+                )
+                
+                # If we get here, the request succeeded, break out of retry loop
+                break
+                
+            except requests.exceptions.Timeout:
+                retry_count += 1
+                if retry_count > max_retries:
+                    print("❌ Perplexity API timeout after multiple attempts")
+                    raise Exception("Perplexity API timeout after multiple attempts (60s each)")
+                else:
+                    print(f"⚠️ API timeout on attempt {retry_count}, retrying...")
+                    continue
+            except Exception as e:
+                # For non-timeout errors, don't retry
+                print(f"❌ Error calling Perplexity API: {str(e)}")
+                raise
+        # Handle response after successful API call
+        print(f"Perplexity response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"❌ Perplexity API error: {response.status_code} - {response.text}")
+            raise Exception(f"Perplexity API error: {response.status_code} - {response.text}")
+        
+        result = response.json()
+        message_content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
+        
+        # Handle markdown-wrapped JSON (```json ... ```)
+        json_content = self._extract_json_from_markdown(message_content)
+        
+        try:
+            content = json.loads(json_content)
+            return content
+        except json.JSONDecodeError as e:
+            print(f"❌ Failed to parse JSON from Perplexity response: {e}")
+            print(f"Raw content: {repr(message_content)}")
+            print(f"Extracted JSON: {repr(json_content)}")
+            raise Exception("Invalid JSON returned from Perplexity API")
+
+    def _extract_json_from_markdown(self, content: str) -> str:
+        """
+        Extract JSON from markdown code blocks.
+        Handles formats like:
+        ```json
+        { ... }
+        ```
+        or just plain JSON
+        """
+        # Remove leading/trailing whitespace
+        content = content.strip()
+        
+        # Check if content is wrapped in markdown code blocks
+        if content.startswith('```'):
+            # Find the start and end of the code block
+            lines = content.split('\n')
+            start_idx = 0
+            end_idx = len(lines)
+            
+            # Find the first line that starts with ```
+            for i, line in enumerate(lines):
+                if line.strip().startswith('```'):
+                    start_idx = i + 1
+                    break
+            
+            # Find the last line that starts with ```
+            for i in range(len(lines) - 1, -1, -1):
+                if lines[i].strip().startswith('```'):
+                    end_idx = i
+                    break
+            
+            # Extract content between code blocks
+            json_lines = lines[start_idx:end_idx]
+            return '\n'.join(json_lines)
+        
+        # If not wrapped in code blocks, return as-is
+        return content
 
     def debug_ai_content(self, ai_content: Dict[str, Any]):
         """Debug function to see what the AI actually returned"""

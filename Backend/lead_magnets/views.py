@@ -375,16 +375,40 @@ class GeneratePDFView(APIView):
                         ai_client.debug_ai_content(ai_content)
                         print("ℹ️ Using existing AI content from template selection")
                     else:
-                        ai_content = {}
-                        print("⚠️ No AI content available; proceeding with empty content")
+                        print("❌ No AI content available; cannot proceed")
+                        return Response({'error': 'AI content not available'}, status=status.HTTP_400_BAD_REQUEST)
                 except Exception as e:
                     import traceback
                     print(f"❌ AI content generation failed: {str(e)}")
                     print(traceback.format_exc())
-                    ai_content = {}
+                    return Response({'error': 'AI content generation failed', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    
+                # Validate AI JSON schema before mapping
+                if not isinstance(ai_content, dict) or 'cover' not in ai_content or not ai_content.get('sections'):
+                    keys = list(ai_content.keys()) if isinstance(ai_content, dict) else []
+                    print(f"❌ AI JSON missing expected keys: {keys}")
+                    return Response({'error': "AI content invalid — missing 'cover' or 'sections'"}, status=status.HTTP_400_BAD_REQUEST)
                 
                 # Map AI content to template variables and force firm info fallbacks
                 template_vars = ai_client.map_to_template_vars(ai_content, firm_profile)
+                
+                # Ensure sections from ai_content are added to template_vars if present
+                if 'sections' in ai_content and isinstance(ai_content['sections'], list) and len(ai_content['sections']) > 0:
+                    print(f"✅ Adding {len(ai_content['sections'])} sections from ai_content to template_vars")
+                    template_vars['sections'] = ai_content['sections']
+                
+                # Check for flattened template variables that are actually used in the template
+                flattened_keys_present = False
+                flattened_sections_count = 0
+                for i in range(1, 10):  # Check for flattened variables (increased range to 10)
+                    if f'customTitle{i}' in template_vars and template_vars[f'customTitle{i}'] and f'customContent{i}' in template_vars and template_vars[f'customContent{i}']:
+                        flattened_keys_present = True
+                        flattened_sections_count += 1
+                        print(f"✅ Found populated flattened variables for section {i}: {template_vars[f'customTitle{i}']}")
+                
+                if flattened_keys_present:
+                    print(f"✅ Found {flattened_sections_count} populated flattened sections in template_vars")
+                
                 # Ensure cover/contact never empty
                 template_vars['companyName'] = template_vars.get('companyName') or firm_profile.get('firm_name', 'Your Company')
                 template_vars['companySubtitle'] = template_vars.get('companySubtitle') or firm_profile.get('tagline', '')
@@ -392,10 +416,164 @@ class GeneratePDFView(APIView):
                 template_vars['phoneNumber'] = template_vars.get('phoneNumber') or firm_profile.get('phone_number', '')
                 template_vars['website'] = template_vars.get('website') or firm_profile.get('firm_website', '')
                 template_vars['documentSubtitle'] = template_vars.get('documentSubtitle') or firm_profile.get('tagline', '')
+                
+                # If mainTitle is missing but we have a flattened title, use it
+                if 'mainTitle' not in template_vars or not template_vars['mainTitle']:
+                    for i in range(1, 10):
+                        if f'customTitle{i}' in template_vars and template_vars[f'customTitle{i}']:
+                            template_vars['mainTitle'] = template_vars[f'customTitle{i}'].upper()
+                            print(f"✅ Set mainTitle from customTitle{i}: {template_vars['mainTitle']}")
+                            break
+                
                 non_empty = {k: v for k, v in template_vars.items() if str(v).strip()}
                 missing_keys = [k for k, v in template_vars.items() if not str(v).strip()]
                 print(f"✅ Template Variables Mapped: {len(non_empty)} non-empty, {len(missing_keys)} missing")
-                result = template_service.generate_pdf_with_ai_content(template_id, template_vars)
+                print(f"🔍 Template vars keys: {list(template_vars.keys())}")
+                
+                # Debug key template variables
+                debug_keys = ['mainTitle', 'companyName', 'sections', 'accentColor', 'primaryColor']
+                for key in debug_keys:
+                    if key in template_vars:
+                        value = template_vars[key]
+                        if isinstance(value, dict) or isinstance(value, list):
+                            print(f"🔍 {key}: {type(value)} with {len(value)} items")
+                        else:
+                            print(f"🔍 {key}: {value}")
+                    else:
+                        print(f"❌ Missing key template variable: {key}")
+                
+                # Validate only keys actually required by the template
+                required_keys = ['mainTitle', 'companyName']
+                missing_required = [key for key in required_keys if key not in template_vars or not template_vars[key]]
+                
+                # Enhanced logging for content validation
+                print(f"🔍 Content validation - Required keys: {required_keys}")
+                print(f"🔍 Content validation - Missing keys: {missing_required}")
+                
+                # Flag to track if we've successfully recovered content
+                content_recovered = False
+                
+                if missing_required:
+                    print(f"⚠️ Missing required content for PDF generation: {missing_required}")
+                    print(f"🔄 Attempting content recovery from AI response...")
+                    print("="*50)
+                    print("📋 CONTENT RECOVERY PROCESS STARTED")
+                    print("="*50)
+                    
+                    # Attempt to recover missing content from AI content if possible
+                    if 'mainTitle' in missing_required and ai_content:
+                        # Try multiple paths to find a title in the AI content
+                        print(f"🔍 Searching for mainTitle in AI content structure...")
+                        if 'cover' in ai_content and 'title' in ai_content['cover']:
+                            template_vars['mainTitle'] = ai_content['cover']['title']
+                            content_recovered = True
+                            print(f"✅ Recovered mainTitle from AI content cover: {template_vars['mainTitle']}")
+                        elif 'title' in ai_content:
+                            template_vars['mainTitle'] = ai_content['title']
+                            content_recovered = True
+                            print(f"✅ Recovered mainTitle from AI content root: {template_vars['mainTitle']}")
+                        # If still missing after checks, leave as missing to fail fast
+                    
+                    if 'companyName' in missing_required:
+                        # Try to get company name from firm profile
+                        if firm_profile and 'firm_name' in firm_profile and firm_profile['firm_name']:
+                            template_vars['companyName'] = firm_profile['firm_name']
+                            content_recovered = True
+                            print(f"✅ Recovered companyName from firm profile: {template_vars['companyName']}")
+                        # Do not create fallback company name; fail fast if absent
+                    
+                    # Re-check missing required keys after recovery attempts
+                    missing_required = [key for key in required_keys if key not in template_vars or not template_vars[key]]
+                    
+                    if content_recovered:
+                        print("✅ Successfully recovered missing content")
+                    else:
+                        print("⚠️ Failed to recover missing content")
+                    
+                    print("="*50)
+                    print("📋 CONTENT RECOVERY PROCESS COMPLETED")
+                    print("="*50)
+                    
+                    # Additional recovery paths for mainTitle
+                    if 'mainTitle' in missing_required and ai_content:
+                        if 'style' in ai_content and 'title' in ai_content['style']:
+                            template_vars['mainTitle'] = ai_content['style']['title']
+                            content_recovered = True
+                            print(f"✅ Recovered mainTitle from AI style: {template_vars['mainTitle']}")
+                        else:
+                            print(f"❌ Could not find mainTitle in AI content structure")
+                    
+                    # Sections are optional for this template because we map into
+                    # flattened placeholders (customTitle1, customContent1, etc.)
+                    # We'll still validate if present below.
+                
+                # Verify sections content is properly structured and fix if needed
+                if 'sections' in template_vars and isinstance(template_vars['sections'], list):
+                    print(f"🔍 Validating structure of {len(template_vars['sections'])} sections")
+                    sections_fixed = False
+                    section_issues = 0
+                    
+                    for i, section in enumerate(template_vars['sections']):
+                        if not isinstance(section, dict) or 'title' not in section or 'content' not in section:
+                            print(f"⚠️ Section {i} is malformed, fixing structure")
+                            sections_fixed = True
+                            section_issues += 1
+                            
+                            # Convert non-dict sections to dict if needed
+                            if not isinstance(section, dict):
+                                template_vars['sections'][i] = {
+                                    'title': f"Section {i+1}",
+                                    'content': str(section)
+                                }
+                                continue
+                                
+                            # Ensure required fields exist
+                            if 'title' not in section:
+                                section['title'] = f"Section {i+1}"
+                            if 'content' not in section:
+                                section['content'] = "Content unavailable"
+                    
+                    if sections_fixed:
+                        content_recovered = True
+                        print(f"✅ Fixed {section_issues} malformed sections structure")
+                    else:
+                        print(f"✅ All sections have valid structure")
+                
+                # Final validation before PDF generation
+                critical_missing = [key for key in required_keys if key not in template_vars or not template_vars[key]]
+                if critical_missing:
+                    print(f"❌ Critical content missing for PDF generation: {critical_missing}")
+                    result = {
+                        'success': False,
+                        'error': 'Missing critical content for PDF generation',
+                        'details': f'Required content missing: {critical_missing}',
+                        'missing_keys': critical_missing
+                    }
+                else:
+                    print(f"🚀 Proceeding with PDF generation - Content validation passed")
+                    # Add timing information
+                    import time
+                    start_time = time.time()
+                    print(f"⏱️ Starting PDF generation at {time.strftime('%H:%M:%S')}")
+                    
+                    try:
+                        print(f"📊 PDF Generation Stats - Template ID: {template_id}")
+                        print(f"📊 PDF Generation Stats - Template Variables Keys: {list(template_vars.keys())}")
+                        print(f"📊 PDF Generation Stats - Sections Count: {len(template_vars.get('sections', []))}")
+                        
+                        result = template_service.generate_pdf_with_ai_content(template_id, template_vars)
+                        
+                        elapsed_time = time.time() - start_time
+                        print(f"⏱️ PDF generation completed in {elapsed_time:.2f} seconds")
+                    except Exception as e:
+                        elapsed_time = time.time() - start_time
+                        print(f"❌ PDF generation failed after {elapsed_time:.2f} seconds")
+                        print(f"❌ Exception: {str(e)}")
+                        result = {
+                            'success': False,
+                            'error': f'Exception during PDF generation: {str(e)}',
+                            'details': 'An unexpected error occurred during PDF generation'
+                        }
                 print(f"🛠️ Service result: keys={list(result.keys())}")
             else:
                 # Fallback to manual variables with sensible defaults
@@ -414,11 +592,17 @@ class GeneratePDFView(APIView):
             
             if result.get('success'):
                 # Mark lead magnet completed
+                print("\n" + "="*50)
+                print("📋 PDF GENERATION COMPLETED SUCCESSFULLY")
+                print("="*50)
+                print(f"✅ PDF generated successfully for lead magnet ID: {lead_magnet.id}")
+                
                 lead_magnet.status = 'completed'
                 lead_magnet.save(update_fields=['status'])
 
                 # Update template selection status to pdf-generated only on success
                 if template_selection:
+                    print(f"✅ Updating template selection ID: {template_selection.id} to 'pdf-generated'")
                     template_selection.status = 'pdf-generated'
                     template_selection.save(update_fields=['status'])
                 
@@ -428,10 +612,69 @@ class GeneratePDFView(APIView):
                 filename = result.get('filename', f'lead-magnet-{template_id}.pdf')
                 response['Content-Disposition'] = f'attachment; filename="{filename}"'
                 print("✅ PDF Response Ready")
+                print("="*50)
                 return response
             else:
-                print(f"❌ PDF generation failed: {result.get('error')}")
-                return Response({'error': 'PDF generation failed', 'details': result.get('error')}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                # Handle PDF generation failure
+                error_message = result.get('error', 'Unknown error during PDF generation')
+                details = result.get('details', '')
+                missing_keys = result.get('missing_keys', [])
+                
+                print("\n" + "="*50)
+                print("❌ PDF GENERATION FAILED")
+                print("="*50)
+                print(f"❌ PDF generation failed: {error_message}")
+                print(f"❌ Details: {details}")
+                
+                # Keep status in a valid state; do not set to an invalid choice
+                print(f"⚠️ Keeping lead magnet status as 'in-progress' due to failure")
+                lead_magnet.status = 'in-progress'
+                lead_magnet.save(update_fields=['status'])
+                
+                # Update template selection if it exists
+                if template_selection:
+                    print(f"⚠️ Reverting template selection ID: {template_selection.id} to 'template-selected' status")
+                    template_selection.status = 'template-selected'
+                    template_selection.save(update_fields=['status'])
+                
+                # If missing keys were identified, try to recover and regenerate
+                if missing_keys and ai_content:
+                    print(f"🔄 Attempting to recover missing content and regenerate PDF")
+                    
+                    # Try to recover missing content directly from AI content
+                    recovered = False
+                    for key in missing_keys:
+                        if key == 'mainTitle' and 'cover' in ai_content and 'title' in ai_content['cover']:
+                            template_vars['mainTitle'] = ai_content['cover']['title']
+                            recovered = True
+                            print(f"🔄 Recovered mainTitle: {template_vars['mainTitle']}")
+                        elif key == 'sections' and 'sections' in ai_content:
+                            template_vars['sections'] = ai_content['sections']
+                            recovered = True
+                            print(f"🔄 Recovered sections: {len(template_vars['sections'])} sections")
+                        # Do not create default fallbacks; only use AI content or firm data
+                    
+                    # Do not synthesize sections; require AI-provided sections or flattened content
+                    
+                    if recovered:
+                        # Try generating PDF again with recovered content
+                        print("🔄 Regenerating PDF with recovered content")
+                        result = template_service.generate_pdf_with_ai_content(template_id, template_vars)
+                        
+                        if result.get('success'):
+                            pdf_data = result.get('pdf_data')
+                            content_type = result.get('content_type', 'application/pdf')
+                            filename = result.get('filename', 'lead-magnet.pdf')
+                            
+                            print(f"✅ PDF regenerated successfully after content recovery")
+                            
+                            response = HttpResponse(pdf_data, content_type=content_type)
+                            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                            return response
+                
+                print("="*50)
+                # If recovery failed or wasn't attempted, return error response
+                return Response({'error': 'PDF generation failed', 'details': error_message, 'lead_magnet_id': lead_magnet.id}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
         except LeadMagnet.DoesNotExist:
             return Response({'error': 'Lead magnet not found'}, status=status.HTTP_404_NOT_FOUND)

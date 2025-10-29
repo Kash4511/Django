@@ -3,7 +3,7 @@ import re
 import requests
 from typing import Dict, Any, List
 from django.conf import settings
-from jinja2 import Template
+from jinja2 import Template, Environment, FileSystemLoader, select_autoescape
 
 
 class DocRaptorService:
@@ -29,30 +29,35 @@ class DocRaptorService:
         ]
 
     def render_template_with_vars(self, template_id: str, variables: Dict[str, Any]) -> str:
-        template_path = os.path.join(self.templates_dir, 'Template.html')
-        with open(template_path, 'r', encoding='utf-8') as f:
-            html_content = f.read()
+        env = Environment(
+            loader=FileSystemLoader(self.templates_dir),
+            autoescape=select_autoescape(['html'])
+        )
+        template = env.get_template('Template.html')
+        rendered_html = template.render(**variables)
 
-        def replace_var(match):
-            key = match.group(1).strip()
-            return str(variables.get(key, ''))
+        # Debugging output
+        missing = [k for k, v in variables.items() if not v]
+        sample_keys = list(variables.keys())[:10]
+        print(f"🧩 Render complete")
+        print(f"🧪 Variables count: {len(variables)}")
+        print(f"🧪 Sample keys: {sample_keys}")
+        print(f"🔍 Missing values: {missing[:10]}")
+        print(f"🧪 Rendered length: {len(rendered_html)}")
 
-        rendered_html = re.sub(r"\{\{\s*([a-zA-Z0-9_]+)\s*\}\}", replace_var, html_content)
-
-        # Diagnostics: missing or leftover placeholders
-        placeholders = re.findall(r"\{\{\s*([a-zA-Z0-9_]+)\s*\}\}", html_content)
-        missing_keys = [k for k in set(placeholders) if k not in variables or not str(variables.get(k, '')).strip()]
-        leftover_placeholders = re.findall(r"\{\{\s*([a-zA-Z0-9_]+)\s*\}\}", rendered_html)
-        snippet = rendered_html[:400].replace('\n', ' ')
-        print(f"🧪 DEBUG: Template path: {template_path}")
-        print(f"🧪 DEBUG: Provided keys: {sorted(list(variables.keys()))[:20]}")
-        print(f"🧪 DEBUG: Missing or empty keys: {sorted(missing_keys)[:20]}")
-        print(f"🧪 DEBUG: Leftover placeholders after render: {sorted(set(leftover_placeholders))[:20]}")
-        print(f"🧪 DEBUG: Rendered HTML sample: {snippet}")
-        print(f"🧪 DEBUG: Rendered HTML length: {len(rendered_html)}")
-
-        # Clean empty bullets, boxes, quotes
+        # Clean and save preview
         rendered_html = clean_rendered_html(rendered_html)
+        self._save_preview_html(template_id, rendered_html)
+
+        # Also save a root-level debug output for quick inspection
+        try:
+            debug_out = os.path.join(settings.BASE_DIR, 'debug_output.html')
+            with open(debug_out, 'w', encoding='utf-8') as f:
+                f.write(rendered_html)
+            print(f"✅ Saved debug_output.html to {debug_out}")
+        except Exception as e:
+            print(f"⚠️ Failed to save debug_output.html: {e}")
+
         return rendered_html
 
     def _save_preview_html(self, template_id: str, rendered_html: str) -> str:
@@ -84,8 +89,17 @@ class DocRaptorService:
         print("🛠️ DEBUG: generate_pdf called")
         print(f"🛠️ DEBUG: DocRaptor API Key present: {bool(self.api_key)}")
         print(f"🛠️ DEBUG: DocRaptor test mode: {self.test_mode}")
+        # Fail fast if all variables are empty
+        has_any_value = any(bool(v) for v in variables.values())
+        if not has_any_value:
+            print("❌ All template variables are empty — AI output missing or mapping failed.")
+            return {
+                'success': False,
+                'error': 'Empty template variables',
+                'details': 'AI output missing or mapping failed'
+            }
+
         rendered_html = self.render_template_with_vars(template_id, variables)
-        self._save_preview_html(template_id, rendered_html)
 
         if not self.api_key:
             print("⚠️ DEBUG: No DocRaptor API key. Returning mock PDF bytes.")
