@@ -1,0 +1,11 @@
+# Ignore environment files and secrets
+.env
+Backend/.env
+
+# Optional: local DB and generated media (kept minimal)
+Backend/db.sqlite3
+Backend/media/
+
+# Python cache
+__pycache__/
+*.pyc
