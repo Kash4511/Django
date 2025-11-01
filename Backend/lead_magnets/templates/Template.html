@@ -104,58 +104,93 @@
             font-weight: 600;
         }
 
-        /* === COVER PAGE === */
-        .cover {
+        /* === DESIGN COVER PAGE === */
+        .design-cover {
             height: var(--page-height);
+            position: relative;
+            overflow: hidden;
+            background: white;
+        }
+
+        /* Deep plum geometric banner - INVERTED */
+        .banner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 35%;
+            background-color: var(--primary-color);
+            /* Correct slope: high on left → low on right */
+            clip-path: polygon(0 0, 100% 0, 100% 65%, 0 100%);
+        }
+
+
+        /* Content area */
+        .cover-content-design {
+            position: absolute;
+            bottom: 100mm;
+            left: 25mm;
+            width: calc(100% - 50mm);
+        }
+
+        .title {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 0 25mm;
+            align-items: flex-start;
+            margin-bottom: 40px;
         }
 
-        .cover-content {
-            max-width: 140mm;
+        .title-line {
+            width: 2px;
+            height: 85px;
+            background-color: var(--text-color);
+            margin-right: 15px;
+            margin-top: 5px;
         }
 
-        .cover .main-title {
-            font-size: 42px;
-            font-weight: 700;
-            color: var(--primary-color);
-            line-height: 1.1;
-            margin-bottom: 16px;
+        .title-text {
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-weight: 400;
+            font-size: 32px;
+            line-height: 1.3;
+            letter-spacing: 2px;
+            color: var(--text-color);
         }
 
-        .cover .subtitle {
-            font-size: 18px;
-            color: var(--secondary-color);
-            font-weight: 300;
-            margin-bottom: 60px;
-            letter-spacing: 1px;
+        .subtitle {
+            margin-top: 40px;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1.8px;
+            color: #333;
+            font-weight: 600;
         }
 
-        .divider {
-            height: 1px;
-            width: 60px;
-            background: var(--border-color);
-            margin: 40px auto;
+        .branding {
+            position: absolute;
+            bottom: 30mm;
+            left: 25mm;
         }
 
-        .cover .brand {
+        .brand-name {
             font-size: 14px;
             color: var(--secondary-color);
             font-weight: 500;
             letter-spacing: 1px;
+            margin-bottom: 8px;
         }
 
         .contact-info {
-            margin-top: 20px;
             font-size: 12px;
             color: var(--light-text);
-            font-weight: 400;
+            line-height: 1.5;
+        }
+
+        .version {
+            position: absolute;
+            bottom: 30mm;
+            right: 25mm;
+            font-size: 12px;
+            color: var(--light-text);
         }
 
         /* === CONTENTS PAGE STYLES === */
@@ -403,22 +438,30 @@
 <body>
     <div class="book">
         <!-- Page 1: Cover -->
-        <section class="page cover">
-            <div class="cover-content">
-                <h1 class="main-title">{{mainTitle}}</h1>
-                <p class="subtitle">{{documentSubtitle}}</p>
-                
-                <div class="divider"></div>
-                
-                <div class="brand">
-                    <div class="brand-name">{{companyName}} {{companySubtitle}}</div>
+        <section class="page design-cover">
+            <div class="banner"></div>
+            
+            <div class="cover-content-design">
+                <div class="title">
+                    <div class="title-line"></div>
+                    <div class="title-text">
+                        {{mainTitle}}
+                    </div>
                 </div>
-                
+                <div class="subtitle">
+                    {{documentSubtitle}}
+                </div>
+            </div>
+            
+            <div class="branding">
+                <div class="brand-name">{{companyName}} {{companySubtitle}}</div>
                 <div class="contact-info">
                     {{phoneNumber}} • {{emailAddress}}<br>
                     {{website}}
                 </div>
             </div>
+            
+            <div class="version">{{versionNumber}}</div>
         </section>
 
         <!-- Page 2: Terms of Use -->

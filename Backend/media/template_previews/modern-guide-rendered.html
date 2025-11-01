@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMART HOME DESIGN GUIDE BY KYRO - Kyro </title>
+    <title>SMART HOME GUIDE BY KYRO - Kyro </title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* === CORE VARIABLES === */
@@ -104,58 +104,93 @@
             font-weight: 600;
         }
 
-        /* === COVER PAGE === */
-        .cover {
+        /* === DESIGN COVER PAGE === */
+        .design-cover {
             height: var(--page-height);
+            position: relative;
+            overflow: hidden;
+            background: white;
+        }
+
+        /* Deep plum geometric banner - INVERTED */
+        .banner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 35%;
+            background-color: var(--primary-color);
+            /* Correct slope: high on left → low on right */
+            clip-path: polygon(0 0, 100% 0, 100% 65%, 0 100%);
+        }
+
+
+        /* Content area */
+        .cover-content-design {
+            position: absolute;
+            bottom: 100mm;
+            left: 25mm;
+            width: calc(100% - 50mm);
+        }
+
+        .title {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            text-align: center;
-            padding: 0 25mm;
+            justify-content: center;
+            margin-bottom: 40px;
         }
 
-        .cover-content {
-            max-width: 140mm;
+        .title-line {
+            width: 2px;
+            height: 85px;
+            background-color: var(--text-color);
+            margin-right: 15px;
         }
 
-        .cover .main-title {
-            font-size: 42px;
-            font-weight: 700;
-            color: var(--primary-color);
-            line-height: 1.1;
-            margin-bottom: 16px;
+        .title-text {
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-weight: 500;
+            font-size: 32px;
+            line-height: 1.3;
+            letter-spacing: 2px;
+            color: var(--text-color);
         }
 
-        .cover .subtitle {
-            font-size: 18px;
-            color: var(--secondary-color);
-            font-weight: 300;
-            margin-bottom: 60px;
-            letter-spacing: 1px;
+        .subtitle {
+            margin-top: 40px;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1.8px;
+            color: #333;
+            font-weight: 600;
         }
 
-        .divider {
-            height: 1px;
-            width: 60px;
-            background: var(--border-color);
-            margin: 40px auto;
+        .branding {
+            position: absolute;
+            bottom: 30mm;
+            left: 25mm;
         }
 
-        .cover .brand {
+        .brand-name {
             font-size: 14px;
             color: var(--secondary-color);
             font-weight: 500;
             letter-spacing: 1px;
+            margin-bottom: 8px;
         }
 
         .contact-info {
-            margin-top: 20px;
             font-size: 12px;
             color: var(--light-text);
-            font-weight: 400;
+            line-height: 1.5;
+        }
+
+        .version {
+            position: absolute;
+            bottom: 30mm;
+            right: 25mm;
+            font-size: 12px;
+            color: var(--light-text);
         }
 
         /* === CONTENTS PAGE STYLES === */
@@ -403,22 +438,30 @@
 <body>
     <div class="book">
         <!-- Page 1: Cover -->
-        <section class="page cover">
-            <div class="cover-content">
-                <h1 class="main-title">Smart Home Design Guide by Kyro</h1>
-                <p class="subtitle">Smart home design can be simple, affordable, and highly rewarding. Create intelligent, energy-efficient systems that enhance daily living while reducing long-term expenses.</p>
-                
-                <div class="divider"></div>
-                
-                <div class="brand">
-                    <div class="brand-name">Kyro </div>
+        <section class="page design-cover">
+            <div class="banner"></div>
+            
+            <div class="cover-content-design">
+                <div class="title">
+                    <div class="title-line"></div>
+                    <div class="title-text">
+                        Smart Home Guide by Kyro
+                    </div>
                 </div>
-                
+                <div class="subtitle">
+                    
+                </div>
+            </div>
+            
+            <div class="branding">
+                <div class="brand-name">Kyro </div>
                 <div class="contact-info">
                     0538994758 • info@Kyro.co<br>
                     https://www.Kyro.co
                 </div>
             </div>
+            
+            <div class="version"></div>
         </section>
 
         <!-- Page 2: Terms of Use -->
@@ -426,7 +469,7 @@
             <div class="page-header">
                 <div class="page-header-content">
                     <div class="step-indicator">STEP 01</div>
-                    <div class="section-title">Introduction: Rethinking Smart Homes with Sustainability</div>
+                    <div class="section-title">Understanding Smart Home Fundamentals</div>
                     <div class="page-number-header">PAGE 2</div>
                 </div>
             </div>
@@ -434,10 +477,10 @@
             <div class="content-container">
                 <div class="terms-content">
                     <h1 class="terms-title">Terms of Use</h1>
-                    <p class="terms-text">This guide is provided for informational purposes by Kyro.</p>
-                    <p class="terms-text">The contents of this guide are intended to offer general advice and practical examples for smart home design. All recommendations are based on current industry standards and sustainable practices.</p>
-                    <p class="terms-text">Kyro is not liable for any damages resulting from the use or misuse of the information provided. Readers should consult with a professional before making significant changes to their home systems.</p>
-                    <p class="terms-text">By downloading or referencing this guide, you acknowledge that all content remains the intellectual property of Kyro and may not be reproduced without permission.</p>
+                    <p class="terms-text">This guide is for informational purposes and should not be considered professional advice.</p>
+                    <p class="terms-text">Kyro provides this guide to inform homeowners about smart home design options. While we strive for accuracy, individual circumstances and technology may vary.</p>
+                    <p class="terms-text">Readers are encouraged to consult with professionals before making significant home improvement decisions. Kyro is not liable for any direct or indirect consequences resulting from the use of this guide.</p>
+                    <p class="terms-text">All content in this guide is the property of Kyro and may not be reproduced or distributed without written permission. By downloading, you accept these terms.</p>
                     <p class="terms-text"></p>
                     <p class="terms-text rights-text"></p>
                 </div>
@@ -452,7 +495,7 @@
             <div class="page-header">
                 <div class="page-header-content">
                     <div class="step-indicator">STEP 02</div>
-                    <div class="section-title">Affordable and Sustainable Smart Home Solutions</div>
+                    <div class="section-title">Cost-Effective Smart Home Planning</div>
                     <div class="page-number-header">PAGE 3</div>
                 </div>
             </div>
@@ -463,27 +506,27 @@
                     
                     <ul class="contents-list">
                         <li class="contents-item">
-                            <span class="contents-text">Introduction: Rethinking Smart Homes with Sustainability</span>
+                            <span class="contents-text">Understanding Smart Home Fundamentals</span>
                             <span class="contents-page">4</span>
                         </li>
                         <li class="contents-item">
-                            <span class="contents-text">Affordable and Sustainable Smart Home Solutions</span>
+                            <span class="contents-text">Cost-Effective Smart Home Planning</span>
                             <span class="contents-page">5</span>
                         </li>
                         <li class="contents-item">
-                            <span class="contents-text">Streamlined Technology for Modern Living</span>
+                            <span class="contents-text">Sustainable Materials for Smart Homes</span>
                             <span class="contents-page">6</span>
                         </li>
                         <li class="contents-item">
-                            <span class="contents-text">Reducing Costs and Timelines through Smart Planning</span>
+                            <span class="contents-text">Integrating Intelligent Systems</span>
                             <span class="contents-page">7</span>
                         </li>
                         <li class="contents-item">
-                            <span class="contents-text">Energy Efficiency and Intelligent System Integration</span>
+                            <span class="contents-text">Designing for Comfort, Security, and Convenience</span>
                             <span class="contents-page">8</span>
                         </li>
                         <li class="contents-item">
-                            <span class="contents-text">Getting Started: Steps to Your Smarter, Greener Home</span>
+                            <span class="contents-text">Next Steps for Future-Ready Smart Homes</span>
                             <span class="contents-page">9</span>
                         </li>
                     </ul>
@@ -499,28 +542,28 @@
             <div class="page-header">
                 <div class="page-header-content">
                     <div class="step-indicator">STEP 03</div>
-                    <div class="section-title">Streamlined Technology for Modern Living</div>
+                    <div class="section-title">Sustainable Materials for Smart Homes</div>
                     <div class="page-number-header">PAGE 4</div>
                 </div>
             </div>
             
             <div class="content-container">
                 <div class="content">
-                    <h1>Introduction: Rethinking Smart Homes with Sustainability</h1>
+                    <h1>Understanding Smart Home Fundamentals</h1>
                     
-                    <p>Many homeowners believe that smart homes are complicated and expensive, but advances in sustainable materials and simplified designs have changed the landscape. Embracing eco-friendly technologies can make smart living accessible and rewarding, while helping reduce environmental impact.</p>
+                    <p>A smart home uses connected devices, automation, and intelligent systems to improve daily life. By leveraging technology and eco-friendly solutions, homeowners can achieve greater efficiency, comfort, and sustainability.</p>
                     
                     <div class="content-box">
-                        <h3>Sustainable Materials</h3>
-                        <p>Using materials such as bamboo flooring, recycled insulation, and energy-efficient glass reduces the carbon footprint during construction and long-term operation.</p>
+                        <h3>Benefits of Smart Living</h3>
+                        <p>Homeowners enjoy increased comfort, better security, and reduced utility costs through intelligent automation.</p>
                     </div>
                     
-                    <h2>Shifting Perceptions</h2>
-                    <p>Innovative smart home solutions now prioritize ease-of-use and affordability, making them suitable for a wide range of households.</p>
+                    <h2>What Makes a Home Smart?</h2>
+                    <p>Smart homes feature integrated devices—such as thermostats, lights, and security systems—that communicate and operate automatically to optimize energy use and convenience.</p>
                     
                     <div class="content-box accent">
-                        <h3>Shifting Perceptions</h3>
-                        <p>Innovative smart home solutions now prioritize ease-of-use and affordability, making them suitable for a wide range of households.</p>
+                        <h3>What Makes a Home Smart?</h3>
+                        <p>Smart homes feature integrated devices—such as thermostats, lights, and security systems—that communicate and operate automatically to optimize energy use and convenience.</p>
                     </div>
                 </div>
             </div>
@@ -534,37 +577,37 @@
             <div class="page-header">
                 <div class="page-header-content">
                     <div class="step-indicator">STEP 04</div>
-                    <div class="section-title">Reducing Costs and Timelines through Smart Planning</div>
+                    <div class="section-title">Integrating Intelligent Systems</div>
                     <div class="page-number-header">PAGE 5</div>
                 </div>
             </div>
             
             <div class="content-container">
                 <div class="content">
-                    <h1>Affordable and Sustainable Smart Home Solutions</h1>
+                    <h1>Cost-Effective Smart Home Planning</h1>
                     
-                    <p>Cutting-edge smart home technology is more affordable than ever, especially when paired with sustainable materials. Choosing products designed for energy efficiency and longevity can drastically lower total costs over time.</p>
+                    <p>Building a smart home does not require significant upfront investment. Careful planning and prioritizing essential systems allow for affordable, scalable solutions that can grow over time.</p>
                     
                     <div class="two-columns">
                         <div class="column">
                             <div class="content-box">
-                                <h3>Budget-Friendly Systems</h3>
-                                <p>Starter kits with smart thermostats, LED lighting, and programmable plugs are accessible for most budgets and provide immediate energy savings.</p>
+                                <h3>Budget-Friendly Strategies</h3>
+                                <p>Start with core features like smart lighting or thermostats, then expand as needs and budgets allow.</p>
                             </div>
                         </div>
                         <div class="column">
                             <div class="content-box">
-                                <h3>Long-Term Value</h3>
-                                <p>Investing in durable, eco-certified products reduces maintenance costs and supports a sustainable lifestyle.</p>
+                                <h3>Avoiding Common Pitfalls</h3>
+                                <p>Many homeowners overcomplicate their smart home projects. Focus on reliable products and professional guidance to simplify installation and ongoing management.</p>
                             </div>
                         </div>
                     </div>
                     
-                    <h2>Long-Term Value</h2>
-                    <p>Investing in durable, eco-certified products reduces maintenance costs and supports a sustainable lifestyle.</p>
+                    <h2>Avoiding Common Pitfalls</h2>
+                    <p>Many homeowners overcomplicate their smart home projects. Focus on reliable products and professional guidance to simplify installation and ongoing management.</p>
                     
                     <blockquote>
-                        "Cutting-edge smart home technology is more affordable than ever, especially when paired with sustainable materials."
+                        "Building a smart home does not require significant upfront investment."
                         <footer>— Kyro</footer>
                     </blockquote>
                 </div>
@@ -579,33 +622,33 @@
             <div class="page-header">
                 <div class="page-header-content">
                     <div class="step-indicator">STEP 05</div>
-                    <div class="section-title">Energy Efficiency and Intelligent System Integration</div>
+                    <div class="section-title">Designing for Comfort, Security, and Convenience</div>
                     <div class="page-number-header">PAGE 6</div>
                 </div>
             </div>
             
             <div class="content-container">
                 <div class="content">
-                    <h1>Streamlined Technology for Modern Living</h1>
+                    <h1>Sustainable Materials for Smart Homes</h1>
                     
-                    <p>Smart home integration no longer requires complex wiring or disruptive renovations. Wireless devices and modular systems allow for incremental upgrades and easy expansion, suited to individual needs and lifestyles.</p>
+                    <p>Sustainable materials reduce environmental impact and improve indoor air quality. Combining these with smart systems maximizes long-term efficiency and aligns with eco-friendly values.</p>
                     
                     <div class="content-box accent">
-                        <h3>Modular Upgrades</h3>
-                        <p>Homeowners can add devices such as smart speakers or security sensors over time, avoiding large upfront investments and lengthy installations.</p>
+                        <h3>Choosing Sustainable Options</h3>
+                        <p>Use materials such as bamboo flooring, recycled insulation, and low-VOC paints. These choices contribute to healthier living spaces and lower resource consumption.</p>
                     </div>
                     
-                    <h2>Simple Controls</h2>
+                    <h2>Integration with Technology</h2>
                     <ul>
-                        <li>Smart home integration no longer requires complex wiring or disruptive renovations.</li>
-                        <li>Wireless devices and modular systems allow for incremental upgrades and easy expansion, suited to individual needs and lifestyles.</li>
+                        <li>Sustainable materials reduce environmental impact and improve indoor air quality.</li>
+                        <li>Combining these with smart systems maximizes long-term efficiency and aligns with eco-friendly values.</li>
                         
                         
                     </ul>
                     
                     <div class="content-box">
-                        <h3>Modular Upgrades</h3>
-                        <p>Homeowners can add devices such as smart speakers or security sensors over time, avoiding large upfront investments and lengthy installations.</p>
+                        <h3>Choosing Sustainable Options</h3>
+                        <p>Use materials such as bamboo flooring, recycled insulation, and low-VOC paints. These choices contribute to healthier living spaces and lower resource consumption.</p>
                     </div>
                 </div>
             </div>
@@ -619,35 +662,35 @@
             <div class="page-header">
                 <div class="page-header-content">
                     <div class="step-indicator">STEP 06</div>
-                    <div class="section-title">Reducing Costs and Timelines through Smart Planning</div>
+                    <div class="section-title">Integrating Intelligent Systems</div>
                     <div class="page-number-header">PAGE 7</div>
                 </div>
             </div>
             
             <div class="content-container">
                 <div class="content">
-                    <h1>Reducing Costs and Timelines through Smart Planning</h1>
+                    <h1>Integrating Intelligent Systems</h1>
                     
-                    <p>Thoughtful planning is key to minimizing costs and project duration when creating a smart home. Early decisions about system compatibility, sustainable materials, and future needs help prevent delays and unnecessary expenses.</p>
+                    <p>The key to an adaptive smart home is seamless integration of devices and platforms. Interoperable systems allow homeowners to control multiple functions from a single interface, enhancing convenience.</p>
                     
                     <div class="two-columns">
                         <div class="column">
-                            <h3>Efficient Project Management</h3>
-                            <p>Mapping out priorities and timelines before installation streamlines the process and helps avoid unexpected hurdles.</p>
+                            <h3>Popular Smart Devices</h3>
+                            <p>Install smart thermostats, automated lighting, and security cameras for instant improvements in energy management and safety.</p>
                         </div>
                         <div class="column">
-                            <h3>Choosing Scalable Solutions</h3>
-                            <p>Opt for open-source platforms and interoperable devices to ensure your system can grow with your needs, eliminating future replacements.</p>
+                            <h3>Centralized Control</h3>
+                            <p>Use a smart home hub or app to connect devices, enabling homeowners to automate routines and monitor performance from anywhere.</p>
                         </div>
                     </div>
                     
                     <div class="content-box">
-                        <h3>Reducing Costs and Timelines through Smart Planning</h3>
-                        <p>Mapping out priorities and timelines before installation streamlines the process and helps avoid unexpected hurdles.</p>
+                        <h3>Integrating Intelligent Systems</h3>
+                        <p>Install smart thermostats, automated lighting, and security cameras for instant improvements in energy management and safety.</p>
                     </div>
                     
-                    <h2>Choosing Scalable Solutions</h2>
-                    <p>Opt for open-source platforms and interoperable devices to ensure your system can grow with your needs, eliminating future replacements.</p>
+                    <h2>Centralized Control</h2>
+                    <p>Use a smart home hub or app to connect devices, enabling homeowners to automate routines and monitor performance from anywhere.</p>
                 </div>
             </div>
             
@@ -660,26 +703,26 @@
             <div class="page-header">
                 <div class="page-header-content">
                     <div class="step-indicator">STEP 07</div>
-                    <div class="section-title">Energy Efficiency and Intelligent System Integration</div>
+                    <div class="section-title">Designing for Comfort, Security, and Convenience</div>
                     <div class="page-number-header">PAGE 8</div>
                 </div>
             </div>
             
             <div class="content-container">
                 <div class="content">
-                    <h1>Energy Efficiency and Intelligent System Integration</h1>
+                    <h1>Designing for Comfort, Security, and Convenience</h1>
                     
-                    <p>Smart homes offer significant energy savings through intelligent system integration. Automated lighting, climate control, and appliance management can reduce utility bills and environmental impact while improving comfort.</p>
+                    <p>Smart home design should center on the needs of the occupants. Thoughtful placement and automation of systems ensure living spaces are safe, comfortable, and easy to manage.</p>
                     
                     <div class="content-box accent">
-                        <h3>Automated Energy Management</h3>
-                        <p>Sensors and automation routines adjust heating, cooling, and lighting based on occupancy and time of day, maximizing efficiency.</p>
+                        <h3>Enhancing Everyday Life</h3>
+                        <p>Automated lighting, climate control, and door locks offer convenience and peace of mind, especially for busy families.</p>
                     </div>
                     
-                    <h2>Solar and Renewable Integration</h2>
+                    <h2>Customizing Experiences</h2>
                     <ol>
-                        <li>Smart homes offer significant energy savings through intelligent system integration.</li>
-                        <li>Automated lighting, climate control, and appliance management can reduce utility bills and environmental impact while improving comfort.</li>
+                        <li>Smart home design should center on the needs of the occupants.</li>
+                        <li>Thoughtful placement and automation of systems ensure living spaces are safe, comfortable, and easy to manage.</li>
                         
                         
                     </ol>
@@ -705,7 +748,7 @@
             <div class="content-container">
                 <div class="contact-section">
                     <h1 class="contact-title">download our Smart Home Design Guide today.</h1>
-                    <p class="contact-description">For personalized advice and expert support, contact Kyro’s team of smart home specialists. We’re ready to answer your questions and help you plan a sustainable, intelligent home upgrade. Reach us by phone, email, or through our website for a consultation. Discover how sustainable smart home solutions can fit your lifestyle and budget.</p>
+                    <p class="contact-description">Contact Kyro to start your smart home journey. Our team guides you through every step, from planning and material selection to system integration and ongoing support. With a focus on sustainability and simplicity, we make smart living accessible for all homeowners. Reach out for a tailored consultation and discover how advanced technology and eco-friendly design can transform your home.</p>
                     
                     <div class="contact-details">
                         <strong>Kyro </strong><br>
@@ -716,7 +759,7 @@
                     
                     <div class="content-box" style="margin-top: 30px; max-width: 400px; margin-left: auto; margin-right: auto;">
                         <h3>Why Choose Kyro</h3>
-                        <p>Kyro delivers smart home projects that balance modern technology with sustainability, focusing on natural materials and energy efficiency.</p>
+                        <p>Kyro specializes in blending sustainable materials with intelligent technology, delivering smart homes that are both efficient and future-ready.</p>
                     </div>
                     
                     <div style="margin-top: 40px; font-size: 14px; color: var(--light-text);">
