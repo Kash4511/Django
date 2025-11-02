@@ -3,25 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMART HOME GUIDE BY KYRO - Kyro </title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>GUIDE TO SMART-HOMES BY KYRO - Kyro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        /* === CORE VARIABLES === */
         :root {
-            --primary-color: #614c00;
-            --secondary-color: #003952;
-            --accent-color: #F4A460;
-            --light-bg: #f8f9fa;
-            --text-color: #333;
-            --light-text: #666;
-            --border-color: #e0e0e0;
-            --page-width: 210mm;
-            --page-height: 297mm;
-            --content-width: 160mm;
-            --font-main: 'Inter', sans-serif;
+            --primary: #080808;
+            --secondary: #003952;
+            --accent: #F4A460;
+            --highlight: ;
+            --gold: ;
+            --light: #f8f9fa;
+            --text: #2d3436;
+            --text-light: #636e72;
         }
 
-        /* === RESET === */
         * {
             margin: 0;
             padding: 0;
@@ -29,249 +24,506 @@
         }
 
         body {
-            font-family: var(--font-main);
-            color: var(--text-color);
-            background: #fff;
-            margin: 0;
-            padding: 0;
-            line-height: 1.5;
+            font-family: 'Inter', sans-serif;
+            background: #e0e0e0;
+            padding: 20px;
         }
 
-        /* === BOOK === */
         .book {
-            width: var(--page-width);
+            width: 210mm;
             margin: 0 auto;
             background: white;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
         }
 
-        /* === PAGE FIX: Use block layout only === */
         .page {
+            width: 210mm;
+            height: 297mm;
+            background: white;
+            position: relative;
+            overflow: hidden;
+            page-break-after: always;
+        }
+
+        /* COVER PAGE - SOLID PRIMARY COLOR */
+        .cover {
+            background: var(--primary);
+            position: relative;
+        }
+
+        /* Geometric Background Elements */
+        .geo-circle-1 {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            top: -150px;
+            right: -100px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .geo-circle-2 {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            bottom: -100px;
+            left: -80px;
+            border: 2px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .geo-square {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.04);
+            transform: rotate(45deg);
+            top: 40%;
+            right: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .geo-lines {
+            position: absolute;
+            top: 30%;
+            left: -50px;
+            width: 200px;
+            height: 200px;
+        }
+
+        .geo-line {
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 20px 0;
+            transform-origin: left;
+        }
+
+        .geo-line:nth-child(1) { transform: rotate(-25deg); }
+        .geo-line:nth-child(2) { transform: rotate(-15deg); }
+        .geo-line:nth-child(3) { transform: rotate(-5deg); }
+
+        /* Cover Content */
+        .cover-content {
+            position: relative;
+            z-index: 10;
+            padding: 80mm 25mm 25mm 25mm;
+            color: white;
+        }
+
+        .cover-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 48px;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            color: white;
+            border-bottom: 3px solid var(--secondary);
+            padding-bottom: 15px;
+            display: inline-block;
+        }
+
+        .cover-title-accent {
+            color: white;
             display: block;
-            position: relative;
-            width: 100%;
-            height: var(--page-height);
-            overflow: hidden;
-            break-after: page;
-            background: white;
+            font-size: 52px;
         }
 
-        /* === CONTENT AREA === */
-        .content-container {
-            width: var(--content-width);
-            margin: 0 auto;
-            padding: 20mm 0 20mm;
-            box-sizing: border-box;
-        }
-
-        /* === HEADER === */
-        .page-header {
-            position: relative;
-            width: 100%;
-            background: white;
-            border-bottom: 1px solid var(--border-color);
-            padding: 8px 0;
-            font-size: 11px;
-            letter-spacing: 0.5px;
-        }
-
-        .page-header-content {
-            width: var(--content-width);
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 500;
-            text-transform: uppercase;
-        }
-
-        .step-indicator {
-            flex: 1;
-            color: var(--secondary-color);
-        }
-
-        .section-title {
-            flex: 1;
-            text-align: center;
-            color: var(--primary-color);
-            font-weight: 600;
-        }
-
-        .page-number-header {
-            flex: 1;
-            text-align: right;
-            color: var(--secondary-color);
-            font-weight: 600;
-        }
-
-        /* === DESIGN COVER PAGE === */
-        .design-cover {
-            height: var(--page-height);
-            position: relative;
-            overflow: hidden;
-            background: white;
-        }
-
-        /* Deep plum geometric banner - INVERTED */
-        .banner {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 35%;
-            background-color: var(--primary-color);
-            /* Correct slope: high on left → low on right */
-            clip-path: polygon(0 0, 100% 0, 100% 65%, 0 100%);
-        }
-
-
-        /* Content area */
-        .cover-content-design {
-            position: absolute;
-            bottom: 100mm;
-            left: 25mm;
-            width: calc(100% - 50mm);
-        }
-
-        .title {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .cover-subtitle {
+            font-size: 18px;
+            font-weight: 300;
+            line-height: 1.6;
+            margin-top: 30px;
             margin-bottom: 40px;
+            color: white;
+            max-width: 500px;
         }
 
-        .title-line {
-            width: 2px;
-            height: 85px;
-            background-color: var(--text-color);
-            margin-right: 15px;
-        }
-
-        .title-text {
-            text-transform: uppercase;
-            font-weight: 500;
-            font-size: 32px;
-            line-height: 1.3;
-            letter-spacing: 2px;
-            color: var(--text-color);
-        }
-
-        .subtitle {
-            margin-top: 40px;
-            text-transform: uppercase;
-            font-size: 12px;
-            letter-spacing: 1.8px;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .branding {
+        .cover-footer {
             position: absolute;
-            bottom: 30mm;
+            bottom: 25mm;
             left: 25mm;
+            right: 25mm;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
         }
 
-        .brand-name {
-            font-size: 14px;
-            color: var(--secondary-color);
-            font-weight: 500;
-            letter-spacing: 1px;
+        .company-info {
+            line-height: 1.8;
+        }
+
+        .company-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: white;
             margin-bottom: 8px;
         }
 
-        .contact-info {
-            font-size: 12px;
-            color: var(--light-text);
-            line-height: 1.5;
+        /* ENHANCED CONTENT PAGE HEADER - SECONDARY COLOR */
+        .content-page {
+            padding: 0;
+            padding-bottom: 20mm;
         }
 
-        .version {
-            position: absolute;
-            bottom: 30mm;
-            right: 25mm;
-            font-size: 12px;
-            color: var(--light-text);
-        }
-
-        /* === CONTENTS PAGE STYLES === */
-        .contents-container {
-            padding-top: 25mm;
-        }
-
-        .contents-title {
-            font-size: 20px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--primary-color);
-            margin-bottom: 25mm;
-            letter-spacing: 0.5px;
-        }
-
-        .contents-list {
-            list-style: none;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        .contents-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            align-items: flex-start;
-        }
-
-        .contents-text {
-            flex: 0 0 75%;
-            color: var(--primary-color);
-            font-weight: 400;
-        }
-
-        .contents-page {
-            flex: 0 0 25%;
-            text-align: right;
-            color: var(--primary-color);
-            font-weight: 600;
-        }
-
-        /* === TERMS OF USE STYLES === */
-        .terms-content {
-            text-align: center;
-            padding: 30mm 0;
-        }
-
-        .terms-title {
-            font-size: 16px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 30px;
-            color: var(--primary-color);
-        }
-
-        .terms-text {
-            font-size: 14px;
-            line-height: 1.7;
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .terms-text:last-of-type {
+        .page-header-enhanced {
+            background: var(--secondary);
+            padding: 20px 25mm;
+            position: relative;
+            overflow: hidden;
             margin-bottom: 0;
         }
 
-        .rights-text {
-            font-size: 12px;
-            margin-top: 30px;
-            color: var(--secondary-color);
+        /* Decorative elements in header */
+        .header-decoration {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 100%;
+            opacity: 0.1;
         }
 
-        /* === CONTENT === */
-        h1 {
-            font-size: 26px;
-            color: var(--primary-color);
+        .header-circle {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .header-circle-1 {
+            width: 120px;
+            height: 120px;
+            top: -40px;
+            right: -20px;
+        }
+
+        .header-circle-2 {
+            width: 80px;
+            height: 80px;
+            top: 10px;
+            right: 80px;
+        }
+
+        .header-circle-3 {
+            width: 50px;
+            height: 50px;
+            bottom: -10px;
+            right: 40px;
+        }
+
+        .page-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .page-title-enhanced {
+            font-family: 'Poppins', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+            position: relative;
+            padding-left: 15px;
+        }
+
+        .page-title-enhanced:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 5px;
+            height: 35px;
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        .page-number-enhanced {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+            letter-spacing: 1px;
+        }
+
+        /* Accent bar below header */
+        .header-accent-bar {
+            height: 6px;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--highlight) 100%);
+            position: relative;
+        }
+
+        .header-accent-bar:after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 100px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+        }
+
+        /* Main content area */
+        .page-content-area {
+            padding: 25mm 25mm 0 25mm;
+        }
+
+        /* ENHANCED FOOTER - PRIMARY COLOR */
+        .footer-enhanced {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--primary);
+            padding: 18px 25mm;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: white;
+            overflow: hidden;
+        }
+
+        /* Footer decorative elements */
+        .footer-decoration {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        .footer-wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+        }
+
+        .footer-wave path {
+            fill: rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-circles {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+        }
+
+        .footer-circle {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .footer-circle-1 {
+            width: 60px;
+            height: 60px;
+            top: -20px;
+            left: 30%;
+        }
+
+        .footer-circle-2 {
+            width: 40px;
+            height: 40px;
+            top: -10px;
+            right: 25%;
+        }
+
+        .footer-circle-3 {
+            width: 30px;
+            height: 30px;
+            bottom: -5px;
+            left: 60%;
+        }
+
+        .footer-content-left,
+        .footer-content-right {
+            position: relative;
+            z-index: 2;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .footer-content-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .footer-icon {
+            width: 18px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .footer-content-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .footer-divider {
+            width: 1px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.3);
+            margin: 0 4px;
+        }
+
+        /* STYLED SECTION TITLE WITH LEFT BAR */
+        .section-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 30px 0 15px;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .section-title:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 30px;
+            background: var(--secondary);
+            border-radius: 3px;
+        }
+
+        .content-text {
+            font-size: 14px;
+            line-height: 1.8;
+            color: var(--text);
+            margin-bottom: 20px;
+        }
+
+        /* TICK CIRCLE CHECKLIST - SECONDARY COLOR */
+        .checklist {
+            list-style: none;
+            margin: 20px 0;
+            padding: 0;
+        }
+
+        .checklist li {
+            padding: 12px 0 12px 40px;
+            position: relative;
+            font-size: 14px;
+            line-height: 1.6;
+            border-bottom: 1px solid #e0e0e0;
+            color: var(--text);
+        }
+
+        .checklist li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            background: var(--secondary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        /* INFO BOXES */
+        .info-box {
+            background: var(--light);
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 5px solid var(--secondary);
+            margin: 25px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .info-box-title {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--secondary);
             margin-bottom: 12px;
-            border-bottom: 2px solid var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-box p {
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* CTA SECTION - SECONDARY COLOR */
+        .cta-section {
+            background: var(--secondary);
+            padding: 40px;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .cta-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .cta-text {
+            font-size: 16px;
+            margin-bottom: 25px;
+            color: white;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: white;
+            color: var(--secondary);
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+
+        h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 26px;
+            color: var(--primary);
+            margin-bottom: 12px;
+            border-bottom: 2px solid var(--secondary);
             padding-bottom: 6px;
             text-transform: uppercase;
             font-weight: 700;
@@ -279,14 +531,14 @@
 
         h2 {
             font-size: 20px;
-            color: var(--secondary-color);
+            color: var(--secondary);
             margin: 18px 0 8px;
             font-weight: 600;
         }
 
         h3 {
             font-size: 16px;
-            color: var(--primary-color);
+            color: var(--primary);
             margin: 15px 0 8px;
             font-weight: 600;
         }
@@ -295,6 +547,7 @@
             font-size: 14px;
             margin-bottom: 10px;
             line-height: 1.6;
+            color: var(--text);
         }
 
         ul, ol {
@@ -306,13 +559,46 @@
             margin-bottom: 6px;
         }
 
-        /* === BLOCKQUOTE === */
+        /* Regular UL with tick circles - SECONDARY COLOR */
+        ul:not(.checklist) {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        ul:not(.checklist) li {
+            padding: 12px 0 12px 40px;
+            position: relative;
+            font-size: 14px;
+            line-height: 1.6;
+            border-bottom: 1px solid #e0e0e0;
+            color: var(--text);
+        }
+
+        ul:not(.checklist) li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            background: var(--secondary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
         blockquote {
-            border-left: 3px solid var(--accent-color);
+            border-left: 3px solid var(--secondary);
             padding: 12px 16px;
-            background: var(--light-bg);
+            background: var(--light);
             font-style: italic;
-            color: var(--light-text);
+            color: var(--text-light);
             margin: 15px 0;
         }
 
@@ -320,27 +606,25 @@
             margin-top: 8px;
             font-style: normal;
             font-weight: 500;
-            color: var(--secondary-color);
+            color: var(--secondary);
         }
 
-        /* === TWO COLUMNS === */
         .two-columns {
-            display: table;
-            width: 100%;
-            border-spacing: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
         }
 
         .column {
-            display: table-cell;
-            vertical-align: top;
+            width: 100%;
         }
 
-        /* === CONTENT BOXES === */
         .content-box {
-            background: var(--light-bg);
-            padding: 18px;
+            background: var(--light);
+            padding: 20px;
             margin: 15px 0;
-            border-radius: 4px;
+            border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.03);
         }
 
@@ -351,426 +635,531 @@
 
         .content-box h3 {
             margin-top: 0;
-            color: var(--primary-color);
+            color: var(--primary);
             font-weight: 600;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid #e0e0e0;
             padding-bottom: 8px;
             margin-bottom: 12px;
+            font-size: 16px;
         }
 
-        /* === SECTION DIVIDER === */
+        .content-box p {
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0;
+        }
+
         .section-divider {
             height: 1px;
-            background: linear-gradient(to right, transparent, var(--border-color), transparent);
+            background: linear-gradient(to right, transparent, #e0e0e0, transparent);
             margin: 20px 0;
         }
 
-        /* === CONTACT SECTION === */
-        .contact-section {
-            text-align: center;
-            padding: 30mm 0;
-        }
-
-        .contact-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-        }
-
-        .contact-description {
-            font-size: 16px;
-            color: var(--text-color);
-            margin-bottom: 30px;
-        }
-
-        .contact-details {
-            font-size: 14px;
-            color: var(--light-text);
-            line-height: 1.8;
-        }
-
-        /* === FOOTER === */
-        .page-footer {
-            position: absolute;
-            bottom: 10mm;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            font-size: 11px;
-            color: var(--light-text);
-            border-top: 1px solid var(--border-color);
-            padding-top: 8px;
-        }
-
-        /* === PAGE NUMBER === */
-        .page-number {
-            position: absolute;
-            bottom: 20mm;
-            right: 25mm;
-            font-size: 12px;
-            color: var(--light-text);
-        }
-
-        /* === PRINT-SAFE RULES === */
         @media print {
-            @page {
-                size: A4;
-                margin: 0;
+            body {
+                background: white;
+                padding: 0;
             }
-
             .book {
                 box-shadow: none;
             }
-
-            .page {
-                box-shadow: none;
-                break-inside: avoid;
-                overflow: visible;
-            }
-
-            .content-container {
-                padding-top: 15mm;
+            @page {
+                size: A4;
+                margin: 0;
             }
         }
     </style>
 </head>
 <body>
     <div class="book">
-        <!-- Page 1: Cover -->
-        <section class="page design-cover">
-            <div class="banner"></div>
+        <!-- COVER PAGE -->
+        <div class="page cover">
+            <div class="geo-circle-1"></div>
+            <div class="geo-circle-2"></div>
+            <div class="geo-square"></div>
+            <div class="geo-lines">
+                <div class="geo-line"></div>
+                <div class="geo-line"></div>
+                <div class="geo-line"></div>
+            </div>
             
-            <div class="cover-content-design">
-                <div class="title">
-                    <div class="title-line"></div>
-                    <div class="title-text">
-                        Smart Home Guide by Kyro
-                    </div>
+            <div class="cover-content">
+                <h1 class="cover-title">
+                    Guide to Smart-Homes by Kyro
+                    <span class="cover-title-accent"></span>
+                </h1>
+                
+                <p class="cover-subtitle">
+                    Empower homeowners and developers to adopt efficient, automated, and sustainable smart home solutions that reduce energy costs, increase comfort, and enhance daily living through intelligent technology integration.
+                </p>
+            </div>
+            
+            <div class="cover-footer">
+                <div class="company-info">
+                    <div class="company-name">Kyro </div>
+                    <div>info@Kyro.co • https://www.Kyro.co • 0538994758</div>
                 </div>
-                <div class="subtitle">
-                    
+            </div>
+        </div>
+
+        <!-- PAGE 2: TERMS OF USE -->
+        <div class="page content-page">
+            <div class="page-header-enhanced">
+                <div class="header-decoration">
+                    <div class="header-circle header-circle-1"></div>
+                    <div class="header-circle header-circle-2"></div>
+                    <div class="header-circle header-circle-3"></div>
+                </div>
+                <div class="page-header-content">
+                    <h2 class="page-title-enhanced">Understanding Smart Home Sustainability</h2>
+                    <div class="page-number-enhanced">PAGE 2</div>
+                </div>
+            </div>
+            <div class="header-accent-bar"></div>
+            
+            <div class="page-content-area">
+                <div style="text-align: center; padding: 30mm 0;">
+                    <h1 style="font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 30px; color: var(--primary); border: none;">Terms of Use</h1>
+                    <p style="font-size: 14px; line-height: 1.7; color: var(--primary); margin-bottom: 20px;">This guide is for educational purposes and should not be construed as professional advice.</p>
+                    <p style="font-size: 14px; line-height: 1.7; color: var(--primary); margin-bottom: 20px;">The content presented in this guide is intended to inform and inspire homeowners and developers. Readers are responsible for verifying the suitability of solutions for their own properties and circumstances.</p>
+                    <p style="font-size: 14px; line-height: 1.7; color: var(--primary); margin-bottom: 20px;">Kyro is not liable for any outcomes resulting from the implementation of recommendations or products discussed in this guide. Always consult qualified professionals when making significant home automation or structural changes.</p>
+                    <p style="font-size: 14px; line-height: 1.7; color: var(--primary); margin-bottom: 20px;">By accessing this guide, you agree not to reproduce or distribute its contents without explicit permission from Kyro. For further inquiries, please contact us directly.</p>
+                    <p style="font-size: 14px; line-height: 1.7; color: var(--primary); margin-bottom: 20px;"></p>
+                    <p style="font-size: 12px; margin-top: 30px; color: var(--secondary);"></p>
                 </div>
             </div>
             
-            <div class="branding">
-                <div class="brand-name">Kyro </div>
-                <div class="contact-info">
-                    0538994758 • info@Kyro.co<br>
+            <div class="footer-enhanced">
+                <div class="footer-decoration">
+                    <div class="footer-circles">
+                        <div class="footer-circle footer-circle-1"></div>
+                        <div class="footer-circle footer-circle-2"></div>
+                        <div class="footer-circle footer-circle-3"></div>
+                    </div>
+                    <svg class="footer-wave" viewBox="0 0 1200 40" preserveAspectRatio="none">
+                        <path d="M0,20 Q300,0 600,20 T1200,20 L1200,40 L0,40 Z"></path>
+                    </svg>
+                </div>
+                <div class="footer-content-left">
+                    <div class="footer-icon">©</div>
+                    <span>© 2025 Kyro. All rights reserved.</span>
+                </div>
+                <div class="footer-content-right">
+                    <span>https://www.Kyro.co</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 3: TABLE OF CONTENTS -->
+        <div class="page content-page">
+            <div class="page-header-enhanced">
+                <div class="header-decoration">
+                    <div class="header-circle header-circle-1"></div>
+                    <div class="header-circle header-circle-2"></div>
+                    <div class="header-circle header-circle-3"></div>
+                </div>
+                <div class="page-header-content">
+                    <h2 class="page-title-enhanced">Key Benefits of Smart Automation</h2>
+                    <div class="page-number-enhanced">PAGE 3</div>
+                </div>
+            </div>
+            <div class="header-accent-bar"></div>
+            
+            <div class="page-content-area">
+                <h1 style="font-size: 20px; font-weight: 700; text-transform: uppercase; color: var(--primary); margin-bottom: 25mm; letter-spacing: 0.5px; border: none;">Contents</h1>
+                
+                <ul style="list-style: none; font-size: 14px; line-height: 1.5; padding: 0;">
+                    <li style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: flex-start;">
+                        <span style="flex: 0 0 75%; color: var(--primary); font-weight: 400;">Understanding Smart Home Sustainability</span>
+                        <span style="flex: 0 0 25%; text-align: right; color: var(--primary); font-weight: 600;">4</span>
+                    </li>
+                    <li style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: flex-start;">
+                        <span style="flex: 0 0 75%; color: var(--primary); font-weight: 400;">Key Benefits of Smart Automation</span>
+                        <span style="flex: 0 0 25%; text-align: right; color: var(--primary); font-weight: 600;">5</span>
+                    </li>
+                    <li style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: flex-start;">
+                        <span style="flex: 0 0 75%; color: var(--primary); font-weight: 400;">Affordable Solutions for Every Budget</span>
+                        <span style="flex: 0 0 25%; text-align: right; color: var(--primary); font-weight: 600;">6</span>
+                    </li>
+                    <li style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: flex-start;">
+                        <span style="flex: 0 0 75%; color: var(--primary); font-weight: 400;">Materials and Technologies for Eco-Friendly Homes</span>
+                        <span style="flex: 0 0 25%; text-align: right; color: var(--primary); font-weight: 600;">7</span>
+                    </li>
+                    <li style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: flex-start;">
+                        <span style="flex: 0 0 75%; color: var(--primary); font-weight: 400;">Steps for Seamless Integration</span>
+                        <span style="flex: 0 0 25%; text-align: right; color: var(--primary); font-weight: 600;">8</span>
+                    </li>
+                    <li style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: flex-start;">
+                        <span style="flex: 0 0 75%; color: var(--primary); font-weight: 400;">Troubleshooting and Best Practices</span>
+                        <span style="flex: 0 0 25%; text-align: right; color: var(--primary); font-weight: 600;">9</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="footer-enhanced">
+                <div class="footer-decoration">
+                    <div class="footer-circles">
+                        <div class="footer-circle footer-circle-1"></div>
+                        <div class="footer-circle footer-circle-2"></div>
+                        <div class="footer-circle footer-circle-3"></div>
+                    </div>
+                    <svg class="footer-wave" viewBox="0 0 1200 40" preserveAspectRatio="none">
+                        <path d="M0,20 Q300,0 600,20 T1200,20 L1200,40 L0,40 Z"></path>
+                    </svg>
+                </div>
+                <div class="footer-content-left">
+                    <div class="footer-icon">©</div>
+                    <span>© 2025 Kyro. All rights reserved.</span>
+                </div>
+                <div class="footer-content-right">
+                    <span>https://www.Kyro.co</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 4: CUSTOM CONTENT 1 -->
+        <div class="page content-page">
+            <div class="page-header-enhanced">
+                <div class="header-decoration">
+                    <div class="header-circle header-circle-1"></div>
+                    <div class="header-circle header-circle-2"></div>
+                    <div class="header-circle header-circle-3"></div>
+                </div>
+                <div class="page-header-content">
+                    <h2 class="page-title-enhanced">Affordable Solutions for Every Budget</h2>
+                    <div class="page-number-enhanced">PAGE 4</div>
+                </div>
+            </div>
+            <div class="header-accent-bar"></div>
+            
+            <div class="page-content-area">
+                <h1>Understanding Smart Home Sustainability</h1>
+                <p class="content-text">Sustainable smart homes combine intelligent technology with eco-friendly materials to lower energy use and reduce environmental impact. By leveraging automation and monitoring, homeowners can optimize energy consumption while maintaining high comfort levels. These systems not only benefit the environment but also add lasting value to properties.</p>
+                
+                <h3 class="section-title">Eco-Friendly Materials</h3>
+                <p class="content-text">Choosing sustainable building materials, such as reclaimed wood, recycled metal, or non-toxic insulation, contributes to a healthier home and lowers your carbon footprint.</p>
+                
+                <div class="content-box">
+                    <h3>Smart Energy Management</h3>
+                    <p>Smart thermostats, LED lighting, and automated plug controls are integral for monitoring and reducing household energy use.</p>
+                </div>
+                
+                <div class="content-box accent">
+                    <h3>Eco-Friendly Materials</h3>
+                    <p>Choosing sustainable building materials, such as reclaimed wood, recycled metal, or non-toxic insulation, contributes to a healthier home and lowers your carbon footprint.</p>
+                </div>
+            </div>
+            
+            <div class="footer-enhanced">
+                <div class="footer-decoration">
+                    <div class="footer-circles">
+                        <div class="footer-circle footer-circle-1"></div>
+                        <div class="footer-circle footer-circle-2"></div>
+                        <div class="footer-circle footer-circle-3"></div>
+                    </div>
+                    <svg class="footer-wave" viewBox="0 0 1200 40" preserveAspectRatio="none">
+                        <path d="M0,20 Q300,0 600,20 T1200,20 L1200,40 L0,40 Z"></path>
+                    </svg>
+                </div>
+                <div class="footer-content-left">
+                    <div class="footer-icon">©</div>
+                    <span>© 2025 Kyro. All rights reserved.</span>
+                </div>
+                <div class="footer-content-right">
+                    <span>https://www.Kyro.co</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 5: CUSTOM CONTENT 2 WITH CHECKLIST -->
+        <div class="page content-page">
+            <div class="page-header-enhanced">
+                <div class="header-decoration">
+                    <div class="header-circle header-circle-1"></div>
+                    <div class="header-circle header-circle-2"></div>
+                    <div class="header-circle header-circle-3"></div>
+                </div>
+                <div class="page-header-content">
+                    <h2 class="page-title-enhanced">Materials and Technologies for Eco-Friendly Homes</h2>
+                    <div class="page-number-enhanced">PAGE 5</div>
+                </div>
+            </div>
+            <div class="header-accent-bar"></div>
+            
+            <div class="page-content-area">
+                <h1>Key Benefits of Smart Automation</h1>
+                <p class="content-text">Intelligent automation empowers homeowners to minimize energy waste, streamline daily routines, and improve indoor comfort. Smart systems can adjust lighting, temperature, and appliance operation based on real-time data and preferences, resulting in substantial savings and convenience.</p>
+                
+                <h3 class="section-title">Enhancing Comfort and Wellbeing</h3>
+                <ul class="checklist">
+                    <li>Smart home technology is increasingly accessible, with scalable options for any budget.</li>
+                    <li>Simple upgrades, like smart plugs and programmable thermostats, offer quick returns on investment, while more advanced systems can be added as needs evolve.</li>
+                    
+                    
+                </ul>
+                
+                <div class="info-box">
+                    <div class="info-box-title">Reducing Energy Costs</div>
+                    <p>Automated schedules and occupancy sensors ensure devices run only when needed, significantly reducing unnecessary energy consumption and utility expenses.</p>
+                </div>
+                
+                <blockquote>
+                    "Intelligent automation empowers homeowners to minimize energy waste, streamline daily routines, and improve indoor comfort."
+                    <footer>— Kyro</footer>
+                </blockquote>
+            </div>
+            
+            <div class="footer-enhanced">
+                <div class="footer-decoration">
+                    <div class="footer-circles">
+                        <div class="footer-circle footer-circle-1"></div>
+                        <div class="footer-circle footer-circle-2"></div>
+                        <div class="footer-circle footer-circle-3"></div>
+                    </div>
+                    <svg class="footer-wave" viewBox="0 0 1200 40" preserveAspectRatio="none">
+                        <path d="M0,20 Q300,0 600,20 T1200,20 L1200,40 L0,40 Z"></path>
+                    </svg>
+                </div>
+                <div class="footer-content-left">
+                    <div class="footer-icon">©</div>
+                    <span>© 2025 Kyro. All rights reserved.</span>
+                </div>
+                <div class="footer-content-right">
+                    <span>https://www.Kyro.co</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 6: CUSTOM CONTENT 3 -->
+        <div class="page content-page">
+            <div class="page-header-enhanced">
+                <div class="header-decoration">
+                    <div class="header-circle header-circle-1"></div>
+                    <div class="header-circle header-circle-2"></div>
+                    <div class="header-circle header-circle-3"></div>
+                </div>
+                <div class="page-header-content">
+                    <h2 class="page-title-enhanced">Steps for Seamless Integration</h2>
+                    <div class="page-number-enhanced">PAGE 6</div>
+                </div>
+            </div>
+            <div class="header-accent-bar"></div>
+            
+            <div class="page-content-area">
+                <h1>Affordable Solutions for Every Budget</h1>
+                <p class="content-text">Smart home technology is increasingly accessible, with scalable options for any budget. Simple upgrades, like smart plugs and programmable thermostats, offer quick returns on investment, while more advanced systems can be added as needs evolve.</p>
+                
+                <h3 class="section-title">Expanding Capability Over Time</h3>
+                <p class="content-text"></p>
+                
+                <div class="content-box accent">
+                    <h3>Low-Cost Entry Points</h3>
+                    <p>Smart lighting and plug controls require minimal upfront investment and can immediately reduce energy use by eliminating standby power and automating schedules.</p>
+                </div>
+            </div>
+            
+            <div class="footer-enhanced">
+                <div class="footer-decoration">
+                    <div class="footer-circles">
+                        <div class="footer-circle footer-circle-1"></div>
+                        <div class="footer-circle footer-circle-2"></div>
+                        <div class="footer-circle footer-circle-3"></div>
+                    </div>
+                    <svg class="footer-wave" viewBox="0 0 1200 40" preserveAspectRatio="none">
+                        <path d="M0,20 Q300,0 600,20 T1200,20 L1200,40 L0,40 Z"></path>
+                    </svg>
+                </div>
+                <div class="footer-content-left">
+                    <div class="footer-icon">©</div>
+                    <span>© 2025 Kyro. All rights reserved.</span>
+                </div>
+                <div class="footer-content-right">
+                    <span>https://www.Kyro.co</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 7: CUSTOM CONTENT 4 -->
+        <div class="page content-page">
+            <div class="page-header-enhanced">
+                <div class="header-decoration">
+                    <div class="header-circle header-circle-1"></div>
+                    <div class="header-circle header-circle-2"></div>
+                    <div class="header-circle header-circle-3"></div>
+                </div>
+                <div class="page-header-content">
+                    <h2 class="page-title-enhanced">Materials and Technologies for Eco-Friendly Homes</h2>
+                    <div class="page-number-enhanced">PAGE 7</div>
+                </div>
+            </div>
+            <div class="header-accent-bar"></div>
+            
+            <div class="page-content-area">
+                <h1>Materials and Technologies for Eco-Friendly Homes</h1>
+                <p class="content-text">Integrating sustainable materials with advanced smart technologies creates homes that are energy efficient and environmentally responsible. Carefully selected products and thoughtful design can dramatically lower resource consumption and maintenance costs.</p>
+                
+                <h3 class="section-title">Leveraging Smart Devices</h3>
+                <p class="content-text">Smart thermostats, energy monitors, and solar-powered security systems automate efficiency and provide real-time insights that help you optimize energy use and reduce waste.</p>
+                
+                <div class="two-columns">
+                    <div class="column">
+                        <div class="content-box">
+                            <h3>Reducing Energy Costs</h3>
+                            <p>Automated schedules and occupancy sensors ensure devices run only when needed, significantly reducing unnecessary energy consumption and utility expenses.</p>
+                        </div>
+                    </div>
+                    <div class="column">
+                        <div class="content-box">
+                            <h3>Enhancing Comfort and Wellbeing</h3>
+                            <p>Smart homes automatically tailor lighting and climate settings to suit individual preferences, promoting a healthier and more enjoyable living environment.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <h3>Materials and Technologies for Eco-Friendly Homes</h3>
+                    <p>Opt for products with recycled content, certified sustainable origins, and low embodied energy.</p>
+                </div>
+            </div>
+            
+            <div class="footer-enhanced">
+                <div class="footer-decoration">
+                    <div class="footer-circles">
+                        <div class="footer-circle footer-circle-1"></div>
+                        <div class="footer-circle footer-circle-2"></div>
+                        <div class="footer-circle footer-circle-3"></div>
+                    </div>
+                    <svg class="footer-wave" viewBox="0 0 1200 40" preserveAspectRatio="none">
+                        <path d="M0,20 Q300,0 600,20 T1200,20 L1200,40 L0,40 Z"></path>
+                    </svg>
+                </div>
+                <div class="footer-content-left">
+                    <div class="footer-icon">©</div>
+                    <span>© 2025 Kyro. All rights reserved.</span>
+                </div>
+                <div class="footer-content-right">
+                    <span>https://www.Kyro.co</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 8: CUSTOM CONTENT 5 -->
+        <div class="page content-page">
+            <div class="page-header-enhanced">
+                <div class="header-decoration">
+                    <div class="header-circle header-circle-1"></div>
+                    <div class="header-circle header-circle-2}}</div>
+                    <div class="header-circle header-circle-3"></div>
+                </div>
+                <div class="page-header-content">
+                    <h2 class="page-title-enhanced">Steps for Seamless Integration</h2>
+                    <div class="page-number-enhanced">PAGE 8</div>
+                </div>
+            </div>
+            <div class="header-accent-bar"></div>
+            
+            <div class="page-content-area">
+                <h1>Steps for Seamless Integration</h1>
+                <p class="content-text">A successful smart home starts with a compatibility plan and careful integration. Ensure devices communicate effectively, build a reliable network, and automate key functions to maximize energy savings and convenience.</p>
+                
+                <h3 class="section-title">Building a Reliable Network</h3>
+                <ul class="checklist">
+                    <li>A successful smart home starts with a compatibility plan and careful integration.</li>
+                    <li>Ensure devices communicate effectively, build a reliable network, and automate key functions to maximize energy savings and convenience.</li>
+                    
+                    
+                </ul>
+                
+                <div class="info-box">
+                    <div class="info-box-title">Planning for Compatibility</div>
+                    <p>Select devices that support common communication protocols like Zigbee or Z-Wave to allow easy expansion and prevent technology lock-in.</p>
+                </div>
+                
+                
+            </div>
+            
+            <div class="footer-enhanced">
+                <div class="footer-decoration">
+                    <div class="footer-circles">
+                        <div class="footer-circle footer-circle-1"></div>
+                        <div class="footer-circle footer-circle-2"></div>
+                        <div class="footer-circle footer-circle-3"></div>
+                    </div>
+                    <svg class="footer-wave" viewBox="0 0 1200 40" preserveAspectRatio="none">
+                        <path d="M0,20 Q300,0 600,20 T1200,20 L1200,40 L0,40 Z"></path>
+                    </svg>
+                </div>
+                <div class="footer-content-left">
+                    <div class="footer-icon">©</div>
+                    <span>© 2025 Kyro. All rights reserved.</span>
+                </div>
+                <div class="footer-content-right">
+                    <span>https://www.Kyro.co</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 9: CONTACT & CTA -->
+        <div class="page content-page">
+            <div class="page-header-enhanced">
+                <div class="header-decoration">
+                    <div class="header-circle header-circle-1"></div>
+                    <div class="header-circle header-circle-2"></div>
+                    <div class="header-circle header-circle-3"></div>
+                </div>
+                <div class="page-header-content">
+                    <h2 class="page-title-enhanced">Ready to transform your space?</h2>
+                    <div class="page-number-enhanced">PAGE 9</div>
+                </div>
+            </div>
+            <div class="header-accent-bar"></div>
+            
+            <div class="page-content-area">
+                <div class="cta-section">
+                    <h3 class="cta-title">Ready to transform your space?</h3>
+                    <p class="cta-text">Contact Kyro to explore custom smart home solutions tailored to your needs. Our team combines expertise in intelligent automation with a commitment to sustainable design, guiding you through every step of your smart home journey. We provide ongoing support and transparent communication to ensure your project exceeds expectations.</p>
+                    <a href="#" class="cta-button"></a>
+                </div>
+                
+                <h3 class="section-title">Why Choose Kyro</h3>
+                <p class="content-text" style="text-align: center;">
+                    <strong>Kyro </strong><br>
+                    0538994758<br>
+                    info@Kyro.co<br>
                     https://www.Kyro.co
+                </p>
+                
+                <div class="content-box" style="margin-top: 30px;">
+                    <h3>Why Choose Kyro</h3>
+                    <p>Kyro specializes in integrating smart technologies and sustainable materials for efficient, comfortable living spaces.</p>
+                </div>
+                
+                <div style="margin-top: 30px; text-align: center; font-size: 14px; color: var(--text-light);">
+                    <p><strong></strong></p>
                 </div>
             </div>
             
-            <div class="version"></div>
-        </section>
-
-        <!-- Page 2: Terms of Use -->
-        <section class="page">
-            <div class="page-header">
-                <div class="page-header-content">
-                    <div class="step-indicator">STEP 01</div>
-                    <div class="section-title">Understanding Smart Home Fundamentals</div>
-                    <div class="page-number-header">PAGE 2</div>
-                </div>
-            </div>
-            
-            <div class="content-container">
-                <div class="terms-content">
-                    <h1 class="terms-title">Terms of Use</h1>
-                    <p class="terms-text">This guide is for informational purposes and should not be considered professional advice.</p>
-                    <p class="terms-text">Kyro provides this guide to inform homeowners about smart home design options. While we strive for accuracy, individual circumstances and technology may vary.</p>
-                    <p class="terms-text">Readers are encouraged to consult with professionals before making significant home improvement decisions. Kyro is not liable for any direct or indirect consequences resulting from the use of this guide.</p>
-                    <p class="terms-text">All content in this guide is the property of Kyro and may not be reproduced or distributed without written permission. By downloading, you accept these terms.</p>
-                    <p class="terms-text"></p>
-                    <p class="terms-text rights-text"></p>
-                </div>
-            </div>
-            
-            <div class="page-footer">© 2025 Kyro. All rights reserved.</div>
-            <div class="page-number">2</div>
-        </section>
-
-        <!-- Page 3: Contents -->
-        <section class="page">
-            <div class="page-header">
-                <div class="page-header-content">
-                    <div class="step-indicator">STEP 02</div>
-                    <div class="section-title">Cost-Effective Smart Home Planning</div>
-                    <div class="page-number-header">PAGE 3</div>
-                </div>
-            </div>
-            
-            <div class="content-container">
-                <div class="contents-container">
-                    <h1 class="contents-title">Contents</h1>
-                    
-                    <ul class="contents-list">
-                        <li class="contents-item">
-                            <span class="contents-text">Understanding Smart Home Fundamentals</span>
-                            <span class="contents-page">4</span>
-                        </li>
-                        <li class="contents-item">
-                            <span class="contents-text">Cost-Effective Smart Home Planning</span>
-                            <span class="contents-page">5</span>
-                        </li>
-                        <li class="contents-item">
-                            <span class="contents-text">Sustainable Materials for Smart Homes</span>
-                            <span class="contents-page">6</span>
-                        </li>
-                        <li class="contents-item">
-                            <span class="contents-text">Integrating Intelligent Systems</span>
-                            <span class="contents-page">7</span>
-                        </li>
-                        <li class="contents-item">
-                            <span class="contents-text">Designing for Comfort, Security, and Convenience</span>
-                            <span class="contents-page">8</span>
-                        </li>
-                        <li class="contents-item">
-                            <span class="contents-text">Next Steps for Future-Ready Smart Homes</span>
-                            <span class="contents-page">9</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="page-footer">© 2025 Kyro. All rights reserved.</div>
-            <div class="page-number">3</div>
-        </section>
-
-        <!-- Page 4: Custom Content 1 -->
-        <section class="page">
-            <div class="page-header">
-                <div class="page-header-content">
-                    <div class="step-indicator">STEP 03</div>
-                    <div class="section-title">Sustainable Materials for Smart Homes</div>
-                    <div class="page-number-header">PAGE 4</div>
-                </div>
-            </div>
-            
-            <div class="content-container">
-                <div class="content">
-                    <h1>Understanding Smart Home Fundamentals</h1>
-                    
-                    <p>A smart home uses connected devices, automation, and intelligent systems to improve daily life. By leveraging technology and eco-friendly solutions, homeowners can achieve greater efficiency, comfort, and sustainability.</p>
-                    
-                    <div class="content-box">
-                        <h3>Benefits of Smart Living</h3>
-                        <p>Homeowners enjoy increased comfort, better security, and reduced utility costs through intelligent automation.</p>
+            <div class="footer-enhanced">
+                <div class="footer-decoration">
+                    <div class="footer-circles">
+                        <div class="footer-circle footer-circle-1"></div>
+                        <div class="footer-circle footer-circle-2"></div>
+                        <div class="footer-circle footer-circle-3"></div>
                     </div>
-                    
-                    <h2>What Makes a Home Smart?</h2>
-                    <p>Smart homes feature integrated devices—such as thermostats, lights, and security systems—that communicate and operate automatically to optimize energy use and convenience.</p>
-                    
-                    <div class="content-box accent">
-                        <h3>What Makes a Home Smart?</h3>
-                        <p>Smart homes feature integrated devices—such as thermostats, lights, and security systems—that communicate and operate automatically to optimize energy use and convenience.</p>
-                    </div>
+                    <svg class="footer-wave" viewBox="0 0 1200 40" preserveAspectRatio="none">
+                        <path d="M0,20 Q300,0 600,20 T1200,20 L1200,40 L0,40 Z"></path>
+                    </svg>
+                </div>
+                <div class="footer-content-left">
+                    <div class="footer-icon">©</div>
+                    <span>© 2025 Kyro. All rights reserved.</span>
+                </div>
+                <div class="footer-content-right">
+                    <span>https://www.Kyro.co</span>
                 </div>
             </div>
-            
-            <div class="page-footer">© 2025 Kyro. All rights reserved.</div>
-            <div class="page-number">4</div>
-        </section>
-
-        <!-- Page 5: Custom Content 2 -->
-        <section class="page">
-            <div class="page-header">
-                <div class="page-header-content">
-                    <div class="step-indicator">STEP 04</div>
-                    <div class="section-title">Integrating Intelligent Systems</div>
-                    <div class="page-number-header">PAGE 5</div>
-                </div>
-            </div>
-            
-            <div class="content-container">
-                <div class="content">
-                    <h1>Cost-Effective Smart Home Planning</h1>
-                    
-                    <p>Building a smart home does not require significant upfront investment. Careful planning and prioritizing essential systems allow for affordable, scalable solutions that can grow over time.</p>
-                    
-                    <div class="two-columns">
-                        <div class="column">
-                            <div class="content-box">
-                                <h3>Budget-Friendly Strategies</h3>
-                                <p>Start with core features like smart lighting or thermostats, then expand as needs and budgets allow.</p>
-                            </div>
-                        </div>
-                        <div class="column">
-                            <div class="content-box">
-                                <h3>Avoiding Common Pitfalls</h3>
-                                <p>Many homeowners overcomplicate their smart home projects. Focus on reliable products and professional guidance to simplify installation and ongoing management.</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <h2>Avoiding Common Pitfalls</h2>
-                    <p>Many homeowners overcomplicate their smart home projects. Focus on reliable products and professional guidance to simplify installation and ongoing management.</p>
-                    
-                    <blockquote>
-                        "Building a smart home does not require significant upfront investment."
-                        <footer>— Kyro</footer>
-                    </blockquote>
-                </div>
-            </div>
-            
-            <div class="page-footer">© 2025 Kyro. All rights reserved.</div>
-            <div class="page-number">5</div>
-        </section>
-
-        <!-- Page 6: Custom Content 3 -->
-        <section class="page">
-            <div class="page-header">
-                <div class="page-header-content">
-                    <div class="step-indicator">STEP 05</div>
-                    <div class="section-title">Designing for Comfort, Security, and Convenience</div>
-                    <div class="page-number-header">PAGE 6</div>
-                </div>
-            </div>
-            
-            <div class="content-container">
-                <div class="content">
-                    <h1>Sustainable Materials for Smart Homes</h1>
-                    
-                    <p>Sustainable materials reduce environmental impact and improve indoor air quality. Combining these with smart systems maximizes long-term efficiency and aligns with eco-friendly values.</p>
-                    
-                    <div class="content-box accent">
-                        <h3>Choosing Sustainable Options</h3>
-                        <p>Use materials such as bamboo flooring, recycled insulation, and low-VOC paints. These choices contribute to healthier living spaces and lower resource consumption.</p>
-                    </div>
-                    
-                    <h2>Integration with Technology</h2>
-                    <ul>
-                        <li>Sustainable materials reduce environmental impact and improve indoor air quality.</li>
-                        <li>Combining these with smart systems maximizes long-term efficiency and aligns with eco-friendly values.</li>
-                        
-                        
-                    </ul>
-                    
-                    <div class="content-box">
-                        <h3>Choosing Sustainable Options</h3>
-                        <p>Use materials such as bamboo flooring, recycled insulation, and low-VOC paints. These choices contribute to healthier living spaces and lower resource consumption.</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="page-footer">© 2025 Kyro. All rights reserved.</div>
-            <div class="page-number">6</div>
-        </section>
-
-        <!-- Page 7: Custom Content 4 -->
-        <section class="page">
-            <div class="page-header">
-                <div class="page-header-content">
-                    <div class="step-indicator">STEP 06</div>
-                    <div class="section-title">Integrating Intelligent Systems</div>
-                    <div class="page-number-header">PAGE 7</div>
-                </div>
-            </div>
-            
-            <div class="content-container">
-                <div class="content">
-                    <h1>Integrating Intelligent Systems</h1>
-                    
-                    <p>The key to an adaptive smart home is seamless integration of devices and platforms. Interoperable systems allow homeowners to control multiple functions from a single interface, enhancing convenience.</p>
-                    
-                    <div class="two-columns">
-                        <div class="column">
-                            <h3>Popular Smart Devices</h3>
-                            <p>Install smart thermostats, automated lighting, and security cameras for instant improvements in energy management and safety.</p>
-                        </div>
-                        <div class="column">
-                            <h3>Centralized Control</h3>
-                            <p>Use a smart home hub or app to connect devices, enabling homeowners to automate routines and monitor performance from anywhere.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="content-box">
-                        <h3>Integrating Intelligent Systems</h3>
-                        <p>Install smart thermostats, automated lighting, and security cameras for instant improvements in energy management and safety.</p>
-                    </div>
-                    
-                    <h2>Centralized Control</h2>
-                    <p>Use a smart home hub or app to connect devices, enabling homeowners to automate routines and monitor performance from anywhere.</p>
-                </div>
-            </div>
-            
-            <div class="page-footer">© 2025 Kyro. All rights reserved.</div>
-            <div class="page-number">7</div>
-        </section>
-
-        <!-- Page 8: Custom Content 5 -->
-        <section class="page">
-            <div class="page-header">
-                <div class="page-header-content">
-                    <div class="step-indicator">STEP 07</div>
-                    <div class="section-title">Designing for Comfort, Security, and Convenience</div>
-                    <div class="page-number-header">PAGE 8</div>
-                </div>
-            </div>
-            
-            <div class="content-container">
-                <div class="content">
-                    <h1>Designing for Comfort, Security, and Convenience</h1>
-                    
-                    <p>Smart home design should center on the needs of the occupants. Thoughtful placement and automation of systems ensure living spaces are safe, comfortable, and easy to manage.</p>
-                    
-                    <div class="content-box accent">
-                        <h3>Enhancing Everyday Life</h3>
-                        <p>Automated lighting, climate control, and door locks offer convenience and peace of mind, especially for busy families.</p>
-                    </div>
-                    
-                    <h2>Customizing Experiences</h2>
-                    <ol>
-                        <li>Smart home design should center on the needs of the occupants.</li>
-                        <li>Thoughtful placement and automation of systems ensure living spaces are safe, comfortable, and easy to manage.</li>
-                        
-                        
-                    </ol>
-                    
-                    
-                </div>
-            </div>
-            
-            <div class="page-footer">© 2025 Kyro. All rights reserved.</div>
-            <div class="page-number">8</div>
-        </section>
-
-        <!-- Page 9: Contact & Next Steps -->
-        <section class="page">
-            <div class="page-header">
-                <div class="page-header-content">
-                    <div class="step-indicator">STEP 08</div>
-                    <div class="section-title">download our Smart Home Design Guide today.</div>
-                    <div class="page-number-header">PAGE 9</div>
-                </div>
-            </div>
-            
-            <div class="content-container">
-                <div class="contact-section">
-                    <h1 class="contact-title">download our Smart Home Design Guide today.</h1>
-                    <p class="contact-description">Contact Kyro to start your smart home journey. Our team guides you through every step, from planning and material selection to system integration and ongoing support. With a focus on sustainability and simplicity, we make smart living accessible for all homeowners. Reach out for a tailored consultation and discover how advanced technology and eco-friendly design can transform your home.</p>
-                    
-                    <div class="contact-details">
-                        <strong>Kyro </strong><br>
-                        0538994758<br>
-                        info@Kyro.co<br>
-                        https://www.Kyro.co
-                    </div>
-                    
-                    <div class="content-box" style="margin-top: 30px; max-width: 400px; margin-left: auto; margin-right: auto;">
-                        <h3>Why Choose Kyro</h3>
-                        <p>Kyro specializes in blending sustainable materials with intelligent technology, delivering smart homes that are both efficient and future-ready.</p>
-                    </div>
-                    
-                    <div style="margin-top: 40px; font-size: 14px; color: var(--light-text);">
-                        <p><strong>Ready to get started?</strong> Contact us today for a complimentary consultation.</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="page-footer">© 2025 Kyro. All rights reserved.</div>
-            <div class="page-number">9</div>
-        </section>
+        </div>
     </div>
 </body>
 </html>
