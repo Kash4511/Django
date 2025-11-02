@@ -3,6 +3,21 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+def brand_asset_upload_to(instance, filename):
+    """Dynamic upload path for brand assets based on user and asset type.
+    Matches migration reference `lead_magnets.models.brand_asset_upload_to`.
+
+    Path: brand_assets/<user_id>/<logos|images>/<brand_id|default>/<original_filename>
+    """
+    try:
+        user_id = getattr(instance, 'user_id', None) or (instance.user.id if getattr(instance, 'user', None) else 'anonymous')
+    except Exception:
+        user_id = 'anonymous'
+    asset_type = getattr(instance, 'asset_type', 'image')
+    subdir = 'logos' if asset_type == 'logo' else 'images'
+    brand_id = getattr(instance, 'brand_id', '') or 'default'
+    return f"brand_assets/{user_id}/{subdir}/{brand_id}/{filename}"
+
 class LeadMagnet(models.Model):
     STATUS_CHOICES = [
         ('draft', 'Draft'),
@@ -55,6 +70,27 @@ class Download(models.Model):
     
     class Meta:
         ordering = ['-downloaded_at']
+
+class BrandAsset(models.Model):
+    """Stores uploaded brand assets (logos and general images)."""
+    ASSET_TYPE_CHOICES = [
+        ('logo', 'Logo'),
+        ('image', 'Image'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='brand_assets')
+    brand_id = models.CharField(max_length=120, blank=True)
+    asset_type = models.CharField(max_length=20, choices=ASSET_TYPE_CHOICES)
+    file = models.FileField(upload_to=brand_asset_upload_to)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user_id or self.user_id}@{self.brand_id} - {self.asset_type}"
+
+    class Meta:
+        ordering = ['-created_at']
 
 class FirmProfile(models.Model):
     FIRM_SIZE_CHOICES = [

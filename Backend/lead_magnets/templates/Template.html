@@ -279,7 +279,122 @@
             padding: 25mm 25mm 0 25mm;
         }
 
-        /* ENHANCED FOOTER - PRIMARY COLOR */
+        /* IMAGE PLACEHOLDERS */
+        .image-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
+            border: 2px dashed var(--accent);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 25px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .image-placeholder:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(0,0,0,0.02) 10px,
+                    rgba(0,0,0,0.02) 20px
+                );
+        }
+
+        .image-placeholder-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--secondary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .image-placeholder-icon:after {
+            content: '🏗️';
+            font-size: 30px;
+        }
+
+        .image-placeholder-text {
+            font-size: 14px;
+            color: var(--text-light);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .image-placeholder-subtext {
+            font-size: 11px;
+            color: var(--text-light);
+            margin-top: 5px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Small image placeholder for content boxes */
+        .image-placeholder-small {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
+            border: 2px dashed var(--accent);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 15px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .image-placeholder-small:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(0,0,0,0.02) 10px,
+                    rgba(0,0,0,0.02) 20px
+                );
+        }
+
+        .image-placeholder-small .image-placeholder-icon {
+            width: 45px;
+            height: 45px;
+        }
+
+        .image-placeholder-small .image-placeholder-icon:after {
+            font-size: 22px;
+        }
+
+        .image-placeholder-small .image-placeholder-text {
+            font-size: 12px;
+        }
+
+        /* ENHANCED FOOTER - PRIMARY COLOR WITH LOGO */
         .footer-enhanced {
             position: absolute;
             bottom: 0;
@@ -354,18 +469,46 @@
             left: 60%;
         }
 
-        .footer-content-left,
-        .footer-content-right {
+        /* LOGO PLACEHOLDER IN FOOTER */
+        .footer-logo-wrapper {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .footer-logo {
+            width: 45px;
+            height: 45px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+
+        .footer-logo-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .footer-content-left {
             position: relative;
             z-index: 2;
             font-weight: 500;
             letter-spacing: 0.5px;
-        }
-
-        .footer-content-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .footer-icon {
@@ -377,19 +520,17 @@
             align-items: center;
             justify-content: center;
             font-size: 10px;
+            margin-right: 8px;
         }
 
         .footer-content-right {
+            position: relative;
+            z-index: 2;
             display: flex;
             align-items: center;
             gap: 8px;
-        }
-
-        .footer-divider {
-            width: 1px;
-            height: 12px;
-            background: rgba(255, 255, 255, 0.3);
-            margin: 0 4px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
         }
 
         /* STYLED SECTION TITLE WITH LEFT BAR */
@@ -503,19 +644,7 @@
             font-size: 16px;
             margin-bottom: 25px;
             color: white;
-        }
-
-        .cta-button {
-            display: inline-block;
-            background: white;
-            color: var(--secondary);
-            padding: 15px 40px;
-            border-radius: 30px;
-            font-weight: 700;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-decoration: none;
+            line-height: 1.6;
         }
 
         h1 {
@@ -741,9 +870,13 @@
                         <path d="M0,20 Q300,0 600,20 T1200,20 L1200,40 L0,40 Z"></path>
                     </svg>
                 </div>
-                <div class="footer-content-left">
-                    <div class="footer-icon">©</div>
-                    <span>{{footerText}}</span>
+                <div class="footer-logo-wrapper">
+                    <div class="footer-logo">
+                        <div class="footer-logo-placeholder">{{logoPlaceholder}}</div>
+                    </div>
+                    <div class="footer-content-left">
+                        <span>{{footerText}}</span>
+                    </div>
                 </div>
                 <div class="footer-content-right">
                     <span>{{website}}</span>
@@ -808,9 +941,13 @@
                         <path d="M0,20 Q300,0 600,20 T1200,20 L1200,40 L0,40 Z"></path>
                     </svg>
                 </div>
-                <div class="footer-content-left">
-                    <div class="footer-icon">©</div>
-                    <span>{{footerText}}</span>
+                <div class="footer-logo-wrapper">
+                    <div class="footer-logo">
+                        <div class="footer-logo-placeholder">{{logoPlaceholder}}</div>
+                    </div>
+                    <div class="footer-content-left">
+                        <span>{{footerText}}</span>
+                    </div>
                 </div>
                 <div class="footer-content-right">
                     <span>{{website}}</span>
@@ -818,7 +955,7 @@
             </div>
         </div>
 
-        <!-- PAGE 4: CUSTOM CONTENT 1 -->
+        <!-- PAGE 4: CUSTOM CONTENT 1 WITH ARCHITECTURAL IMAGE -->
         <div class="page content-page">
             <div class="page-header-enhanced">
                 <div class="header-decoration">
@@ -836,6 +973,13 @@
             <div class="page-content-area">
                 <h1>{{customTitle1}}</h1>
                 <p class="content-text">{{customContent1}}</p>
+                
+                <!-- ARCHITECTURAL IMAGE PLACEHOLDER 1 -->
+                <div class="image-placeholder">
+                    <div class="image-placeholder-icon"></div>
+                    <div class="image-placeholder-text">Architectural Image</div>
+                    <div class="image-placeholder-subtext">{{architecturalImageCaption1}}</div>
+                </div>
                 
                 <h3 class="section-title">{{subheading1}}</h3>
                 <p class="content-text">{{subcontent1}}</p>
@@ -862,9 +1006,13 @@
                         <path d="M0,20 Q300,0 600,20 T1200,20 L1200,40 L0,40 Z"></path>
                     </svg>
                 </div>
-                <div class="footer-content-left">
-                    <div class="footer-icon">©</div>
-                    <span>{{footerText}}</span>
+                <div class="footer-logo-wrapper">
+                    <div class="footer-logo">
+                        <div class="footer-logo-placeholder">{{logoPlaceholder}}</div>
+                    </div>
+                    <div class="footer-content-left">
+                        <span>{{footerText}}</span>
+                    </div>
                 </div>
                 <div class="footer-content-right">
                     <span>{{website}}</span>
@@ -921,9 +1069,13 @@
                         <path d="M0,20 Q300,0 600,20 T1200,20 L1200,40 L0,40 Z"></path>
                     </svg>
                 </div>
-                <div class="footer-content-left">
-                    <div class="footer-icon">©</div>
-                    <span>{{footerText}}</span>
+                <div class="footer-logo-wrapper">
+                    <div class="footer-logo">
+                        <div class="footer-logo-placeholder">{{logoPlaceholder}}</div>
+                    </div>
+                    <div class="footer-content-left">
+                        <span>{{footerText}}</span>
+                    </div>
                 </div>
                 <div class="footer-content-right">
                     <span>{{website}}</span>
@@ -931,7 +1083,7 @@
             </div>
         </div>
 
-        <!-- PAGE 6: CUSTOM CONTENT 3 -->
+        <!-- PAGE 6: CUSTOM CONTENT 3 - FIXED WITH SIMPLE STRUCTURE -->
         <div class="page content-page">
             <div class="page-header-enhanced">
                 <div class="header-decoration">
@@ -950,8 +1102,20 @@
                 <h1>{{customTitle3}}</h1>
                 <p class="content-text">{{customContent3}}</p>
                 
+                <!-- ARCHITECTURAL IMAGE PLACEHOLDER 2 -->
+                <div class="image-placeholder">
+                    <div class="image-placeholder-icon"></div>
+                    <div class="image-placeholder-text">Architectural Image</div>
+                    <div class="image-placeholder-subtext">{{architecturalImageCaption2}}</div>
+                </div>
+                
                 <h3 class="section-title">{{subheading3}}</h3>
                 <p class="content-text">{{subcontent3}}</p>
+                
+                <div class="info-box">
+                    <div class="info-box-title">{{infoBoxTitle3}}</div>
+                    <p>{{infoBoxContent3}}</p>
+                </div>
                 
                 <div class="content-box accent">
                     <h3>{{accentBoxTitle2}}</h3>
@@ -970,9 +1134,13 @@
                         <path d="M0,20 Q300,0 600,20 T1200,20 L1200,40 L0,40 Z"></path>
                     </svg>
                 </div>
-                <div class="footer-content-left">
-                    <div class="footer-icon">©</div>
-                    <span>{{footerText}}</span>
+                <div class="footer-logo-wrapper">
+                    <div class="footer-logo">
+                        <div class="footer-logo-placeholder">{{logoPlaceholder}}</div>
+                    </div>
+                    <div class="footer-content-left">
+                        <span>{{footerText}}</span>
+                    </div>
                 </div>
                 <div class="footer-content-right">
                     <span>{{website}}</span>
@@ -980,7 +1148,7 @@
             </div>
         </div>
 
-        <!-- PAGE 7: CUSTOM CONTENT 4 -->
+        <!-- PAGE 7: CUSTOM CONTENT 4 WITH SMALL IMAGE PLACEHOLDERS -->
         <div class="page content-page">
             <div class="page-header-enhanced">
                 <div class="header-decoration">
@@ -1002,10 +1170,16 @@
                 <h3 class="section-title">{{subheading4}}</h3>
                 <p class="content-text">{{subcontent4}}</p>
                 
+                <!-- TWO COLUMN LAYOUT WITH SMALL IMAGE PLACEHOLDERS -->
                 <div class="two-columns">
                     <div class="column">
                         <div class="content-box">
                             <h3>{{columnBoxTitle1}}</h3>
+                            <!-- ARCHITECTURAL IMAGE PLACEHOLDER 3 (SMALL) -->
+                            <div class="image-placeholder-small">
+                                <div class="image-placeholder-icon"></div>
+                                <div class="image-placeholder-text">Detail View</div>
+                            </div>
                             <p>{{columnBoxContent1}}</p>
                         </div>
                     </div>
@@ -1034,9 +1208,13 @@
                         <path d="M0,20 Q300,0 600,20 T1200,20 L1200,40 L0,40 Z"></path>
                     </svg>
                 </div>
-                <div class="footer-content-left">
-                    <div class="footer-icon">©</div>
-                    <span>{{footerText}}</span>
+                <div class="footer-logo-wrapper">
+                    <div class="footer-logo">
+                        <div class="footer-logo-placeholder">{{logoPlaceholder}}</div>
+                    </div>
+                    <div class="footer-content-left">
+                        <span>{{footerText}}</span>
+                    </div>
                 </div>
                 <div class="footer-content-right">
                     <span>{{website}}</span>
@@ -1049,7 +1227,7 @@
             <div class="page-header-enhanced">
                 <div class="header-decoration">
                     <div class="header-circle header-circle-1"></div>
-                    <div class="header-circle header-circle-2}}</div>
+                    <div class="header-circle header-circle-2"></div>
                     <div class="header-circle header-circle-3"></div>
                 </div>
                 <div class="page-header-content">
@@ -1093,9 +1271,13 @@
                         <path d="M0,20 Q300,0 600,20 T1200,20 L1200,40 L0,40 Z"></path>
                     </svg>
                 </div>
-                <div class="footer-content-left">
-                    <div class="footer-icon">©</div>
-                    <span>{{footerText}}</span>
+                <div class="footer-logo-wrapper">
+                    <div class="footer-logo">
+                        <div class="footer-logo-placeholder">{{logoPlaceholder}}</div>
+                    </div>
+                    <div class="footer-content-left">
+                        <span>{{footerText}}</span>
+                    </div>
                 </div>
                 <div class="footer-content-right">
                     <span>{{website}}</span>
@@ -1119,10 +1301,9 @@
             <div class="header-accent-bar"></div>
             
             <div class="page-content-area">
-                <div class="cta-section">
+                <div class="cta-section" style="padding: 50px 40px;">
                     <h3 class="cta-title">{{contactTitle}}</h3>
                     <p class="cta-text">{{contactDescription}}</p>
-                    <a href="#" class="cta-button">{{ctaButtonText}}</a>
                 </div>
                 
                 <h3 class="section-title">{{differentiatorTitle}}</h3>
@@ -1154,9 +1335,13 @@
                         <path d="M0,20 Q300,0 600,20 T1200,20 L1200,40 L0,40 Z"></path>
                     </svg>
                 </div>
-                <div class="footer-content-left">
-                    <div class="footer-icon">©</div>
-                    <span>{{footerText}}</span>
+                <div class="footer-logo-wrapper">
+                    <div class="footer-logo">
+                        <div class="footer-logo-placeholder">{{logoPlaceholder}}</div>
+                    </div>
+                    <div class="footer-content-left">
+                        <span>{{footerText}}</span>
+                    </div>
                 </div>
                 <div class="footer-content-right">
                     <span>{{website}}</span>

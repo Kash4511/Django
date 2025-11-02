@@ -6,6 +6,7 @@ Backend/.env
 Backend/db.sqlite3
 Backend/media/
 
-# Python cache
-__pycache__/
-*.pyc
+# Python cache (robust)
+**/__pycache__/
+*.py[cod]
+*$py.class
