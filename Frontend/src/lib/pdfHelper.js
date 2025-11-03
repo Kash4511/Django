@@ -40,7 +40,7 @@ export const generatePDFWithAuth = async (params) => {
           'Content-Type': 'application/json'
         },
         responseType: 'blob',
-        timeout: 60000 // 60 second timeout
+        
       }
     );
     

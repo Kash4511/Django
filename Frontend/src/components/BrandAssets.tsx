@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, User, Palette } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useBrand } from '../contexts/BrandContext'
 import { dashboardApi } from '../lib/dashboardApi'
 import type { FirmProfile } from '../lib/dashboardApi'
 import './BrandAssets.css'
@@ -16,11 +17,12 @@ const FONT_STYLES = [
 
 const BrandAssets: React.FC = () => {
   const { user, logout } = useAuth()
+  const { brandColors, updateBrandColors } = useBrand()
   const navigate = useNavigate()
   const [formData, setFormData] = useState<Partial<FirmProfile>>({
-    primary_brand_color: '#2a5766',
-    secondary_brand_color: '#ffffff',
-    preferred_font_style: 'no-preference',
+    primary_brand_color: brandColors.primaryColor,
+    secondary_brand_color: brandColors.secondaryColor,
+    preferred_font_style: brandColors.fontStyle,
     branding_guidelines: ''
   })
   const [loading, setLoading] = useState(false)
@@ -72,6 +74,14 @@ const BrandAssets: React.FC = () => {
     try {
       await dashboardApi.updateFirmProfile(formData)
       setHasExistingAssets(true)
+      
+      // Update brand colors in context
+      updateBrandColors({
+        primaryColor: formData.primary_brand_color || '#2a5766',
+        secondaryColor: formData.secondary_brand_color || '#ffffff',
+        fontStyle: formData.preferred_font_style || 'no-preference'
+      })
+      
       // Could add success notification here
     } catch (err) {
       console.error('Failed to save brand assets:', err)

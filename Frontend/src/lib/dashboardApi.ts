@@ -175,7 +175,7 @@ export const dashboardApi = {
           Authorization: `Bearer ${localStorage.getItem('access_token')}`,
           'Content-Type': 'application/json'
         },
-        timeout: 30000
+        
       });
       
       console.log('✅ Lead magnet created successfully:', response.data);
@@ -216,7 +216,7 @@ export const dashboardApi = {
           Authorization: `Bearer ${localStorage.getItem('access_token')}`,
           'Content-Type': 'application/json'
         },
-        timeout: 30000
+        
       });
       
       console.log('✅ Lead magnet created successfully:', response.data);
@@ -241,7 +241,7 @@ export const dashboardApi = {
           Authorization: `Bearer ${localStorage.getItem('access_token')}`,
           'Content-Type': 'application/json'
         },
-        timeout: 30000
+        
       });
       
       console.log('✅ Lead magnet created successfully:', response.data);
@@ -307,7 +307,7 @@ export const dashboardApi = {
           'Content-Type': 'application/json'
         },
         responseType: 'blob',
-        timeout: 60000
+        
       });
       
       console.log('✅ PDF generated successfully');

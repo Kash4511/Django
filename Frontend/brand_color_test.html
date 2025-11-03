@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brand Color Dynamicity Test</title>
+  <style>
+    :root {
+      --primary-color: #2a5766;
+      --secondary-color: #ffffff;
+      --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    }
+    
+    body {
+      font-family: var(--font-family);
+      padding: 2rem;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      color: var(--primary-color);
+    }
+    
+    .nav-item {
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      border-radius: 0.5rem;
+    }
+    
+    .nav-item.active {
+      background-color: var(--primary-color);
+      color: #ffffff;
+    }
+    
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: #ffffff;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    
+    .color-input {
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+    }
+    
+    .color-input label {
+      width: 150px;
+    }
+    
+    .color-input input {
+      margin-right: 1rem;
+    }
+    
+    .color-preview {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: inline-block;
+      border: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Brand Color Dynamicity Test</h1>
+    
+    <div class="color-controls">
+      <h2>Change Brand Colors</h2>
+      <div class="color-input">
+        <label for="primary-color">Primary Color:</label>
+        <input type="color" id="primary-color" value="#2a5766">
+        <div class="color-preview" id="primary-preview" style="background-color: #2a5766;"></div>
+      </div>
+      
+      <div class="color-input">
+        <label for="secondary-color">Secondary Color:</label>
+        <input type="color" id="secondary-color" value="#ffffff">
+        <div class="color-preview" id="secondary-preview" style="background-color: #ffffff;"></div>
+      </div>
+      
+      <button class="btn-primary" id="apply-colors">Apply Colors</button>
+    </div>
+    
+    <hr>
+    
+    <h2>Component Examples</h2>
+    
+    <h3>Navigation Items</h3>
+    <div class="nav-item">Regular Nav Item</div>
+    <div class="nav-item active">Active Nav Item</div>
+    
+    <h3>Buttons</h3>
+    <button class="btn-primary">Primary Button</button>
+    
+    <hr>
+    
+    <div id="results">
+      <h2>Test Results</h2>
+      <pre id="test-output"></pre>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const primaryColorInput = document.getElementById('primary-color');
+      const secondaryColorInput = document.getElementById('secondary-color');
+      const primaryPreview = document.getElementById('primary-preview');
+      const secondaryPreview = document.getElementById('secondary-preview');
+      const applyButton = document.getElementById('apply-colors');
+      const testOutput = document.getElementById('test-output');
+      
+      // Update preview when color inputs change
+      primaryColorInput.addEventListener('input', () => {
+        primaryPreview.style.backgroundColor = primaryColorInput.value;
+      });
+      
+      secondaryColorInput.addEventListener('input', () => {
+        secondaryPreview.style.backgroundColor = secondaryColorInput.value;
+      });
+      
+      // Apply colors when button is clicked
+      applyButton.addEventListener('click', () => {
+        const primaryColor = primaryColorInput.value;
+        const secondaryColor = secondaryColorInput.value;
+        
+        // Set CSS variables
+        document.documentElement.style.setProperty('--primary-color', primaryColor);
+        document.documentElement.style.setProperty('--secondary-color', secondaryColor);
+        
+        // Log test results
+        testCSSVariables();
+      });
+      
+      // Function to test CSS variables
+      function testCSSVariables() {
+        const root = document.documentElement;
+        const computedStyle = getComputedStyle(root);
+        
+        // Get the CSS variables
+        const primaryColor = computedStyle.getPropertyValue('--primary-color').trim();
+        const secondaryColor = computedStyle.getPropertyValue('--secondary-color').trim();
+        const fontFamily = computedStyle.getPropertyValue('--font-family').trim();
+        
+        let output = 'Current CSS Variables:\n';
+        output += `--primary-color: ${primaryColor}\n`;
+        output += `--secondary-color: ${secondaryColor}\n`;
+        output += `--font-family: ${fontFamily}\n\n`;
+        
+        // Check if variables are applied to elements
+        const navItems = document.querySelectorAll('.nav-item.active');
+        if (navItems.length > 0) {
+          const navItemStyle = getComputedStyle(navItems[0]);
+          output += `Active nav item background color: ${navItemStyle.backgroundColor}\n`;
+        }
+        
+        const buttons = document.querySelectorAll('.btn-primary');
+        if (buttons.length > 0) {
+          const buttonStyle = getComputedStyle(buttons[0]);
+          output += `Primary button background color: ${buttonStyle.backgroundColor}\n`;
+        }
+        
+        testOutput.textContent = output;
+      }
+      
+      // Run initial test
+      testCSSVariables();
+    });
+  </script>
+</body>
+</html>

@@ -38,8 +38,8 @@
 }
 
 .back-button:hover {
-  background: #2a5766;
-  border-color: #2a5766;
+  background: var(--primary-color);
+  border-color: var(--primary-color);
 }
 
 .brand-title-section {
@@ -126,7 +126,7 @@
 
 .form-input:focus {
   outline: none;
-  border-color: #2a5766;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(42, 87, 102, 0.1);
 }
 
@@ -147,7 +147,7 @@
 
 .form-select:focus {
   outline: none;
-  border-color: #2a5766;
+  border-color: var(--primary-color);
 }
 
 .form-textarea {
@@ -165,7 +165,7 @@
 
 .form-textarea:focus {
   outline: none;
-  border-color: #2a5766;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(42, 87, 102, 0.1);
 }
 
@@ -191,7 +191,7 @@
 }
 
 .color-input:hover {
-  border-color: #2a5766;
+  border-color: var(--primary-color);
 }
 
 .color-text {
@@ -219,7 +219,7 @@
 }
 
 .btn-primary {
-  background: #2a5766;
+  background: var(--primary-color);
   color: #ffffff;
 }
 
@@ -237,7 +237,7 @@
 
 /* Sidebar active state for brand assets */
 .nav-item.active {
-  background: #2a5766;
+  background: var(--primary-color);
   color: #ffffff;
 }
 
