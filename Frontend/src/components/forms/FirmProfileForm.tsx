@@ -57,7 +57,7 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({
     'Industry & Size'
   ]
 
-  const handleInputChange = (field: keyof FirmProfile, value: any) => {
+  const handleInputChange = (field: keyof FirmProfile, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 

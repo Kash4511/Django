@@ -10,17 +10,16 @@ import TemplateSelectionForm from './forms/TemplateSelectionForm'
 import './CreateLeadMagnet.css'
 import type { LeadMagnetGeneration } from '../lib/dashboardApi';
 
-
-interface CreateLeadMagnetProps {}
-
 type FormStep = 'firm-profile' | 'lead-magnet-generation' | 'template-selection'
 
-const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
+const CreateLeadMagnet: React.FC = () => {
   const { logout } = useAuth()
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState<FormStep>('firm-profile')
   const [firmProfile, setFirmProfile] = useState<Partial<FirmProfile>>({})
-  const [capturedAnswers, setCapturedAnswers] = useState<LeadMagnetGeneration & { title?: string }>({} as LeadMagnetGeneration)
+  const [capturedAnswers, setCapturedAnswers] = useState<LeadMagnetGeneration & { title?: string }>(
+    {} as LeadMagnetGeneration & { title?: string }
+  );
   const [loading, setLoading] = useState(false)
   const [hasExistingProfile, setHasExistingProfile] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -53,7 +52,7 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
           setHasExistingProfile(true)
           setCurrentStep('lead-magnet-generation')
         }
-      } catch (err) {
+      } catch {
         // No existing profile, start with firm profile form
         console.log('No existing profile found')
       }
@@ -115,31 +114,6 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
     setCurrentStep('template-selection')
   }
 
-  const getFilenameFromHeaders = (headers: Record<string, any>) => {
-    const cd = headers['content-disposition'] || headers['Content-Disposition']
-    if (!cd) return 'lead-magnet.pdf'
-
-    // Try RFC 5987
-    const starMatch = cd.match(/filename\*=([^;]+)/i)
-    if (starMatch) {
-      let value = starMatch[1].trim()
-      if (value.startsWith("UTF-8''")) {
-        value = value.replace("UTF-8''", '')
-      }
-      try {
-        return decodeURIComponent(value.replace(/\"/g, ''))
-      } catch {
-        return value.replace(/\"/g, '')
-      }
-    }
-
-    // Fallback to simple filename="..."
-    const simpleMatch = cd.match(/filename="?([^";]+)"?/i)
-    if (simpleMatch) return simpleMatch[1]
-
-    return 'lead-magnet.pdf'
-  }
-
   const handleTemplateSubmit = async (templateId: string, templateName: string, templateThumbnail?: string) => {
     setLoading(true)
     setErrorMessage(null)
@@ -158,7 +132,7 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
 
       const leadMagnet = await dashboardApi.createLeadMagnetWithData({
         title: capturedAnswers.title || 'Untitled Lead Magnet',
-        firm_profile: hasExistingProfile ? undefined : firmProfile,
+        firm_profile: hasExistingProfile ? undefined : (firmProfile as FirmProfile),
         generation_data: generationData,
       })
 
@@ -170,7 +144,7 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
         template_id: templateId,
         template_name: templateName,
         template_thumbnail: templateThumbnail,
-        captured_answers: capturedAnswers,
+        captured_answers: capturedAnswers as unknown as Record<string, unknown>,
         source: 'create-lead-magnet'
       }
 
@@ -180,11 +154,11 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
       // Generate PDF with AI content using the new endpoint
       // Pass the user's answers to the AI content generation process
       try {
-        const pdfResponse = await dashboardApi.generatePDFWithAI({
+        await dashboardApi.generatePDFWithAI({
           template_id: templateId,
           lead_magnet_id: leadMagnet.id,
           use_ai_content: true,
-          user_answers: capturedAnswers // Pass user answers to AI content generation
+          user_answers: capturedAnswers as unknown as Record<string, unknown> // Pass user answers to AI content generation
         })
         
         // Remove duplicate manual download; dashboardApi already triggers download
@@ -200,9 +174,11 @@ const CreateLeadMagnet: React.FC<CreateLeadMagnetProps> = () => {
         navigate('/dashboard')
       }
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to create lead magnet with template:', err)
-      const msg = err?.message ? err.message : 'Failed to create lead magnet. Please review inputs and try again.'
+      const msg = (typeof (err as { message?: unknown }).message === 'string')
+        ? ((err as { message?: string }).message as string)
+        : 'Failed to create lead magnet. Please review inputs and try again.'
       setErrorMessage(msg)
     } finally {
       setLoading(false)

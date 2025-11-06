@@ -26,9 +26,10 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
         setError(null)
         const data = await dashboardApi.getTemplates()
         setTemplates(data)
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to fetch templates:', err)
-        setError(err.response?.data?.error || 'Failed to load templates')
+        const apiErr = err as { response?: { data?: { error?: string } } }
+        setError(apiErr.response?.data?.error || 'Failed to load templates')
       } finally {
         setFetchingTemplates(false)
       }
@@ -43,12 +44,14 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
 
   const [elapsed, setElapsed] = useState(0)
   useEffect(() => {
-    let timer: any
+    let timer: ReturnType<typeof setInterval> | null = null
     if (loading) {
       setElapsed(0)
       timer = setInterval(() => setElapsed((s) => s + 1), 1000)
     }
-    return () => timer && clearInterval(timer)
+    return () => {
+      if (timer) clearInterval(timer)
+    }
   }, [loading])
 
   const handleSubmit = (e: React.FormEvent) => {

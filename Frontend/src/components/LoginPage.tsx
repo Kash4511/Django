@@ -47,20 +47,29 @@ const LoginPage: React.FC = () => {
       await login(formData.email, formData.password)
       console.log('Login successful, navigating to dashboard...')
       navigate('/dashboard')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Login error:', err)
-      if (err.response?.data) {
-        const errorData = err.response.data
-        if (errorData.non_field_errors && Array.isArray(errorData.non_field_errors)) {
-          setError(errorData.non_field_errors[0])
-        } else if (errorData.detail) {
-          setError(errorData.detail)
+      const asObj = err as Record<string, unknown>
+      const response = asObj.response as { data?: unknown } | undefined
+      const data = response?.data
+      if (data && typeof data === 'object') {
+        const errorData = data as Record<string, unknown>
+        if (
+          Array.isArray(errorData.non_field_errors) &&
+          typeof errorData.non_field_errors[0] === 'string'
+        ) {
+          setError(errorData.non_field_errors[0] as string)
+        } else if (typeof errorData.detail === 'string') {
+          setError(errorData.detail as string)
         } else {
           setError('Login failed. Please check your credentials.')
         }
-      } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+      } else if (
+        (asObj.code === 'ECONNABORTED') ||
+        (typeof asObj.message === 'string' && (asObj.message as string).includes('timeout'))
+      ) {
         setError('Request timed out. Please try again.')
-      } else if (err.request) {
+      } else if (asObj.request) {
         setError('Unable to connect to server. Please check your connection and try again.')
       } else {
         setError('An unexpected error occurred. Please try again.')

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import { dashboardApi } from '../lib/dashboardApi'
+import { useAuth } from './AuthContext'
 
 interface BrandColors {
   primaryColor: string;
@@ -28,11 +29,21 @@ interface BrandProviderProps {
 export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
   const [brandColors, setBrandColors] = useState<BrandColors>(defaultBrandColors);
   const [loading, setLoading] = useState(true);
+  const { isAuthenticated, loading: authLoading } = useAuth();
 
   // Load brand colors from API on mount
   useEffect(() => {
     const loadBrandColors = async () => {
       try {
+        // Wait for auth state to resolve; skip if logged out
+        if (authLoading) {
+          return;
+        }
+        if (!isAuthenticated) {
+          setLoading(false);
+          return;
+        }
+
         setLoading(true);
         const profile = await dashboardApi.getFirmProfile();
         if (profile) {
@@ -43,6 +54,12 @@ export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
           });
         }
       } catch (error) {
+        // Quiet 401s (unauthorized) to avoid noisy logs when tokens expire
+        const status = (error as any)?.response?.status;
+        if (status === 401) {
+          // Keep defaults, no error log needed
+          return;
+        }
         console.error('Failed to load brand colors:', error);
       } finally {
         setLoading(false);
@@ -50,7 +67,7 @@ export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
     };
 
     loadBrandColors();
-  }, []);
+  }, [isAuthenticated, authLoading]);
 
   const updateBrandColors = (colors: BrandColors) => {
     setBrandColors(colors);
@@ -65,6 +82,7 @@ export const BrandProvider: React.FC<BrandProviderProps> = ({ children }) => {
   return <BrandContext.Provider value={value}>{children}</BrandContext.Provider>;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useBrand = () => {
   const context = useContext(BrandContext);
   if (context === undefined) {

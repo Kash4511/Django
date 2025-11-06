@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FileText, Bot, Download, Edit3, MousePointer } from 'lucide-react'
 import './HowItWorksSection.css'
@@ -35,10 +35,12 @@ const TypingAnimation: React.FC = () => {
   const [currentText, setCurrentText] = useState('')
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isTyping, setIsTyping] = useState(false)
-  const texts = ['Project Name...', 'Modern Villa Design', 'Target Audience: Homeowners', 'Brand Colors: #2563eb']
+  const texts = useMemo(() => (
+    ['Project Name...', 'Modern Villa Design', 'Target Audience: Homeowners', 'Brand Colors: #2563eb']
+  ), [])
   
   useEffect(() => {
-    let timeout: NodeJS.Timeout
+    let timeout: ReturnType<typeof setTimeout>
     
     const typeText = () => {
       const fullText = texts[currentIndex]
@@ -81,12 +83,12 @@ const TypingAnimation: React.FC = () => {
 const AIGeneratingAnimation: React.FC = () => {
   const [currentLineIndex, setCurrentLineIndex] = useState(0)
   const [isGenerating, setIsGenerating] = useState(true)
-  const contentLines = [
+  const contentLines = useMemo(() => ([
     'Sustainable Architecture Trends...',
     'Energy-efficient design principles...',
     'Modern materials and techniques...',
     'Client presentation strategies...'
-  ]
+  ]), [])
   
   useEffect(() => {
     const interval = setInterval(() => {
@@ -97,7 +99,7 @@ const AIGeneratingAnimation: React.FC = () => {
       }, 1000)
     }, 2500)
     return () => clearInterval(interval)
-  }, [])
+  }, [contentLines])
   
   return (
     <div className="ai-demo">

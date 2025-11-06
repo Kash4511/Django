@@ -36,10 +36,9 @@ apiClient.interceptors.response.use(
         const refreshToken = localStorage.getItem('refresh_token');
         
         if (!refreshToken) {
-          // No refresh token, logout user
+          // No refresh token, clear tokens and let app routing handle navigation
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
-          window.location.href = '/login';
           return Promise.reject(error);
         }
         
@@ -60,10 +59,9 @@ apiClient.interceptors.response.use(
         // Retry original request
         return apiClient(originalRequest);
       } catch (refreshError) {
-        // Refresh token failed, logout user
+        // Refresh token failed, clear tokens and let app routing handle navigation
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        window.location.href = '/login';
         return Promise.reject(refreshError);
       }
     }

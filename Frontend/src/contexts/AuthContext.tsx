@@ -65,7 +65,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Fetch user profile
       const profileResponse = await apiClient.get('/api/auth/profile/')
       setUser(profileResponse.data)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login failed:', error)
       throw error
     }
@@ -88,7 +88,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Fetch user profile
       const profileResponse = await apiClient.get('/api/auth/profile/')
       setUser(profileResponse.data)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Signup failed:', error)
       throw error
     }
@@ -105,7 +105,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       })
       // Don't automatically log in - just register
       console.log('Registration successful:', response.data)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Registration failed:', error)
       throw error
     }
@@ -130,6 +130,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (context === undefined) {

@@ -119,7 +119,7 @@
 
 .sidebar-create-btn {
   width: 100%;
-  background: var(--primary-color);
+  background: #2A5766;
   color: #ffffff;
   border: none;
   padding: 0.875rem 1rem;
@@ -133,6 +133,11 @@
   cursor: pointer;
   transition: all 0.3s ease;
   margin-bottom: 2rem;
+}
+
+.nav-item.active {
+  background: #2A5766;
+  color: #ffffff;
 }
 
 .sidebar-create-btn:hover {
@@ -178,7 +183,7 @@
 }
 
 .nav-item.active {
-  background: var(--primary-color);
+  background: #2A5766;
   color: #ffffff;
 }
 

@@ -1,16 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { dashboardApi } from '../lib/dashboardApi';
+import type { PDFTemplate } from '../lib/dashboardApi';
 import './TemplateSelectionForm.css';
 
-interface Template {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  thumbnail: string;
-  preview_url?: string;
-  variables?: Record<string, any>;
-}
+// Use the API's PDFTemplate type for consistency
 
 interface TemplateSelectionFormProps {
   onSubmit: (templateId: string, templateName: string, templateThumbnail?: string) => void;
@@ -18,7 +11,7 @@ interface TemplateSelectionFormProps {
 }
 
 const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({ onSubmit, loading }) => {
-  const [templates, setTemplates] = useState<Template[]>([]);
+  const [templates, setTemplates] = useState<PDFTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [loadingTemplates, setLoadingTemplates] = useState(true);
   const [error, setError] = useState<string>('');
@@ -45,11 +38,10 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({ onSubmit,
         }
       } else {
         // Fallback to hardcoded template if API fails
-        const fallbackTemplate: Template = {
+        const fallbackTemplate: PDFTemplate = {
           id: 'template-html',
           name: 'Professional Guide Template',
           description: 'AI-powered professional guide template with dynamic content generation',
-          category: 'Professional',
           thumbnail: '/template-preview.jpg',
           preview_url: '/template-preview.jpg'
         };
@@ -57,14 +49,13 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({ onSubmit,
         setSelectedTemplate(fallbackTemplate.id);
         console.log('🟡 Using fallback template');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('🔴 Error loading templates:', err);
       // Use fallback template on error
-      const fallbackTemplate: Template = {
+      const fallbackTemplate: PDFTemplate = {
         id: 'template-html',
         name: 'Professional Guide Template',
         description: 'AI-powered professional guide template with dynamic content generation',
-        category: 'Professional',
         thumbnail: '/template-preview.jpg',
         preview_url: '/template-preview.jpg'
       };
@@ -158,12 +149,11 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({ onSubmit,
                 <div className="template-info">
                   <h3>{template.name}</h3>
                   <p>{template.description}</p>
-                  <div className="template-meta">
-                    <span className="template-category">{template.category}</span>
-                    {selectedTemplate === template.id && (
-                      <span className="selected-badge">Selected</span>
-                    )}
-                  </div>
+                    <div className="template-meta">
+                      {selectedTemplate === template.id && (
+                        <span className="selected-badge">Selected</span>
+                      )}
+                    </div>
                 </div>
               </div>
             ))

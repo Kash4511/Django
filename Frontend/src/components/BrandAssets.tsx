@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, User, Palette } from 'lucide-react'
+import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, Palette } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useBrand } from '../contexts/BrandContext'
 import { dashboardApi } from '../lib/dashboardApi'
@@ -16,7 +16,7 @@ const FONT_STYLES = [
 ]
 
 const BrandAssets: React.FC = () => {
-  const { user, logout } = useAuth()
+  const { logout } = useAuth()
   const { brandColors, updateBrandColors } = useBrand()
   const navigate = useNavigate()
   const [formData, setFormData] = useState<Partial<FirmProfile>>({
@@ -55,7 +55,7 @@ const BrandAssets: React.FC = () => {
             setHasExistingAssets(true)
           }
         }
-      } catch (err) {
+      } catch {
         console.log('No existing brand assets found')
       } finally {
         setLoading(false)
@@ -65,7 +65,7 @@ const BrandAssets: React.FC = () => {
     loadBrandAssets()
   }, [])
 
-  const handleInputChange = (field: keyof FirmProfile, value: any) => {
+  const handleInputChange = (field: keyof FirmProfile, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 

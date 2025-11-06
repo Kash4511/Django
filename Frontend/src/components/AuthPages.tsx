@@ -5,7 +5,7 @@ import axios from 'axios'
 import './AuthPages.css'
 
 interface AuthPagesProps {
-  onLogin: (userData: any) => void
+  onLogin: (userData: { name?: string; email?: string }) => void
   onClose: () => void
   initialMode?: 'login' | 'signup'
 }
@@ -101,33 +101,37 @@ const AuthPages: React.FC<AuthPagesProps> = ({ onLogin, onClose, initialMode = '
             timeout: 5000
           })
           onLogin(profileResponse.data)
-        } catch (profileErr) {
+        } catch {
           // Fallback to user data from response or minimal user object
           onLogin(data.user || { name: 'User', email: formData.email })
         }
       } else {
         setError('Invalid response from server. Please try again.')
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('API error:', err)
-      
-      if (err.response?.data) {
-        // Handle backend validation errors
-        const errorData = err.response.data
-        if (errorData.email && Array.isArray(errorData.email)) {
-          setError(errorData.email[0])
-        } else if (errorData.password && Array.isArray(errorData.password)) {
-          setError(errorData.password[0])
-        } else if (errorData.non_field_errors && Array.isArray(errorData.non_field_errors)) {
-          setError(errorData.non_field_errors[0])
-        } else if (errorData.detail) {
-          setError(errorData.detail)
+      const asObj = err as Record<string, unknown>
+      const response = asObj.response as { data?: unknown } | undefined
+      const data = response?.data
+      if (data && typeof data === 'object') {
+        const errorData = data as Record<string, unknown>
+        if (Array.isArray(errorData.email) && typeof errorData.email[0] === 'string') {
+          setError(errorData.email[0] as string)
+        } else if (Array.isArray(errorData.password) && typeof errorData.password[0] === 'string') {
+          setError(errorData.password[0] as string)
+        } else if (Array.isArray(errorData.non_field_errors) && typeof errorData.non_field_errors[0] === 'string') {
+          setError(errorData.non_field_errors[0] as string)
+        } else if (typeof errorData.detail === 'string') {
+          setError(errorData.detail as string)
         } else {
           setError('Authentication failed. Please check your information.')
         }
-      } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+      } else if (
+        (asObj.code === 'ECONNABORTED') ||
+        (typeof asObj.message === 'string' && (asObj.message as string).includes('timeout'))
+      ) {
         setError('Request timed out. Please try again.')
-      } else if (err.request) {
+      } else if (asObj.request) {
         setError('Unable to connect to server. Please check your connection and try again.')
       } else {
         setError('An unexpected error occurred. Please try again.')

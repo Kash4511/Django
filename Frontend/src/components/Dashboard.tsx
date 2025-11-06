@@ -7,10 +7,8 @@ import { dashboardApi } from '../lib/dashboardApi'
 import type { DashboardStats, LeadMagnet } from '../lib/dashboardApi'
 import './Dashboard.css'
 
-interface DashboardProps {}
-
-const Dashboard: React.FC<DashboardProps> = () => {
-  const { user, logout } = useAuth()
+const Dashboard: React.FC = () => {
+  const { logout } = useAuth()
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [stats, setStats] = useState<DashboardStats | null>(null)

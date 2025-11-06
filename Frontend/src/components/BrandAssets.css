@@ -219,12 +219,12 @@
 }
 
 .btn-primary {
-  background: var(--primary-color);
+  background: #2A5766;
   color: #ffffff;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #1e404a;
+  background: #1E404A;
   transform: translateY(-1px);
 }
 

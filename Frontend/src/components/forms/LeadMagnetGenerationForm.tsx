@@ -86,7 +86,7 @@ const LeadMagnetGenerationForm: React.FC<LeadMagnetGenerationFormProps> = ({
     'Outcome & CTA'
   ]
 
-  const handleInputChange = (field: keyof LeadMagnetGeneration, value: any) => {
+  const handleInputChange = (field: keyof LeadMagnetGeneration, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 

@@ -1,4 +1,4 @@
-import React, { useEffect, ReactNode } from 'react';
+import React, { useEffect, type ReactNode } from 'react';
 import { useBrand } from './BrandContext';
 
 interface BrandThemeProviderProps {

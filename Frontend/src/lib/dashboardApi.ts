@@ -1,16 +1,41 @@
-import axios from 'axios';
+import type { AxiosError } from 'axios';
+import { apiClient } from './apiClient';
 
 // Define the base URL for API requests
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = '/api';
 
 // Define types with valid choices
 export interface FirmProfile {
   id?: number;
+  firm_name: string;
+  work_email: string;
+  phone_number: string;
+  firm_website: string;
+  firm_size: string;
+  industry_specialties: string[];
+  location: string;
   primary_brand_color: string;
   secondary_brand_color: string;
   preferred_font_style: string;
   branding_guidelines: string;
   logo?: File | null;
+}
+
+export interface DashboardStats {
+  total_lead_magnets: number;
+  active_lead_magnets: number;
+  total_downloads: number;
+  leads_generated: number;
+}
+
+export interface LeadMagnet {
+  id: number;
+  title: string;
+  description: string;
+  status: string;
+  created_at: string;
+  downloads_count: number;
+  leads_count: number;
 }
 
 // Define type for Lead Magnet generation form
@@ -47,52 +72,49 @@ export interface TemplateSelectionRequest {
   template_id: string;
   template_name: string;
   template_thumbnail?: string;
-  captured_answers?: any;
+  captured_answers?: Record<string, unknown>;
   source?: string;
 }
 
 // Enhanced error handler
-const handleApiError = (error: any, context: string) => {
-  if (error.response) {
+const handleApiError = (error: unknown, context: string) => {
+  const err = error as AxiosError;
+  if (err.response) {
     console.error(`${context} - Server Error:`, {
-      status: error.response.status,
-      statusText: error.response.statusText,
-      data: error.response.data,
-      headers: error.response.headers,
-      url: error.response.config?.url
+      status: err.response.status,
+      statusText: err.response.statusText,
+      data: err.response.data,
+      headers: err.response.headers,
+      url: err.response.config?.url
     });
-    
     throw new Error(
-      `${context} failed: ${error.response.status} ${error.response.statusText}\n` +
-      `Details: ${JSON.stringify(error.response.data, null, 2)}`
+      `${context} failed: ${err.response.status} ${err.response.statusText}\n` +
+      `Details: ${JSON.stringify(err.response.data, null, 2)}`
     );
-  } else if (error.request) {
-    if (error.code === 'ECONNABORTED') {
-      console.error(`${context} - Timeout after ${error.config?.timeout}ms`);
-      throw new Error(`${context} failed: Request timed out after ${error.config?.timeout || 30000}ms. The server may still be processing. Please wait a moment and retry.`);
+  } else if (Object.prototype.hasOwnProperty.call(error as object, 'request')) {
+    const reqErr = error as { request?: unknown; code?: string; config?: { timeout?: number } };
+    if (reqErr.code === 'ECONNABORTED') {
+      console.error(`${context} - Timeout after ${reqErr.config?.timeout}ms`);
+      throw new Error(`${context} failed: Request timed out after ${reqErr.config?.timeout || 30000}ms. The server may still be processing. Please wait a moment and retry.`);
     }
     if (typeof navigator !== 'undefined' && navigator && navigator.onLine === false) {
       console.error(`${context} - Offline: Browser appears offline`);
       throw new Error(`${context} failed: You appear to be offline. Check your network connection.`);
     }
-    console.error(`${context} - No Response:`, error.request);
+    console.error(`${context} - No Response:`, reqErr.request);
     throw new Error(`${context} failed: No response from server`);
   } else {
-    console.error(`${context} - Request Error:`, error.message);
-    throw new Error(`${context} failed: ${error.message}`);
+    console.error(`${context} - Request Error:`, (err as Error).message);
+    throw new Error(`${context} failed: ${(err as Error).message}`);
   }
 };
 
 // API functions
 export const dashboardApi = {
   // Dashboard stats
-  getStats: async () => {
+  getStats: async (): Promise<DashboardStats> => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/dashboard/stats/`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
+      const response = await apiClient.get(`${API_BASE_URL}/dashboard/stats/`);
       return response.data;
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
@@ -108,13 +130,9 @@ export const dashboardApi = {
   // Get valid choices from server
   getValidChoices: async (): Promise<{lead_magnet_types: string[], main_topics: string[]}> => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/valid-choices/`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
+      const response = await apiClient.get(`${API_BASE_URL}/valid-choices/`);
       return response.data;
-    } catch (error) {
+    } catch {
       console.log('Valid choices endpoint not available, using discovered choices');
       return {
         lead_magnet_types: ['CHECKLIST', 'CHEATSHEET', 'GUIDE', 'TEMPLATE'],
@@ -126,11 +144,7 @@ export const dashboardApi = {
   // Templates - FIXED VERSION
   getTemplates: async (): Promise<PDFTemplate[]> => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/templates/`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
+      const response = await apiClient.get(`${API_BASE_URL}/templates/`);
       // Handle different response structures
       if (response.data.templates) {
         return response.data.templates;
@@ -139,29 +153,23 @@ export const dashboardApi = {
       } else {
         return [];
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching templates:', error);
       // Return empty array instead of throwing if you want to handle gracefully
       return [];
     }
   },
   
-  selectTemplate: async (request: TemplateSelectionRequest): Promise<any> => {
+  selectTemplate: async (request: TemplateSelectionRequest): Promise<void> => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/select-template/`, request, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      return response.data;
+      await apiClient.post(`${API_BASE_URL}/select-template/`, request);
     } catch (error) {
       handleApiError(error, 'Selecting template');
     }
   },
   
   // Create lead magnet with comprehensive error handling
-  createLeadMagnet: async (data: CreateLeadMagnetRequest): Promise<any> => {
+  createLeadMagnet: async (data: CreateLeadMagnetRequest): Promise<LeadMagnet> => {
     try {
       console.log('🚀 Sending lead magnet data:', JSON.stringify(data, null, 2));
       
@@ -169,19 +177,13 @@ export const dashboardApi = {
       if (!data.title || !data.generation_data) {
         throw new Error('Title and generation_data are required');
       }
-
-      const response = await axios.post(`${API_BASE_URL}/create-lead-magnet/`, data, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-          'Content-Type': 'application/json'
-        },
-        
-      });
+      const response = await apiClient.post(`${API_BASE_URL}/create-lead-magnet/`, data);
       
       console.log('✅ Lead magnet created successfully:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'Creating lead magnet');
+      throw error;
     }
   },
 
@@ -191,7 +193,7 @@ export const dashboardApi = {
     description?: string; 
     firm_profile?: number | Partial<FirmProfile>; 
     generation_data: LeadMagnetGeneration;
-  }): Promise<any> => {
+  }): Promise<LeadMagnet> => {
     try {
       console.log('🚀 Creating lead magnet with validated data...');
       
@@ -211,18 +213,13 @@ export const dashboardApi = {
 
       console.log('📤 Sending validated data:', JSON.stringify(validatedData, null, 2));
 
-      const response = await axios.post(`${API_BASE_URL}/create-lead-magnet/`, validatedData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-          'Content-Type': 'application/json'
-        },
-        
-      });
+      const response = await apiClient.post(`${API_BASE_URL}/create-lead-magnet/`, validatedData);
       
       console.log('✅ Lead magnet created successfully:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'Creating lead magnet with validated data');
+      throw error;
     }
   },
 
@@ -232,40 +229,32 @@ export const dashboardApi = {
     description?: string; 
     firm_profile?: number | Partial<FirmProfile>; 
     generation_data: LeadMagnetGeneration; 
-  }): Promise<any> => {
+  }): Promise<LeadMagnet> => {
     try {
       console.log('🚀 Creating lead magnet with data:', JSON.stringify(data, null, 2));
       
-      const response = await axios.post(`${API_BASE_URL}/create-lead-magnet/`, data, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-          'Content-Type': 'application/json'
-        },
-        
-      });
+      const response = await apiClient.post(`${API_BASE_URL}/create-lead-magnet/`, data);
       
       console.log('✅ Lead magnet created successfully:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'Creating lead magnet with data');
+      throw error;
     }
   },
 
   // Firm profile
-  getFirmProfile: async (): Promise<any> => {
+  getFirmProfile: async (): Promise<FirmProfile> => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/firm-profile/`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
+      const response = await apiClient.get(`${API_BASE_URL}/firm-profile/`);
       return response.data;
     } catch (error) {
       handleApiError(error, 'Fetching firm profile');
+      throw error;
     }
   },
 
-  updateFirmProfile: async (profileData: Partial<FirmProfile>): Promise<any> => {
+  updateFirmProfile: async (profileData: Partial<FirmProfile>): Promise<FirmProfile> => {
     try {
       const formData = new FormData();
       
@@ -278,16 +267,13 @@ export const dashboardApi = {
           }
         }
       });
-
-      const response = await axios.patch(`${API_BASE_URL}/firm-profile/`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`
-        }
+      const response = await apiClient.patch(`${API_BASE_URL}/firm-profile/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
       return response.data;
     } catch (error) {
       handleApiError(error, 'Updating firm profile');
+      throw error;
     }
   },
 
@@ -296,18 +282,12 @@ export const dashboardApi = {
     template_id: string; 
     lead_magnet_id: number; 
     use_ai_content: boolean;
-    user_answers?: any; // Add user_answers parameter
-  }): Promise<any> => {
+    user_answers?: Record<string, unknown>;
+  }): Promise<void> => {
     try {
       console.log('🔄 Generating PDF with user answers...', request);
-      
-      const response = await axios.post(`${API_BASE_URL}/generate-pdf/`, request, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-          'Content-Type': 'application/json'
-        },
-        responseType: 'blob',
-        
+      const response = await apiClient.post(`${API_BASE_URL}/generate-pdf/`, request, {
+        responseType: 'blob'
       });
       
       console.log('✅ PDF generated successfully');
@@ -322,40 +302,35 @@ export const dashboardApi = {
       link.remove();
       window.URL.revokeObjectURL(url);
       
-      return response;
+      return;
     } catch (error) {
       handleApiError(error, 'Generating PDF with AI');
+      throw error;
     }
   },
 
-  getLeadMagnets: async (): Promise<any> => {
+  getLeadMagnets: async (): Promise<LeadMagnet[]> => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/lead-magnets/`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
+      const response = await apiClient.get(`${API_BASE_URL}/lead-magnets/`);
       return response.data;
     } catch (error) {
       handleApiError(error, 'Fetching lead magnets');
+      throw error;
     }
   },
 
-  getLeadMagnet: async (id: number): Promise<any> => {
+  getLeadMagnet: async (id: number): Promise<LeadMagnet> => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/lead-magnets/${id}/`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
+      const response = await apiClient.get(`${API_BASE_URL}/lead-magnets/${id}/`);
       return response.data;
     } catch (error) {
       handleApiError(error, `Fetching lead magnet ${id}`);
+      throw error;
     }
   },
 
   // Test function with valid choices
-  testCreateLeadMagnet: async (): Promise<any> => {
+  testCreateLeadMagnet: async (): Promise<LeadMagnet> => {
     const testData = {
       title: "Test Lead Magnet - " + Date.now(),
       description: "This is a test lead magnet",
@@ -372,21 +347,17 @@ export const dashboardApi = {
 
     try {
       console.log('🧪 Testing lead magnet creation with valid choices:', testData);
-      const response = await axios.post(`${API_BASE_URL}/create-lead-magnet/`, testData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await apiClient.post(`${API_BASE_URL}/create-lead-magnet/`, testData);
       console.log('✅ Test successful:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'Testing lead magnet creation');
+      throw error;
     }
   },
 
   // Complete workflow: Create lead magnet -> Select template -> Generate PDF
-  createAndGeneratePDF: async (leadMagnetData: any, templateId: string): Promise<any> => {
+  createAndGeneratePDF: async (leadMagnetData: { title: string; generation_data: LeadMagnetGeneration }, templateId: string): Promise<void> => {
     try {
       // Step 1: Create lead magnet
       console.log('📝 Step 1: Creating lead magnet...');
@@ -402,17 +373,14 @@ export const dashboardApi = {
       
       // Step 3: Generate PDF
       console.log('📄 Step 3: Generating PDF...');
-      const pdfResponse = await dashboardApi.generatePDFWithAI({
+      await dashboardApi.generatePDFWithAI({
         template_id: templateId,
         lead_magnet_id: leadMagnet.id,
         use_ai_content: true
       });
       
       console.log('✅ Complete workflow finished successfully!');
-      return {
-        leadMagnet,
-        pdfResponse
-      };
+      return;
     } catch (error) {
       console.error('❌ Workflow failed:', error);
       throw error;
@@ -420,14 +388,9 @@ export const dashboardApi = {
   },
 
   // Delete lead magnet
-  deleteLeadMagnet: async (id: number): Promise<any> => {
+  deleteLeadMagnet: async (id: number): Promise<void> => {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/lead-magnets/${id}/`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
-      return response.data;
+      await apiClient.delete(`${API_BASE_URL}/lead-magnets/${id}/`);
     } catch (error) {
       handleApiError(error, `Deleting lead magnet ${id}`);
     }
