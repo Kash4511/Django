@@ -33,7 +33,11 @@ class DocRaptorService:
             loader=FileSystemLoader(self.templates_dir),
             autoescape=select_autoescape(['html'])
         )
-        template = env.get_template('Template.html')
+        # Choose template by id; default to main Template.html
+        template_name = 'Template.html'
+        if str(template_id).lower() in ('brand-assets', 'brand_assets', 'brand-assets-preview'):
+            template_name = 'BrandAssetsPreview.html'
+        template = env.get_template(template_name)
         rendered_html = template.render(**variables)
 
         # Debugging output

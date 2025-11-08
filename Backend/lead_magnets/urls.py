@@ -12,6 +12,7 @@ urlpatterns = [
     path('templates/', views.ListTemplatesView.as_view(), name='list-templates'),
     path('select-template/', views.SelectTemplateView.as_view(), name='select-template'),
     path('generate-pdf/', views.GeneratePDFView.as_view(), name='generate-pdf'),
+    path('brand-assets/preview-pdf/', views.BrandAssetsPDFPreviewView.as_view(), name='brand-assets-preview-pdf'),
     path('preview-template/', views.PreviewTemplateView.as_view(), name='preview-template'),
     path('generate-document-preview/', views.GenerateDocumentPreviewView.as_view(), name='generate-document-preview'),
     

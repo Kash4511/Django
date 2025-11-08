@@ -720,10 +720,18 @@ class FormaAIConversationView(APIView):
         message = request.data.get('message')
         files = request.data.get('files', [])
         conversation_id = request.data.get('conversation_id')
+        # Optional PDF generation flags
+        generate_pdf = request.data.get('generate_pdf', True)
+        template_id = request.data.get('template_id', 'modern-guide')
         
         if not message:
             return Response({
                 'error': 'Message is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if generate_pdf and not template_id:
+            return Response({
+                'error': 'Template selection is required for PDF generation'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Get or create conversation
@@ -750,22 +758,95 @@ class FormaAIConversationView(APIView):
             'files': files
         })
         
-        # TODO: Send to OpenAI/Perplexity when API key is available
-        # For now, just store the message
-        ai_response = "I've received your message. AI integration will be added when the OpenAI API key is configured."
-        
-        conversation.messages.append({
-            'role': 'assistant',
-            'content': ai_response
-        })
-        
+        # Build firm profile similar to PDF generation flow
+        firm_profile = {}
+        try:
+            fp = FirmProfile.objects.get(user=request.user)
+            firm_profile = {
+                'firm_name': fp.firm_name,
+                'work_email': fp.work_email,
+                'phone_number': fp.phone_number,
+                'firm_website': fp.firm_website,
+                'primary_brand_color': fp.primary_brand_color,
+                'secondary_brand_color': fp.secondary_brand_color,
+                'logo_url': fp.logo.url if fp.logo else '',
+                'industry': 'Architecture'
+            }
+        except FirmProfile.DoesNotExist:
+            firm_profile = {
+                'firm_name': request.user.email.split('@')[0],
+                'work_email': request.user.email,
+                'primary_brand_color': '',
+                'secondary_brand_color': '',
+                'logo_url': '',
+                'industry': 'Architecture'
+            }
+
+        # Convert the chat message into minimal user_answers for AI JSON
+        user_answers = {
+            'main_topic': message,  # treat user message as the main topic/description
+            'lead_magnet_type': 'Custom Guide',
+            'desired_outcome': 'Generate professional PDF content based on the description',
+            'industry': firm_profile.get('industry', 'Architecture'),
+            # brand colors and logo hints help style
+            'brand_primary_color': firm_profile.get('primary_brand_color', ''),
+            'brand_secondary_color': firm_profile.get('secondary_brand_color', ''),
+            'brand_logo_url': firm_profile.get('logo_url', ''),
+        }
+
+        ai_client = PerplexityClient()
+        template_service = DocRaptorService()
+
+        try:
+            ai_content = ai_client.generate_lead_magnet_json(user_answers=user_answers, firm_profile=firm_profile)
+            ai_client.debug_ai_content(ai_content)
+        except Exception as e:
+            # Store failure message and return
+            ai_error = f"AI generation failed: {str(e)}"
+            conversation.messages.append({
+                'role': 'assistant',
+                'content': ai_error
+            })
+            conversation.save()
+            return Response({'error': ai_error}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Map AI JSON to template variables
+        template_vars = ai_client.map_to_template_vars(ai_content, firm_profile)
+        # Ensure critical cover/contact fields are never empty
+        template_vars['companyName'] = template_vars.get('companyName') or firm_profile.get('firm_name', 'Your Company')
+        template_vars['emailAddress'] = template_vars.get('emailAddress') or firm_profile.get('work_email', '')
+        template_vars['phoneNumber'] = template_vars.get('phoneNumber') or firm_profile.get('phone_number', '')
+        template_vars['website'] = template_vars.get('website') or firm_profile.get('firm_website', '')
+
+        # Compose assistant message summary
+        summary_title = template_vars.get('mainTitle') or ai_content.get('cover', {}).get('title') or 'Generated Document'
+        ai_response = f"Generated AI content: {summary_title}."
+        conversation.messages.append({'role': 'assistant', 'content': ai_response})
         conversation.save()
-        
+
+        # If requested, generate PDF and return as file response
+        if generate_pdf:
+            try:
+                result = template_service.generate_pdf_with_ai_content(template_id, template_vars)
+                if result.get('success'):
+                    pdf_data = result.get('pdf_data', b'')
+                    response = HttpResponse(pdf_data, content_type=result.get('content_type', 'application/pdf'))
+                    filename = result.get('filename', f'forma-ai-{template_id}.pdf')
+                    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                    return response
+                else:
+                    return Response({'error': result.get('error', 'PDF generation failed'), 'details': result.get('details', '')}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            except Exception as e:
+                return Response({'error': 'PDF generation failed', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Otherwise return chat response and AI mapping summary
         return Response({
             'success': True,
             'conversation_id': conversation.id,
             'response': ai_response,
-            'messages': conversation.messages
+            'messages': conversation.messages,
+            'template_id': template_id,
+            'template_vars': template_vars
         })
 
 class GenerateDocumentPreviewView(APIView):
@@ -806,4 +887,60 @@ class GenerateDocumentPreviewView(APIView):
             import traceback
             print(f"❌ GenerateDocumentPreviewView error: {e}")
             print(traceback.format_exc())
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class BrandAssetsPDFPreviewView(APIView):
+    """Generate a PDF preview of saved brand assets (company info, colors, logo)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            user = request.user
+            try:
+                fp = FirmProfile.objects.get(user=user)
+            except FirmProfile.DoesNotExist:
+                return Response({'error': 'Firm profile not found. Please save brand assets first.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            def abs_url(url: str) -> str:
+                try:
+                    return request.build_absolute_uri(url) if url else ''
+                except Exception:
+                    return url or ''
+
+            variables = {
+                'companyName': fp.firm_name or '',
+                'phone': fp.phone_number or '',
+                'email': fp.work_email or '',
+                'website': fp.firm_website or '',
+                'primaryColor': fp.primary_brand_color or '#2a5766',
+                'secondaryColor': fp.secondary_brand_color or '#FFFFFF',
+                'logoUrl': abs_url(fp.logo.url) if fp.logo else '',
+                'brandGuidelines': fp.branding_guidelines or ''
+            }
+
+            # Validate required fields
+            required = ['companyName', 'phone', 'email', 'primaryColor', 'secondaryColor']
+            missing = [k for k in required if not variables.get(k)]
+            if missing:
+                return Response({'error': 'Missing required fields', 'missing': missing}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Validate color format
+            import re
+            hex_re = re.compile(r'^#([A-Fa-f0-9]{6})$')
+            invalid_colors = [c for c in ['primaryColor', 'secondaryColor'] if not hex_re.match(variables.get(c, ''))]
+            if invalid_colors:
+                return Response({'error': 'Invalid color formats', 'invalid_colors': invalid_colors}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Generate PDF from brand-assets template
+            template_service = DocRaptorService()
+            result = template_service.generate_pdf('brand-assets', variables)
+            if result.get('success'):
+                pdf_data = result.get('pdf_data', b'')
+                resp = HttpResponse(pdf_data, content_type='application/pdf')
+                resp['Content-Disposition'] = 'attachment; filename="brand-assets-preview.pdf"'
+                return resp
+            else:
+                return Response({'error': 'PDF generation failed', 'details': result.get('details', '')}, status=status.HTTP_502_BAD_GATEWAY)
+
+        except Exception as e:
+            return Response({'error': 'Unexpected error', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

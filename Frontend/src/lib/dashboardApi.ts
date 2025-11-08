@@ -262,6 +262,15 @@ export const dashboardApi = {
         if (value !== undefined && value !== null) {
           if (key === 'logo' && value instanceof File) {
             formData.append('logo', value);
+          } else if (Array.isArray(value)) {
+            // Ensure arrays (e.g., industry_specialties) are sent as valid JSON
+            formData.append(key, JSON.stringify(value));
+          } else if (key === 'firm_website' && typeof value === 'string') {
+            // Normalize website to include protocol for URLField validation
+            const trimmed = value.trim();
+            const hasProtocol = /^https?:\/\//i.test(trimmed);
+            const normalized = trimmed && !hasProtocol ? `https://${trimmed}` : trimmed;
+            formData.append(key, normalized);
           } else {
             formData.append(key, String(value));
           }
@@ -305,6 +314,39 @@ export const dashboardApi = {
       return;
     } catch (error) {
       handleApiError(error, 'Generating PDF with AI');
+      throw error;
+    }
+  },
+
+  // Lead magnets - Generate PDF and return a preview URL (no auto-download)
+  generatePDFWithAIUrl: async (request: {
+    template_id: string;
+    lead_magnet_id: number;
+    use_ai_content: boolean;
+    user_answers?: Record<string, unknown>;
+  }): Promise<string> => {
+    try {
+      const response = await apiClient.post(`${API_BASE_URL}/generate-pdf/`, request, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      return url; // caller should revoke when done
+    } catch (error) {
+      handleApiError(error, 'Generating PDF preview URL');
+      throw error;
+    }
+  },
+
+  // Brand assets PDF preview
+  generateBrandAssetsPDFPreview: async (): Promise<string> => {
+    try {
+      const response = await apiClient.post(`${API_BASE_URL}/brand-assets/preview-pdf/`, {}, {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      return url; // caller should revoke when done
+    } catch (error) {
+      handleApiError(error, 'Generating brand assets PDF preview');
       throw error;
     }
   },

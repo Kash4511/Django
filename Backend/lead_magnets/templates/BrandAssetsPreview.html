@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brand Assets Preview</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 24mm 18mm 24mm 18mm;
+    }
+    body { font-family: Arial, Helvetica, sans-serif; color: #222; }
+
+    /* Header / Footer */
+    header { position: running(header); }
+    footer { position: running(footer); }
+    .page-header {
+      display: flex; align-items: center; gap: 16px;
+      border-bottom: 3px solid var(--primary-color); padding-bottom: 10px;
+    }
+    .brand-logo { width: 64px; height: 64px; object-fit: contain; }
+    .brand-title { font-size: 24px; font-weight: 700; }
+    .brand-subtitle { font-size: 12px; color: #666; }
+
+    .page-footer {
+      border-top: 1px solid #ddd; margin-top: 10px; padding-top: 6px;
+      font-size: 10px; color: #666; display: flex; justify-content: space-between;
+    }
+    .footer-right { color: var(--secondary-color); }
+
+    /* Content */
+    .content { margin-top: 16px; }
+    .section-title { font-size: 16px; font-weight: 600; margin: 24px 0 8px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .info-card { border: 1px solid #ddd; border-radius: 8px; padding: 10px; }
+    .label { font-size: 11px; color: #555; margin-bottom: 4px; }
+    .value { font-size: 13px; font-weight: 600; }
+
+    .swatches { display: flex; gap: 16px; margin-top: 8px; align-items: center; }
+    .swatch {
+      width: 44px; height: 44px; border-radius: 6px; border: 1px solid #bbb; display: inline-block;
+    }
+    .swatch-label { font-size: 11px; color: #555; margin-top: 4px; }
+
+    /* Responsive blocks within PDF page sizes */
+    .two-col { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 16px; }
+
+    /* Swatch helpers */
+    .swatch.primary { background: var(--primary-color); }
+    .swatch.secondary { background: var(--secondary-color); }
+  </style>
+</head>
+<body class="page" style="--primary-color: {{ primaryColor or '#2a5766' }}; --secondary-color: {{ secondaryColor or '#888888' }};">
+  <header>
+    <div class="page-header">
+      {% if logoUrl %}
+      <img class="brand-logo" src="{{ logoUrl }}" alt="Logo" />
+      {% endif %}
+      <div>
+        <div class="brand-title">{{ companyName or 'Your Company' }}</div>
+        <div class="brand-subtitle">Brand Assets Overview</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="content">
+    <div class="two-col">
+      <section>
+        <div class="section-title">Company Details</div>
+        <div class="info-grid">
+          <div class="info-card">
+            <div class="label">Phone</div>
+            <div class="value">{{ phone or '—' }}</div>
+          </div>
+          <div class="info-card">
+            <div class="label">Email</div>
+            <div class="value">{{ email or '—' }}</div>
+          </div>
+          <div class="info-card">
+            <div class="label">Website</div>
+            <div class="value">{{ website or '—' }}</div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-title">Brand Colors</div>
+        <div class="swatches">
+          <div>
+            <div class="swatch primary"></div>
+            <div class="swatch-label">Primary: {{ primaryColor or '#2a5766' }}</div>
+          </div>
+          <div>
+            <div class="swatch secondary"></div>
+            <div class="swatch-label">Secondary: {{ secondaryColor or '#FFFFFF' }}</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    {% if brandGuidelines %}
+    <section>
+      <div class="section-title">Brand Guidelines</div>
+      <div class="info-card">
+        <div class="value">{{ brandGuidelines }}</div>
+      </div>
+    </section>
+    {% endif %}
+  </main>
+
+  <footer>
+    <div class="page-footer">
+      <div>{{ companyName or 'Your Company' }}</div>
+      <div class="footer-right">{{ email or '' }} | {{ website or '' }}</div>
+    </div>
+  </footer>
+</body>
+</html>

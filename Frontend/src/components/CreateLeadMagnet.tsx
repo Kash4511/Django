@@ -9,6 +9,7 @@ import LeadMagnetGenerationForm from './forms/LeadMagnetGenerationForm'
 import TemplateSelectionForm from './forms/TemplateSelectionForm'
 import './CreateLeadMagnet.css'
 import type { LeadMagnetGeneration } from '../lib/dashboardApi';
+import Modal from './Modal'
 
 type FormStep = 'firm-profile' | 'lead-magnet-generation' | 'template-selection'
 
@@ -24,6 +25,8 @@ const CreateLeadMagnet: React.FC = () => {
   const [hasExistingProfile, setHasExistingProfile] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   const handleLogout = () => {
     logout()
@@ -154,24 +157,18 @@ const CreateLeadMagnet: React.FC = () => {
       // Generate PDF with AI content using the new endpoint
       // Pass the user's answers to the AI content generation process
       try {
-        await dashboardApi.generatePDFWithAI({
+        const url = await dashboardApi.generatePDFWithAIUrl({
           template_id: templateId,
           lead_magnet_id: leadMagnet.id,
           use_ai_content: true,
-          user_answers: capturedAnswers as unknown as Record<string, unknown> // Pass user answers to AI content generation
+          user_answers: capturedAnswers as unknown as Record<string, unknown>
         })
-        
-        // Remove duplicate manual download; dashboardApi already triggers download
-        setSuccessMessage('PDF generated. Your download should start automatically.')
-        // Auto-navigate shortly after triggering download to avoid interrupting it
-        setTimeout(() => {
-          navigate('/dashboard')
-        }, 1200)
+        setPreviewUrl(url)
+        setShowPreviewModal(true)
+        setSuccessMessage('PDF generated. Preview shown below.')
       } catch (pdfError) {
         console.error('🔴 PDF generation failed:', pdfError)
         setErrorMessage('PDF generation failed. You can retry from dashboard.')
-        // Still navigate to dashboard even if PDF generation fails
-        navigate('/dashboard')
       }
       
     } catch (err: unknown) {
@@ -301,6 +298,49 @@ const CreateLeadMagnet: React.FC = () => {
           </div>
         </main>
       </div>
+      <Modal 
+        isOpen={showPreviewModal}
+        onClose={() => {
+          setShowPreviewModal(false)
+          if (previewUrl) { window.URL.revokeObjectURL(previewUrl); setPreviewUrl(null) }
+        }}
+        title="Preview PDF"
+        maxWidth={1000}
+      >
+        {previewUrl ? (
+          <div>
+            <iframe title="Lead Magnet Preview" src={previewUrl} style={{ width: '100%', height: '70vh', border: '1px solid #333' }} />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  if (previewUrl) {
+                    const link = document.createElement('a')
+                    link.href = previewUrl
+                    link.setAttribute('download', 'lead-magnet.pdf')
+                    document.body.appendChild(link)
+                    link.click()
+                    link.remove()
+                  }
+                }}
+              >
+                Download PDF
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setShowPreviewModal(false)
+                  if (previewUrl) { window.URL.revokeObjectURL(previewUrl); setPreviewUrl(null) }
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div>Loading preview...</div>
+        )}
+      </Modal>
     </div>
   )
 }

@@ -206,6 +206,7 @@ class PerplexityClient:
         # User-provided context
         main_topic = (user_answers.get('main_topic') or '').strip()
         lead_magnet_type = (user_answers.get('lead_magnet_type') or '').strip()
+        target_audience = user_answers.get('target_audience') or []
         desired_outcome = (user_answers.get('desired_outcome') or '').strip()
         audience_pain_points = user_answers.get('audience_pain_points') or []
         call_to_action = (user_answers.get('call_to_action') or '').strip()
@@ -239,6 +240,7 @@ class PerplexityClient:
                 "user_answers": {
                     "main_topic": main_topic,
                     "lead_magnet_type": lead_magnet_type,
+                    "target_audience": target_audience,
                     "desired_outcome": desired_outcome,
                     "audience_pain_points": audience_pain_points,
                     "call_to_action": call_to_action,
@@ -326,6 +328,7 @@ class PerplexityClient:
                 }
             }, ensure_ascii=False) + "\n\n" +
             "Hard Requirements:\n"
+            "- Address the target_audience EXCLUSIVELY. All content must be tailored to their specific pain_points and desired_outcomes.\n"
             "- Use firm_name, work_email, phone_number, firm_website, tagline EXACTLY as provided.\n"
             "- Use brand colors EXACTLY as provided (primary, secondary, accent). If any input color is missing, set that field to an empty string rather than inventing a color.\n"
             "- Include logo_url if provided; else set to an empty string.\n"
@@ -466,12 +469,22 @@ class PerplexityClient:
         def page_hdr(n: int) -> str:
             return f"PAGE {n}"
 
-        # Create enhanced title with firm info - ensure company name is always included
-        main_title = cover.get("title", "Professional Guide")
-        company_name = company_name or "Your Company"  # Ensure company name is never empty
-        
-        # Always include company name in the title
-        enhanced_title = f"{main_title} by {company_name}" if main_title else company_name
+        # Create a short, professional title for the PDF
+        raw_title = (cover.get("title") or "Professional Guide").strip()
+
+        def clean_title(title: str) -> str:
+            t = (title or "").strip()
+            # Remove common prefixes like "Custom Guide:" or "Guide:"
+            t = re.sub(r"^(custom\s+guide\s*:|guide\s*:)", "", t, flags=re.IGNORECASE).strip()
+            # Collapse multiple spaces and trim punctuation
+            t = re.sub(r"\s+", " ", t)
+            t = t.strip(" -:;.,")
+            # Keep it concise
+            return truncate_title(t) if 'truncate_title' in locals() else t[:60]
+
+        main_title = clean_title(raw_title)
+        # Do NOT append company name to title; keep it short and professional
+        enhanced_title = main_title
         
         # Build template variables dict comprehensively
         template_vars = {

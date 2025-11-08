@@ -15,10 +15,34 @@ const FONT_STYLES = [
   { value: 'no-preference', label: 'No Preference' }
 ]
 
+const INDUSTRY_SPECIALTIES = [
+  'Residential',
+  'Commercial', 
+  'Mixed Practice',
+  'Sustainable/Green',
+  'Educational/Civic',
+  'Hospitality',
+  'Healthcare',
+  'Interiors',
+  'Urban Design',
+  'Other'
+];
+
+const FIRM_SIZE_OPTIONS = [
+  { value: '1-2', label: '1–2' },
+  { value: '3-5', label: '3–5' },
+  { value: '6-10', label: '6–10' },
+  { value: '11+', label: '11+' }
+];
+
+
+type FormStep = 'firm-profile' | 'brand-assets';
+
 const BrandAssets: React.FC = () => {
   const { logout } = useAuth()
   const { brandColors, updateBrandColors } = useBrand()
   const navigate = useNavigate()
+  const [currentStep, setCurrentStep] = useState<FormStep>('firm-profile');
   const [formData, setFormData] = useState<Partial<FirmProfile>>({
     primary_brand_color: brandColors.primaryColor,
     secondary_brand_color: brandColors.secondaryColor,
@@ -28,6 +52,8 @@ const BrandAssets: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [hasExistingAssets, setHasExistingAssets] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [formErrors, setFormErrors] = useState<string[]>([]);
 
   const handleLogout = () => {
     logout()
@@ -35,8 +61,12 @@ const BrandAssets: React.FC = () => {
   }
 
   const handleBack = () => {
-    navigate('/dashboard')
-  }
+    if (currentStep === 'brand-assets') {
+      setCurrentStep('firm-profile');
+    } else {
+      navigate('/dashboard');
+    }
+  };
 
   // Load existing brand assets
   useEffect(() => {
@@ -46,11 +76,18 @@ const BrandAssets: React.FC = () => {
         const profile = await dashboardApi.getFirmProfile()
         if (profile) {
           setFormData({
+            firm_name: profile.firm_name || '',
+            work_email: profile.work_email || '',
+            phone_number: profile.phone_number || '',
+            firm_website: profile.firm_website || '',
+            firm_size: profile.firm_size || '1-2',
+            industry_specialties: profile.industry_specialties || [],
+            location: profile.location || '',
             primary_brand_color: profile.primary_brand_color || '#2a5766',
             secondary_brand_color: profile.secondary_brand_color || '#ffffff', 
             preferred_font_style: profile.preferred_font_style || 'no-preference',
             branding_guidelines: profile.branding_guidelines || ''
-          })
+          });
           if (profile.primary_brand_color || profile.branding_guidelines) {
             setHasExistingAssets(true)
           }
@@ -65,9 +102,23 @@ const BrandAssets: React.FC = () => {
     loadBrandAssets()
   }, [])
 
-  const handleInputChange = (field: keyof FirmProfile, value: string) => {
+  const handleInputChange = (field: keyof FirmProfile, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
+
+  const handleSpecialtyToggle = (specialty: string) => {
+    const current = formData.industry_specialties || []
+    const updated = current.includes(specialty)
+      ? current.filter(s => s !== specialty)
+      : [...current, specialty]
+    handleInputChange('industry_specialties', updated)
+  }
+
+  const handleNextStep = () => {
+    if (currentStep === 'firm-profile') {
+      setCurrentStep('brand-assets');
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true)
@@ -81,6 +132,7 @@ const BrandAssets: React.FC = () => {
         secondaryColor: formData.secondary_brand_color || '#ffffff',
         fontStyle: formData.preferred_font_style || 'no-preference'
       })
+      setShowConfirmation(true);
       
       // Could add success notification here
     } catch (err) {
@@ -90,6 +142,38 @@ const BrandAssets: React.FC = () => {
       setSaving(false)
     }
   }
+
+  const validateForm = (): boolean => {
+    const errors: string[] = [];
+    const hex = /^#([A-Fa-f0-9]{6})$/;
+    if (!formData.firm_name) errors.push('Firm name is required');
+    if (!formData.work_email) errors.push('Work email is required');
+    if (!formData.phone_number) errors.push('Phone number is required');
+    if (!formData.primary_brand_color || !hex.test(formData.primary_brand_color)) errors.push('Primary color must be a valid hex like #2a5766');
+    if (!formData.secondary_brand_color || !hex.test(formData.secondary_brand_color)) errors.push('Secondary color must be a valid hex like #ffffff');
+    setFormErrors(errors);
+    return errors.length === 0;
+  };
+
+  const handleSaveAndContinue = async () => {
+    if (!validateForm()) {
+      return;
+    }
+    try {
+      // Save profile first
+      await dashboardApi.updateFirmProfile(formData);
+      updateBrandColors({
+        primaryColor: formData.primary_brand_color || '#2a5766',
+        secondaryColor: formData.secondary_brand_color || '#ffffff',
+        fontStyle: formData.preferred_font_style || 'no-preference'
+      });
+      // Continue to Create Lead Magnet without showing preview here
+      navigate('/create-lead-magnet');
+    } catch (err) {
+      console.error('Failed during Save & Continue:', err);
+      setFormErrors(['Save failed. Please review your inputs and try again.']);
+    }
+  };
 
   if (loading) {
     return (
@@ -176,100 +260,183 @@ const BrandAssets: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               className="brand-form"
             >
-              <div className="form-section">
-                <h2 className="section-title">Brand Colors</h2>
-                
-                <div className="form-group">
-                  <label className="form-label">Primary Brand Color</label>
-                  <div className="color-input-group">
-                    <input
-                      type="color"
-                      className="color-input"
-                      value={formData.primary_brand_color || '#2a5766'}
-                      onChange={(e) => handleInputChange('primary_brand_color', e.target.value)}
-                    />
+              {currentStep === 'firm-profile' && (
+                <div className="form-section">
+                  <h2 className="section-title">Firm Information</h2>
+                  <div className="form-group">
+                    <label className="form-label">Firm Name *</label>
                     <input
                       type="text"
-                      className="form-input color-text"
-                      value={formData.primary_brand_color || ''}
-                      onChange={(e) => handleInputChange('primary_brand_color', e.target.value)}
-                      placeholder="#2a5766"
+                      className="form-input"
+                      value={formData.firm_name || ''}
+                      onChange={(e) => handleInputChange('firm_name', e.target.value)}
+                      placeholder="Enter your firm name"
                     />
                   </div>
-                  <p className="field-description">Used for headings, accents, and call-to-action elements</p>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Secondary Brand Color</label>
-                  <div className="color-input-group">
+                  <div className="form-group">
+                    <label className="form-label">Work Email *</label>
                     <input
-                      type="color"
-                      className="color-input"
-                      value={formData.secondary_brand_color || '#ffffff'}
-                      onChange={(e) => handleInputChange('secondary_brand_color', e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      className="form-input color-text"
-                      value={formData.secondary_brand_color || ''}
-                      onChange={(e) => handleInputChange('secondary_brand_color', e.target.value)}
-                      placeholder="#ffffff"
+                      type="email"
+                      className="form-input"
+                      value={formData.work_email || ''}
+                      onChange={(e) => handleInputChange('work_email', e.target.value)}
+                      placeholder="your@company.com"
                     />
                   </div>
-                  <p className="field-description">Used for backgrounds and complementary elements</p>
+                  <div className="form-group">
+                    <label className="form-label">Phone Number</label>
+                    <input
+                      type="tel"
+                      className="form-input"
+                      value={formData.phone_number || ''}
+                      onChange={(e) => handleInputChange('phone_number', e.target.value)}
+                      placeholder="+1 (555) 123-4567"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Firm Website</label>
+                    <input
+                      type="url"
+                      className="form-input"
+                      value={formData.firm_website || ''}
+                      onChange={(e) => handleInputChange('firm_website', e.target.value)}
+                      placeholder="https://www.yourfirm.com"
+                    />
+                  </div>
+                  <div className="form-actions">
+                    <button 
+                      type="button" 
+                      className="btn btn-primary"
+                      onClick={handleNextStep}
+                    >
+                      Next
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className="form-section">
-                <h2 className="section-title">Typography</h2>
-                
-                <div className="form-group">
-                  <label className="form-label">Preferred Font Style</label>
-                  <select
-                    className="form-select"
-                    value={formData.preferred_font_style || 'no-preference'}
-                    onChange={(e) => handleInputChange('preferred_font_style', e.target.value)}
-                  >
-                    {FONT_STYLES.map((font) => (
-                      <option key={font.value} value={font.value}>
-                        {font.label}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="field-description">The font style that best represents your brand</p>
-                </div>
-              </div>
+              {currentStep === 'brand-assets' && (
+                <>
+                  <div className="form-section">
+                    <h2 className="section-title">Brand Colors</h2>
+                    
+                    <div className="form-group">
+                      <label className="form-label">Primary Brand Color</label>
+                      <div className="color-input-group">
+                        <input
+                          type="color"
+                          className="color-input"
+                          value={formData.primary_brand_color || '#2a5766'}
+                          onChange={(e) => handleInputChange('primary_brand_color', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="form-input color-text"
+                          value={formData.primary_brand_color || ''}
+                          onChange={(e) => handleInputChange('primary_brand_color', e.target.value)}
+                          placeholder="#2a5766"
+                        />
+                      </div>
+                      <p className="field-description">Used for headings, accents, and call-to-action elements</p>
+                    </div>
 
-              <div className="form-section">
-                <h2 className="section-title">Brand Guidelines</h2>
-                
-                <div className="form-group">
-                  <label className="form-label">Additional Branding Guidelines</label>
-                  <textarea
-                    className="form-textarea"
-                    value={formData.branding_guidelines || ''}
-                    onChange={(e) => handleInputChange('branding_guidelines', e.target.value)}
-                    placeholder="Any specific branding requirements, style guides, tone of voice, or design preferences..."
-                    rows={6}
-                  />
-                  <p className="field-description">Describe your brand personality, tone, and any specific design requirements</p>
-                </div>
-              </div>
+                    <div className="form-group">
+                      <label className="form-label">Secondary Brand Color</label>
+                      <div className="color-input-group">
+                        <input
+                          type="color"
+                          className="color-input"
+                          value={formData.secondary_brand_color || '#ffffff'}
+                          onChange={(e) => handleInputChange('secondary_brand_color', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="form-input color-text"
+                          value={formData.secondary_brand_color || ''}
+                          onChange={(e) => handleInputChange('secondary_brand_color', e.target.value)}
+                          placeholder="#ffffff"
+                        />
+                      </div>
+                      <p className="field-description">Used for backgrounds and complementary elements</p>
+                    </div>
+                  </div>
 
-              <div className="form-actions">
-                <button 
-                  type="button" 
-                  className="btn btn-primary"
-                  onClick={handleSave}
-                  disabled={saving}
-                >
-                  {saving ? 'Saving...' : (hasExistingAssets ? 'Update Brand Assets' : 'Save Brand Assets')}
-                </button>
-              </div>
+                  <div className="form-section">
+                    <h2 className="section-title">Typography</h2>
+                    
+                    <div className="form-group">
+                      <label className="form-label">Preferred Font Style</label>
+                      <select
+                        className="form-select"
+                        value={formData.preferred_font_style || 'no-preference'}
+                        onChange={(e) => handleInputChange('preferred_font_style', e.target.value)}
+                      >
+                        {FONT_STYLES.map((font) => (
+                          <option key={font.value} value={font.value}>
+                            {font.label}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="field-description">The font style that best represents your brand</p>
+                    </div>
+                  </div>
+
+                  <div className="form-section">
+                    <h2 className="section-title">Brand Guidelines</h2>
+                    
+                    <div className="form-group">
+                      <label className="form-label">Additional Branding Guidelines</label>
+                      <textarea
+                        className="form-textarea"
+                        value={formData.branding_guidelines || ''}
+                        onChange={(e) => handleInputChange('branding_guidelines', e.target.value)}
+                        placeholder="Any specific branding requirements, style guides, tone of voice, or design preferences..."
+                        rows={6}
+                      />
+                      <p className="field-description">Describe your brand personality, tone, and any specific design requirements</p>
+                    </div>
+                  </div>
+
+                  <div className="form-actions">
+                    <button 
+                      type="button" 
+                      className="btn btn-primary"
+                      onClick={handleSave}
+                      disabled={saving}
+                    >
+                      {saving ? 'Saving...' : (hasExistingAssets ? 'Update Brand Assets' : 'Save Brand Assets')}
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary"
+                      onClick={handleSaveAndContinue}
+                      disabled={saving}
+                      style={{ marginLeft: '12px' }}
+                    >
+                      Save and Continue
+                    </button>
+                  </div>
+                </>
+              )}
             </motion.div>
           </div>
         </main>
       </div>
+      {formErrors.length > 0 && (
+        <div className="error-banner">
+          {formErrors.map((e, i) => (<div key={i}>{e}</div>))}
+        </div>
+      )}
+      {showConfirmation && (
+        <div className="confirmation-modal">
+          <div className="confirmation-content">
+            <h2>Success!</h2>
+            <p>Your brand assets have been saved.</p>
+            <button onClick={() => setShowConfirmation(false)}>Close</button>
+          </div>
+        </div>
+      )}
+      
     </div>
   )
 }
