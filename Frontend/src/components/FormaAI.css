@@ -255,11 +255,28 @@
   align-items: center;
   justify-content: center;
   transition: background-color 0.2s, color 0.2s;
+  position: relative;
 }
 
 .pdf-btn:hover {
   background-color: #4a4a4e;
   color: #fff;
+}
+
+.image-indicator {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #4CAF50;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
 }
 
 .send-btn {

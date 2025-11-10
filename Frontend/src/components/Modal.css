@@ -52,3 +52,9 @@
 .modal-body {
   color: #ccc;
 }
+
+.template-selection-modal {
+  background-color: #1a1a1a;
+  border: none;
+  padding: 2.5rem;
+}

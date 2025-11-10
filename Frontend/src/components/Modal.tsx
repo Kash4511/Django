@@ -9,9 +9,16 @@ interface ModalProps {
   children: React.ReactNode;
   title?: string;
   maxWidth?: string | number;
+  customClass?: string;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, maxWidth }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, maxWidth, customClass }) => {
+  const titleId = title ? 'modal-title' : undefined
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape') {
+      onClose()
+    }
+  }
   return (
     <AnimatePresence>
       {isOpen && (
@@ -21,17 +28,23 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, maxWidt
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
+          role="presentation"
         >
           <motion.div
-            className="modal-content"
+            className={`modal-content ${customClass || ''}`}
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
             style={maxWidth ? { maxWidth } : undefined}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            onKeyDown={handleKeyDown}
+            tabIndex={-1}
           >
             <div className="modal-header">
-              {title && <h2>{title}</h2>}
+              {title && <h2 id={titleId}>{title}</h2>}
               <button className="modal-close-btn" onClick={onClose}>
                 <X size={24} />
               </button>

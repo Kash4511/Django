@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, Palette } from 'lucide-react'
+import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, Palette, X } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { dashboardApi } from '../lib/dashboardApi'
 import type { FirmProfile, TemplateSelectionRequest } from '../lib/dashboardApi'
@@ -117,7 +117,7 @@ const CreateLeadMagnet: React.FC = () => {
     setCurrentStep('template-selection')
   }
 
-  const handleTemplateSubmit = async (templateId: string, templateName: string, templateThumbnail?: string) => {
+  const handleTemplateSubmit = async (templateId: string, templateName: string, architecturalImages?: File[]) => {
     setLoading(true)
     setErrorMessage(null)
     setSuccessMessage(null)
@@ -146,7 +146,7 @@ const CreateLeadMagnet: React.FC = () => {
         lead_magnet_id: leadMagnet.id,
         template_id: templateId,
         template_name: templateName,
-        template_thumbnail: templateThumbnail,
+        template_thumbnail: architecturalImages && architecturalImages.length > 0 ? architecturalImages[0].name : undefined,
         captured_answers: capturedAnswers as unknown as Record<string, unknown>,
         source: 'create-lead-magnet'
       }
@@ -166,6 +166,12 @@ const CreateLeadMagnet: React.FC = () => {
         setPreviewUrl(url)
         setShowPreviewModal(true)
         setSuccessMessage('PDF generated. Preview shown below.')
+        
+        // Store architectural images for future use when API supports them
+        if (architecturalImages && architecturalImages.length > 0) {
+          console.log('Architectural images uploaded:', architecturalImages.length)
+          // TODO: Add API endpoint to upload architectural images when backend supports it
+        }
       } catch (pdfError) {
         console.error('🔴 PDF generation failed:', pdfError)
         setErrorMessage('PDF generation failed. You can retry from dashboard.')
@@ -291,6 +297,7 @@ const CreateLeadMagnet: React.FC = () => {
             {currentStep === 'template-selection' && (
   <TemplateSelectionForm
     onSubmit={handleTemplateSubmit}
+    onClose={handleBack}
     loading={loading}
   />
 )}
@@ -304,41 +311,58 @@ const CreateLeadMagnet: React.FC = () => {
           setShowPreviewModal(false)
           if (previewUrl) { window.URL.revokeObjectURL(previewUrl); setPreviewUrl(null) }
         }}
-        title="Preview PDF"
-        maxWidth={1000}
+        title="PDF Preview"
+        maxWidth={1200}
       >
         {previewUrl ? (
-          <div>
-            <iframe title="Lead Magnet Preview" src={previewUrl} style={{ width: '100%', height: '70vh', border: '1px solid #333' }} />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
-              <button
-                className="btn btn-primary"
-                onClick={() => {
-                  if (previewUrl) {
-                    const link = document.createElement('a')
-                    link.href = previewUrl
-                    link.setAttribute('download', 'lead-magnet.pdf')
-                    document.body.appendChild(link)
-                    link.click()
-                    link.remove()
-                  }
-                }}
-              >
-                Download PDF
-              </button>
-              <button
-                className="btn btn-secondary"
-                onClick={() => {
-                  setShowPreviewModal(false)
-                  if (previewUrl) { window.URL.revokeObjectURL(previewUrl); setPreviewUrl(null) }
-                }}
-              >
-                Close
-              </button>
+          <div className="pdf-preview-container">
+            <div className="pdf-preview-header">
+              <div className="pdf-preview-title">
+                <FileText size={20} />
+                <span>Lead Magnet Preview</span>
+              </div>
+              <div className="pdf-preview-actions">
+                <button
+                  className="pdf-preview-btn pdf-download-btn"
+                  onClick={() => {
+                    if (previewUrl) {
+                      const link = document.createElement('a')
+                      link.href = previewUrl
+                      link.setAttribute('download', 'lead-magnet.pdf')
+                      document.body.appendChild(link)
+                      link.click()
+                      link.remove()
+                    }
+                  }}
+                >
+                  <Download size={16} />
+                  Download PDF
+                </button>
+                <button
+                  className="pdf-preview-btn pdf-close-btn"
+                  onClick={() => {
+                    setShowPreviewModal(false)
+                    if (previewUrl) { window.URL.revokeObjectURL(previewUrl); setPreviewUrl(null) }
+                  }}
+                >
+                  <X size={16} />
+                  Close
+                </button>
+              </div>
+            </div>
+            <div className="pdf-preview-content">
+              <iframe 
+                title="Lead Magnet Preview" 
+                src={previewUrl} 
+                className="pdf-preview-iframe"
+              />
             </div>
           </div>
         ) : (
-          <div>Loading preview...</div>
+          <div className="pdf-preview-loading">
+            <div className="loading-spinner"></div>
+            <p>Generating PDF preview...</p>
+          </div>
         )}
       </Modal>
     </div>

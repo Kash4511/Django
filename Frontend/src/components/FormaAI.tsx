@@ -18,6 +18,7 @@ const FormaAI: React.FC = () => {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('')
   const [selectedTemplateName, setSelectedTemplateName] = useState<string>('')
   const [templateError, setTemplateError] = useState<string | null>(null)
+  const [architecturalImages, setArchitecturalImages] = useState<File[]>([])
   const [messages, setMessages] = useState<string[]>([])
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
   const [generationProgress, setGenerationProgress] = useState<number>(0)
@@ -47,6 +48,15 @@ const FormaAI: React.FC = () => {
     setAttachedFiles(prev => prev.filter((_, i) => i !== index))
   }
 
+  const handleTemplateSelect = (templateId: string, templateName: string, images?: File[]) => {
+    setSelectedTemplateId(templateId)
+    setSelectedTemplateName(templateName)
+    setTemplateError(null)
+    if (images) {
+      setArchitecturalImages(images)
+    }
+  }
+
   const handleSend = async () => {
     // Check if template is selected
     if (!selectedTemplateId) {
@@ -57,6 +67,12 @@ const FormaAI: React.FC = () => {
         templateButton.style.border = '2px solid #ff6b6b'
         setTimeout(() => { templateButton.style.border = '1px solid #555' }, 1500)
       }
+      return
+    }
+
+    // Check if architectural images are uploaded
+    if (architecturalImages.length === 0) {
+      setTemplateError('Upload architectural images')
       return
     }
 
@@ -74,15 +90,29 @@ const FormaAI: React.FC = () => {
     progressTimers.current.push(window.setTimeout(() => setGenerationProgress(75), 1800))
 
     try {
-      const payload = {
-        message: userMsg,
-        files: [], // future: send metadata/urls for attachments
-        generate_pdf: true,
-        template_id: selectedTemplateId,
-      }
+      // Create FormData to handle file uploads
+      const formData = new FormData()
+      formData.append('message', userMsg)
+      formData.append('generate_pdf', 'true')
+      formData.append('template_id', selectedTemplateId)
+      
+      // Add architectural images
+      architecturalImages.forEach((image, index) => {
+        formData.append(`architectural_image_${index + 1}`, image)
+      })
+      
+      // Add attached files if any
+      attachedFiles.forEach((file, index) => {
+        formData.append(`attachment_${index}`, file)
+      })
 
       // Request may return either JSON or a PDF; use arraybuffer then inspect content-type
-      const res = await apiClient.post('/api/ai-conversation/', payload, { responseType: 'arraybuffer' })
+      const res = await apiClient.post('/api/ai-conversation/', formData, { 
+        responseType: 'arraybuffer',
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
       const contentType = (res.headers && (res.headers['content-type'] || res.headers['Content-Type'])) || ''
 
       if (contentType.includes('application/pdf')) {
@@ -279,6 +309,9 @@ const FormaAI: React.FC = () => {
                       
                       <button className="pdf-btn" onClick={() => setShowTemplateModal(true)}>
                         <PdfIcon size={18} />
+                        {architecturalImages.length > 0 && (
+                          <span className="image-indicator">{architecturalImages.length}</span>
+                        )}
                       </button>
                     </div>
 
@@ -304,11 +337,11 @@ const FormaAI: React.FC = () => {
         title="Choose Your Template"
       >
         <TemplateSelectionForm 
-          onSubmit={(templateId, templateName) => {
-            setSelectedTemplateId(templateId)
-            setSelectedTemplateName(templateName)
+          onSubmit={(templateId, templateName, images) => {
+            handleTemplateSelect(templateId, templateName, images)
             setShowTemplateModal(false)
           }}
+          onClose={() => setShowTemplateModal(false)}
         />
       </Modal>
 

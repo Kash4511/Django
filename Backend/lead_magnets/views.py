@@ -724,6 +724,13 @@ class FormaAIConversationView(APIView):
         generate_pdf = request.data.get('generate_pdf', True)
         template_id = request.data.get('template_id', 'modern-guide')
         
+        # Handle architectural images from FormData
+        architectural_images = []
+        for i in range(1, 4):  # Handle up to 3 architectural images
+            image_key = f'architectural_image_{i}'
+            if image_key in request.FILES:
+                architectural_images.append(request.FILES[image_key])
+        
         if not message:
             return Response({
                 'error': 'Message is required'
@@ -817,6 +824,20 @@ class FormaAIConversationView(APIView):
         template_vars['emailAddress'] = template_vars.get('emailAddress') or firm_profile.get('work_email', '')
         template_vars['phoneNumber'] = template_vars.get('phoneNumber') or firm_profile.get('phone_number', '')
         template_vars['website'] = template_vars.get('website') or firm_profile.get('firm_website', '')
+        
+        # Add architectural images to template variables if provided
+        if architectural_images:
+            template_vars['architecturalImages'] = []
+            for i, image in enumerate(architectural_images[:3]):  # Limit to 3 images
+                # Convert image to base64 for embedding in template
+                import base64
+                image_data = base64.b64encode(image.read()).decode('utf-8')
+                image_extension = image.name.split('.')[-1].lower()
+                mime_type = f'image/{image_extension}' if image_extension in ['jpg', 'jpeg', 'png', 'gif'] else 'image/jpeg'
+                template_vars['architecturalImages'].append({
+                    'src': f'data:{mime_type};base64,{image_data}',
+                    'alt': f'Architectural Image {i + 1}'
+                })
 
         # Compose assistant message summary
         summary_title = template_vars.get('mainTitle') or ai_content.get('cover', {}).get('title') or 'Generated Document'

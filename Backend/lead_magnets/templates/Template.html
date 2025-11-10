@@ -284,7 +284,7 @@
             width: 100%;
             height: 200px;
             background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
-            border: 2px dashed var(--accent);
+            border: 2px solid var(--accent);
             border-radius: 12px;
             display: flex;
             flex-direction: column;
@@ -353,7 +353,7 @@
             width: 100%;
             height: 150px;
             background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
-            border: 2px dashed var(--accent);
+            border: 2px solid var(--accent);
             border-radius: 8px;
             display: flex;
             flex-direction: column;
@@ -974,12 +974,19 @@
                 <h1>{{customTitle1}}</h1>
                 <p class="content-text">{{customContent1}}</p>
                 
-                <!-- ARCHITECTURAL IMAGE PLACEHOLDER 1 -->
+                <!-- ARCHITECTURAL IMAGE 1 -->
+                {% if architecturalImages and architecturalImages|length > 0 %}
+                <div class="architectural-image">
+                    <img src="{{architecturalImages[0].src}}" alt="{{architecturalImages[0].alt}}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px; border: 2px solid var(--accent);">
+                    <div class="image-placeholder-subtext">{{architecturalImageCaption1}}</div>
+                </div>
+                {% else %}
                 <div class="image-placeholder">
                     <div class="image-placeholder-icon"></div>
                     <div class="image-placeholder-text">Architectural Image</div>
                     <div class="image-placeholder-subtext">{{architecturalImageCaption1}}</div>
                 </div>
+                {% endif %}
                 
                 <h3 class="section-title">{{subheading1}}</h3>
                 <p class="content-text">{{subcontent1}}</p>
@@ -1097,12 +1104,19 @@
                 <h1>{{customTitle3}}</h1>
                 <p class="content-text">{{customContent3}}</p>
                 
-                <!-- ARCHITECTURAL IMAGE PLACEHOLDER 2 -->
+                <!-- ARCHITECTURAL IMAGE 2 -->
+                {% if architecturalImages and architecturalImages|length > 1 %}
+                <div class="architectural-image">
+                    <img src="{{architecturalImages[1].src}}" alt="{{architecturalImages[1].alt}}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px; border: 2px solid var(--accent);">
+                    <div class="image-placeholder-subtext">{{architecturalImageCaption2}}</div>
+                </div>
+                {% else %}
                 <div class="image-placeholder">
                     <div class="image-placeholder-icon"></div>
                     <div class="image-placeholder-text">Architectural Image</div>
                     <div class="image-placeholder-subtext">{{architecturalImageCaption2}}</div>
                 </div>
+                {% endif %}
                 
                 <h3 class="section-title">{{subheading3}}</h3>
                 <p class="content-text">{{subcontent3}}</p>
@@ -1164,11 +1178,19 @@
                     <div class="column">
                         <div class="content-box">
                             <h3>{{columnBoxTitle1}}</h3>
-                            <!-- ARCHITECTURAL IMAGE PLACEHOLDER 3 (SMALL) -->
+                            <!-- ARCHITECTURAL IMAGE 3 (SMALL) -->
+                            {% if architecturalImages and architecturalImages|length > 2 %}
+                            <div class="architectural-image-small">
+                                <img src="{{architecturalImages[2].src}}" alt="{{architecturalImages[2].alt}}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid var(--accent);">
+                                <div class="image-placeholder-subtext">{{architecturalImageCaption3}}</div>
+                            </div>
+                            {% else %}
                             <div class="image-placeholder-small">
                                 <div class="image-placeholder-icon"></div>
                                 <div class="image-placeholder-text">Detail View</div>
+                                <div class="image-placeholder-subtext">{{architecturalImageCaption3}}</div>
                             </div>
+                            {% endif %}
                             <p>{{columnBoxContent1}}</p>
                         </div>
                     </div>

@@ -1,65 +1,84 @@
-import React, { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { FileText, Loader2, AlertCircle } from 'lucide-react'
-import { dashboardApi } from '../../lib/dashboardApi'
-import type { PDFTemplate } from '../../lib/dashboardApi'
-import '../CreateLeadMagnet.css'
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { FileText, Loader2, AlertCircle, ChevronLeft } from 'lucide-react';
+import { dashboardApi } from '../../lib/dashboardApi';
+import type { PDFTemplate } from '../../lib/dashboardApi';
+import ImageUpload from './ImageUpload'; // Import the new component
+import './TemplateSelectionForm.css';
+import '../CreateLeadMagnet.css';
 
 interface TemplateSelectionFormProps {
-  onSubmit: (templateId: string, templateName: string, templateThumbnail?: string) => void
-  loading?: boolean
+  onClose: () => void;
+  onSubmit: (templateId: string, templateName: string, architecturalImages?: File[]) => void;
+  loading?: boolean;
 }
 
 const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
+  onClose,
   onSubmit,
-  loading = false
+  loading = false,
 }) => {
-  const [templates, setTemplates] = useState<PDFTemplate[]>([])
-  const [selectedTemplate, setSelectedTemplate] = useState<PDFTemplate | null>(null)
-  const [fetchingTemplates, setFetchingTemplates] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [templates, setTemplates] = useState<PDFTemplate[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<PDFTemplate | null>(null);
+  const [fetchingTemplates, setFetchingTemplates] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showImageUpload, setShowImageUpload] = useState(false); // New state
+  const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        setFetchingTemplates(true)
-        setError(null)
-        const data = await dashboardApi.getTemplates()
-        setTemplates(data)
+        setFetchingTemplates(true);
+        setError(null);
+        const data = await dashboardApi.getTemplates();
+        setTemplates(data);
       } catch (err: unknown) {
-        console.error('Failed to fetch templates:', err)
-        const apiErr = err as { response?: { data?: { error?: string } } }
-        setError(apiErr.response?.data?.error || 'Failed to load templates')
+        console.error('Failed to fetch templates:', err);
+        const apiErr = err as { response?: { data?: { error?: string } } };
+        setError(apiErr.response?.data?.error || 'Failed to load templates');
       } finally {
-        setFetchingTemplates(false)
+        setFetchingTemplates(false);
       }
-    }
+    };
 
-    fetchTemplates()
-  }, [])
+    fetchTemplates();
+  }, []);
 
-  const handleTemplateSelect = (template: PDFTemplate) => {
-    setSelectedTemplate(template)
-  }
-
-  const [elapsed, setElapsed] = useState(0)
   useEffect(() => {
-    let timer: ReturnType<typeof setInterval> | null = null
+    let timer: ReturnType<typeof setInterval> | null = null;
     if (loading) {
-      setElapsed(0)
-      timer = setInterval(() => setElapsed((s) => s + 1), 1000)
+      setElapsed(0);
+      timer = setInterval(() => setElapsed(s => s + 1), 1000);
     }
     return () => {
-      if (timer) clearInterval(timer)
+      if (timer) clearInterval(timer);
+    };
+  }, [loading]);
+
+  const handleTemplateSelect = (template: PDFTemplate) => {
+    setSelectedTemplate(template);
+  };
+
+  const handleImageUploadClose = () => {
+    setShowImageUpload(false);
+  };
+
+  const handleImagesSelected = (images: File[]) => {
+    setShowImageUpload(false);
+
+    if (selectedTemplate) {
+      onSubmit(selectedTemplate.id, selectedTemplate.name, images);
     }
-  }, [loading])
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (selectedTemplate) {
-      onSubmit(selectedTemplate.id, selectedTemplate.name, selectedTemplate.thumbnail)
+    e.preventDefault();
+    if (!selectedTemplate) {
+      setError('Please select a template before continuing');
+      return;
     }
-  }
+    setShowImageUpload(true);
+  };
 
   if (fetchingTemplates) {
     return (
@@ -96,57 +115,71 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
     )
   }
 
+  if (showImageUpload) {
+    return (
+      <ImageUpload 
+        onImagesSelected={handleImagesSelected} 
+        onClose={handleImageUploadClose} 
+      />
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="template-selection-form">
-      <div className="form-header">
-        <h2>Choose Your Template</h2>
-        <p>Select a design template for your lead magnet PDF</p>
-      </div>
+    <>
+      <div className="template-selection-container">
+        <div className="form-header-new">
+          <div className="flex items-center gap-4">
+            <button onClick={onClose} className="back-button-new">
+                <ChevronLeft size={24} />
+                <span>Back</span>
+            </button>
+          </div>
+        </div>
 
-      <div className="template-grid">
-        {templates.map((template) => (
-          <motion.div
-            key={template.id}
-            className={`template-card ${selectedTemplate?.id === template.id ? 'selected' : ''}`}
-            onClick={() => handleTemplateSelect(template)}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+        <div className="template-grid-new">
+          {templates.map((template) => (
+            <motion.div
+              key={template.id}
+              className={`template-card ${selectedTemplate?.id === template.id ? 'selected' : ''}`}
+              onClick={() => handleTemplateSelect(template)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="template-thumbnail-wrapper-new">
+                {template.preview_url ? (
+                  <div className="template-thumbnail-new">
+                    <img src={template.preview_url} alt={template.name} />
+                  </div>
+                ) : (
+                  <div className="template-thumbnail-new placeholder">
+                    <FileText size={36} />
+                  </div>
+                )}
+              </div>
+              <div className="template-info-new">
+                <h3>{template.name}</h3>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="form-actions-new">
+          <button 
+            type="button" 
+            onClick={handleSubmit}
+            className="submit-btn-new"
+            disabled={!selectedTemplate || loading}
           >
-            {template.preview_url ? (
-              <div className="template-thumbnail">
-                <img src={template.preview_url} alt={template.name} />
-              </div>
+            {loading ? (
+              <>
+                <Loader2 className="spinner" size={18} />
+                Processing... ({elapsed}s)
+              </>
             ) : (
-              <div className="template-thumbnail placeholder">
-                <FileText size={48} />
-              </div>
+              'Next' // Changed from Continue
             )}
-            <div className="template-info">
-              <h3>{template.name}</h3>
-              {template.description && <p>{template.description}</p>}
-            </div>
-            {selectedTemplate?.id === template.id && (
-              <div className="selected-indicator">✓</div>
-            )}
-          </motion.div>
-        ))}
-      </div>
-
-      <div className="form-actions">
-        <button 
-          type="submit" 
-          className="submit-btn"
-          disabled={!selectedTemplate || loading}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="spinner" size={18} />
-              Processing... ({elapsed}s)
-            </>
-          ) : (
-            'Continue'
-          )}
-        </button>
+          </button>
+        </div>
       </div>
 
       {loading && (
@@ -158,7 +191,7 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
           </div>
         </div>
       )}
-    </form>
+    </>
   )
 }
 
