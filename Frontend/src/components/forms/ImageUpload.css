@@ -82,3 +82,15 @@
     justify-content: space-between;
     align-items: center;
 }
+
+/* Consistent error banner styling (matches chat template error) */
+.template-error-banner {
+    background: #432222;
+    color: #ffb3b3;
+    border: 1px solid #803333;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: 0 0 10px;
+    max-width: 800px;
+    width: 100%;
+}

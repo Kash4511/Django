@@ -11,6 +11,7 @@ interface ImageUploadProps {
 const ImageUpload: React.FC<ImageUploadProps> = ({ onImagesSelected, onClose }) => {
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newImages = [...images, ...acceptedFiles].slice(0, 3);
@@ -20,10 +21,12 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImagesSelected, onClose }) 
     setPreviews(newPreviews);
   }, [images]);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getInputProps, isDragActive, open } = useDropzone({
     onDrop,
     accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.webp'] },
     maxSize: 10 * 1024 * 1024, // 10MB
+    multiple: true,
+    noClick: true,
   });
 
   const removeImage = (index: number) => {
@@ -35,14 +38,26 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImagesSelected, onClose }) 
   };
 
   const handleContinue = () => {
+    if (images.length === 0) {
+      setError('Upload images');
+      return;
+    }
+    setError(null);
     onImagesSelected(images);
   };
 
   return (
     <div className="image-upload-container">
+        {/* Hidden input to support programmatic open() for all slots */}
+        <input {...getInputProps()} style={{ display: 'none' }} />
         <div className="image-upload-header">
             <h2 className="text-2xl font-semibold text-white">Upload Images</h2>
             <p className="mt-2 text-sm text-gray-400">Upload images for your Modern Guide Template</p>
+            {error && (
+              <div className="template-error-banner" role="alert" style={{ marginTop: '10px' }}>
+                {error}
+              </div>
+            )}
         </div>
 
       <div className="image-grid">
@@ -56,8 +71,14 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImagesSelected, onClose }) 
                 </button>
               </div>
             ) : (
-              <div {...getRootProps({ className: `dropzone ${isDragActive ? 'active' : ''}`})}>
-                <input {...getInputProps()} />
+              <div
+                className={`dropzone ${isDragActive ? 'active' : ''}`}
+                onClick={() => open()}
+                role="button"
+                aria-label={`Select image for slot ${index + 1}`}
+                title="Browse Files"
+                tabIndex={0}
+              >
                 <UploadCloud size={32} />
                 <p>Browse Files</p>
               </div>
@@ -67,7 +88,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImagesSelected, onClose }) 
       </div>
       <div className="image-upload-footer">
         <button onClick={onClose} className="back-button-new">Back</button>
-        <button onClick={handleContinue} className="submit-btn-new" disabled={images.length !== 3}>
+        <button onClick={handleContinue} className="submit-btn-new">
           Continue
         </button>
       </div>

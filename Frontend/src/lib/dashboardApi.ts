@@ -322,8 +322,8 @@ export const dashboardApi = {
   generatePDFWithAIUrl: async (request: {
     template_id: string;
     lead_magnet_id: number;
-    use_ai_content: boolean;
     user_answers?: Record<string, unknown>;
+    architectural_images?: string[];
   }): Promise<string> => {
     try {
       const response = await apiClient.post(`${API_BASE_URL}/generate-pdf/`, request, {
@@ -333,6 +333,19 @@ export const dashboardApi = {
       return url; // caller should revoke when done
     } catch (error) {
       handleApiError(error, 'Generating PDF preview URL');
+      throw error;
+    }
+  },
+
+  generateSlogan: async (request: {
+    user_answers: Record<string, unknown>;
+    firm_profile: Record<string, unknown>;
+  }): Promise<{ slogan: string }> => {
+    try {
+      const response = await apiClient.post(`${API_BASE_URL}/generate-slogan/`, request);
+      return response.data;
+    } catch (error) {
+      handleApiError(error, 'Generating slogan');
       throw error;
     }
   },

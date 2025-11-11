@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import type { LeadMagnetGeneration } from '../../lib/dashboardApi'
+import { dashboardApi } from '../../lib/dashboardApi'
 import './LeadMagnetGenerationForm.css'
 
 interface LeadMagnetGenerationFormProps {
@@ -78,6 +79,9 @@ const LeadMagnetGenerationForm: React.FC<LeadMagnetGenerationFormProps> = ({
   })
 
   const [currentStep, setCurrentStep] = useState(0)
+  const [slogan, setSlogan] = useState('');
+  const [sloganLoading, setSloganLoading] = useState(false);
+  const [sloganError, setSloganError] = useState('');
 
   const steps = [
     'Type & Topic',
@@ -117,6 +121,24 @@ const LeadMagnetGenerationForm: React.FC<LeadMagnetGenerationFormProps> = ({
       onSubmit(formData as LeadMagnetGeneration)
     }
   }
+
+  const handleGenerateSlogan = async () => {
+    setSloganLoading(true);
+    setSloganError('');
+    try {
+      const firmProfile = await dashboardApi.getFirmProfile();
+      const response = await dashboardApi.generateSlogan({
+        user_answers: formData,
+        firm_profile: firmProfile,
+      });
+      setSlogan(response.slogan);
+      handleInputChange('special_requests', response.slogan);
+    } catch (error) {
+      setSloganError('Failed to generate slogan. Please try again.');
+    } finally {
+      setSloganLoading(false);
+    }
+  };
 
   const isStepValid = () => {
     switch (currentStep) {
@@ -292,6 +314,15 @@ const LeadMagnetGenerationForm: React.FC<LeadMagnetGenerationFormProps> = ({
                 placeholder="Any specific requirements, additional sections, or customizations..."
                 rows={3}
               />
+              <button
+                type="button"
+                className="btn btn-secondary mt-2"
+                onClick={handleGenerateSlogan}
+                disabled={sloganLoading}
+              >
+                {sloganLoading ? 'Generating...' : 'Generate Slogan'}
+              </button>
+              {sloganError && <p className="text-red-500 text-sm mt-2">{sloganError}</p>}
             </motion.div>
           </div>
         )

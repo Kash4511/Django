@@ -212,11 +212,14 @@ class PerplexityClient:
         call_to_action = (user_answers.get('call_to_action') or '').strip()
         industry = (user_answers.get('industry') or '').strip()
 
-        # AI customization: tone, section count, and colors based on industry
-        if industry == "Commercial":
-            prompt_style = "Use a sleek, modern color palette and emphasize adaptive reuse."
+        # AI customization: style should follow the topic unless a specific industry is provided
+        if industry:
+            if industry == "Commercial":
+                prompt_style = "Use a sleek, modern color palette and emphasize adaptive reuse."
+            else:
+                prompt_style = f"Use a style aligned with the {industry} domain and audience."
         else:
-            prompt_style = "Use natural tones and focus on sustainable materials."
+            prompt_style = "Use a style appropriate to the user's main_topic; do not assume architecture or sustainability."
 
         # Compose a strict instruction. Model must output ONLY JSON with the exact schema.
         prompt = (
@@ -430,8 +433,8 @@ class PerplexityClient:
             return truncated.rstrip()
 
         def truncate_title(text: str) -> str:
-            """Limit title length"""
-            return truncate_text(text, 60)
+            """Limit title length (~80 chars) but avoid cutting off meaningful phrases"""
+            return truncate_text(text, 80)
 
         def truncate_content(text: str) -> str:
             """Limit main content to prevent overflow - much shorter for clean pages"""
@@ -442,8 +445,103 @@ class PerplexityClient:
             return truncate_text(text, 150)
 
         def truncate_description(text: str) -> str:
-            """Limit description to 1-2 lines (about 80 chars)"""
-            return truncate_text(text, 120)
+            """Allow a longer, richer cover description (~140 chars)."""
+            return truncate_text(text, 140)
+
+        def finalize_line(text: str) -> str:
+            """Ensure clean sentence endings and one-line fit."""
+            t = (text or '').strip()
+            if not t:
+                return ''
+            # Remove trailing connectors without an object
+            t = re.sub(r"[\s,\-]+(and|or|with)\s*$", "", t, flags=re.IGNORECASE)
+            # Remove incomplete trailing clause like "and stay" / "and improve"
+            t = re.sub(r"\s+(and|or|with)\s+[A-Za-z]{1,15}\s*$", "", t, flags=re.IGNORECASE)
+            t = re.sub(r"[\s,\-]+$", "", t)
+            if not re.search(r"[.!?]$", t):
+                t = t + "."
+            return t
+
+        # --- Heading/content alignment & terminology normalization helpers ---
+        STOPWORDS = set(
+            "a an the for and or with of in on to by from at into over under about after before during through across against between toward toward within without".split()
+        )
+
+        def keywords_from_title(title: str) -> List[str]:
+            t = (title or "").lower()
+            # Keep alphanumerics, split on non-letters
+            tokens = re.split(r"[^a-z0-9]+", t)
+            # Remove short words and stopwords
+            return [w for w in tokens if len(w) > 3 and w not in STOPWORDS]
+
+        def contains_any_keyword(text: str, kws: List[str]) -> bool:
+            if not text or not kws:
+                return False
+            t = (text or "").lower()
+            return any(re.search(rf"\b{re.escape(k)}\b", t) for k in kws)
+
+        def standardize_sustainable_terms(text: str) -> str:
+            t = text or ""
+            # Normalize common variants to keep terminology consistent
+            t = re.sub(r"\beco[-\s]?friendly\b", "sustainable", t, flags=re.IGNORECASE)
+            t = re.sub(r"\bgreen(\s+(home|materials|solutions|upgrades))\b", r"sustainable \1", t, flags=re.IGNORECASE)
+            # Collapse redundant repeats like "sustainable, sustainable"
+            t = re.sub(r"\b(sustainable)(\s*,\s*\1)+\b", r"\1", t, flags=re.IGNORECASE)
+            # Limit frequency without removing meaning: if more than 4 occurrences, reduce extras
+            occurrences = [m for m in re.finditer(r"\bsustainable\b", t, flags=re.IGNORECASE)]
+            if len(occurrences) > 4:
+                # Replace every occurrence beyond the 4th with nothing (keeps grammar generally intact)
+                keep = 0
+                def repl(m):
+                    nonlocal keep
+                    keep += 1
+                    return m.group(0) if keep <= 4 else ""
+                t = re.sub(r"\bsustainable\b", repl, t, flags=re.IGNORECASE)
+                # Clean up double spaces from removals
+                t = re.sub(r"\s{2,}", " ", t).strip()
+            return t
+
+        def derive_title_from_content(content: str) -> str:
+            if not content:
+                return ""
+            first_sentence_match = re.search(r"^(.*?[.!?])\s", content)
+            first = first_sentence_match.group(1) if first_sentence_match else content.strip()
+            # Keep capitalized words and key nouns/adjectives
+            words = re.split(r"\s+", re.sub(r"[^A-Za-z0-9\s]", "", first))
+            filtered = [w for w in words if w.lower() not in STOPWORDS]
+            phrase = " ".join(filtered[:8]).strip()
+            phrase = re.sub(r"\s+", " ", phrase).strip(" -:;")
+            return phrase.title() if phrase else "Summary"
+
+        def refine_title_with_content(title: str, content: str) -> str:
+            kws = keywords_from_title(title)
+            if contains_any_keyword(content, kws):
+                return clean_title(title)
+            # Mismatch: derive a concise heading from content
+            return clean_title(derive_title_from_content(content))
+
+        def harmonize_section(title: str, content: str) -> str:
+            # Normalize core content and ensure alignment with heading topic
+            norm = normalize_main_content(content, title)
+            norm = standardize_sustainable_terms(norm)
+            kws = keywords_from_title(title)
+            if not contains_any_keyword(norm, kws) and title.strip():
+                # Prepend a brief aligning lead
+                lead = f"This section focuses on {title.lower()}. "
+                norm = lead + norm
+            return norm
+
+        def sloganize(text: str) -> str:
+            """Create a short slogan from a longer description."""
+            t = (text or '').strip()
+            if not t:
+                return ''
+            m = re.search(r"[.!?]", t)
+            if m:
+                t = t[:m.start()]
+            t = re.sub(r"\s+", " ", t).strip(" -:;,")
+            t = truncate_description(t)
+            return finalize_line(t)
 
         def clean_subtitle(text: str) -> str:
             """Remove stray dots or punctuation-only subtitles."""
@@ -469,6 +567,56 @@ class PerplexityClient:
         def page_hdr(n: int) -> str:
             return f"PAGE {n}"
 
+        # Quality and completion helpers
+        def count_words(t: str) -> int:
+            return len(re.findall(r"\b\w+\b", (t or '')))
+
+        def ensure_min_sentences(text: str, min_sentences: int = 3, max_sentences: int = 5, topic_hint: Optional[str] = None) -> str:
+            sentences = [finalize_line(s) for s in split_sentences(text)]
+            # Fallback pool of professional, neutral sentences
+            th = (topic_hint or 'this topic').strip()
+            fallback_pool = [
+                f"This section provides clear guidance on {th}.",
+                "It outlines benefits, trade-offs, and common pitfalls to avoid.",
+                "Recommendations and steps help readers take confident action.",
+                "Examples illustrate how to apply ideas in real-world scenarios.",
+            ]
+            i = 0
+            while len(sentences) < min_sentences and i < len(fallback_pool):
+                sentences.append(finalize_line(fallback_pool[i]))
+                i += 1
+            # Keep it concise
+            sentences = sentences[:max_sentences]
+            return " ".join(sentences)
+
+        def ensure_min_words(text: str, min_words: int = 60, max_words: int = 220, topic_hint: Optional[str] = None) -> str:
+            t = (text or '').strip()
+            if count_words(t) >= min_words:
+                return t
+            # Add more fallback content until minimum reached
+            th = (topic_hint or 'the topic').strip()
+            additions = [
+                f"The discussion focuses on key considerations for {th}.",
+                "It balances practicality with strategic outcomes and long-term value.",
+                "Readers gain clarity on next steps and measurable results.",
+            ]
+            for line in additions:
+                if count_words(t) >= min_words:
+                    break
+                t = (t + " " + finalize_line(line)).strip()
+            # Soft cap; final truncation handled by truncate functions downstream
+            words = t.split()
+            if len(words) > max_words:
+                t = " ".join(words[:max_words])
+            return t
+
+        def normalize_main_content(text: str, title_hint: str) -> str:
+            # Normalize whitespace and complete sentences
+            t = re.sub(r"\s+", " ", (text or '').strip())
+            t = ensure_min_sentences(t, min_sentences=3, max_sentences=5, topic_hint=title_hint)
+            t = ensure_min_words(t, min_words=60, max_words=220, topic_hint=title_hint)
+            return t
+
         # Create a short, professional title for the PDF
         raw_title = (cover.get("title") or "Professional Guide").strip()
 
@@ -476,6 +624,24 @@ class PerplexityClient:
             t = (title or "").strip()
             # Remove common prefixes like "Custom Guide:" or "Guide:"
             t = re.sub(r"^(custom\s+guide\s*:|guide\s*:)", "", t, flags=re.IGNORECASE).strip()
+
+            # Remove explicit trailing "for/by <company_name>" if present
+            if company_name:
+                cn = company_name.strip()
+                if cn:
+                    t = re.sub(rf"\s+(for|by)\s+{re.escape(cn)}\b[ .\-]*$", "", t, flags=re.IGNORECASE)
+
+            # Remove generic trailing marketing suffix: "for/by <Proper Noun phrase>"
+            # Matches one or more capitalized words at the end
+            t = re.sub(r"\s+(for|by)\s+[A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*)*[ .\-]*$", "", t, flags=re.IGNORECASE)
+
+            # Remove trailing prepositions
+            t = re.sub(r'\s+(of|in|for)$', '', t, flags=re.IGNORECASE).strip()
+
+            # Remove trailing colon and dangling single-letter articles
+            t = re.sub(r"[:\s]+$", "", t).strip()
+            t = re.sub(r"[:\-\s]+(A|An|The)$", "", t, flags=re.IGNORECASE).strip()
+
             # Collapse multiple spaces and trim punctuation
             t = re.sub(r"\s+", " ", t)
             t = t.strip(" -:;.,")
@@ -491,7 +657,7 @@ class PerplexityClient:
             # Cover and theme - enhanced with firm info
             "documentTitle": enhanced_title.upper(),
             "mainTitle": enhanced_title,
-            "documentSubtitle": clean_subtitle(truncate_description(cover.get("subtitle", ""))),
+            "documentSubtitle": sloganize(cover.get("subtitle", "")),
             "companyName": company_name,
             "companySubtitle": company_subtitle,
             "primaryColor": primary_color,
@@ -514,15 +680,15 @@ class PerplexityClient:
             "headerText7": step(7),
             "headerText8": step(8),
 
-            # Section titles used in headers - truncated
-            "sectionTitle1": truncate_title(get_section(0).get("title", "")),
-            "sectionTitle2": truncate_title(get_section(1).get("title", contents.get("title", "CONTENTS"))),
-            "sectionTitle3": truncate_title(get_section(2).get("title", "")),
-            "sectionTitle4": truncate_title(get_section(3).get("title", "")),
-            "sectionTitle5": truncate_title(get_section(4).get("title", "")),
-            "sectionTitle6": truncate_title(get_section(3).get("title", "")),
-            "sectionTitle7": truncate_title(get_section(4).get("title", "")),
-            "sectionTitle8": truncate_title(contact.get("title", "CONTACT")),
+            # Section titles used in headers - explicitly set for pages 2 and 3
+            "sectionTitle1": "Terms of Use",
+            "sectionTitle2": "Contents",
+            "sectionTitle3": truncate_title(clean_title(get_section(2).get("title", ""))),
+            "sectionTitle4": truncate_title(clean_title(get_section(3).get("title", ""))),
+            "sectionTitle5": truncate_title(clean_title(get_section(4).get("title", ""))),
+            "sectionTitle6": truncate_title(clean_title(get_section(3).get("title", ""))),
+            "sectionTitle7": truncate_title(clean_title(get_section(4).get("title", ""))),
+            "sectionTitle8": "REACH OUT TO OUR TEAM",
 
             # Page numbers in headers ("PAGE N") and footers (N)
             "pageNumberHeader2": page_hdr(2),
@@ -545,12 +711,12 @@ class PerplexityClient:
 
             # Contents page
             "contentsTitle": contents.get("title", "Contents"),
-            "contentItem1": truncate_title(get_or(content_items, 0, get_section(0).get("title", ""))),
-            "contentItem2": truncate_title(get_or(content_items, 1, get_section(1).get("title", ""))),
-            "contentItem3": truncate_title(get_or(content_items, 2, get_section(2).get("title", ""))),
-            "contentItem4": truncate_title(get_or(content_items, 3, get_section(3).get("title", ""))),
-            "contentItem5": truncate_title(get_or(content_items, 4, get_section(4).get("title", ""))),
-            "contentItem6": truncate_title(get_or(content_items, 5, contact.get("title", "Contact & Next Steps"))),
+            "contentItem1": truncate_title(clean_title(get_or(content_items, 0, get_section(0).get("title", "")))),
+            "contentItem2": truncate_title(clean_title(get_or(content_items, 1, get_section(1).get("title", "")))),
+            "contentItem3": truncate_title(clean_title(get_or(content_items, 2, get_section(2).get("title", "")))),
+            "contentItem4": truncate_title(clean_title(get_or(content_items, 3, get_section(3).get("title", "")))),
+            "contentItem5": truncate_title(clean_title(get_or(content_items, 4, get_section(4).get("title", "")))),
+            "contentItem6": truncate_title(clean_title(get_or(content_items, 5, contact.get("title", "Contact & Next Steps")))),
 
             # Terms
             "termsTitle": terms_title,
@@ -565,8 +731,8 @@ class PerplexityClient:
             "footerText": f"© {now_year} {company_name}. All rights reserved.",
 
             # Page 4 (Section 1) - with length limits
-            "customTitle1": truncate_title(get_section(0).get("title", "")),
-            "customContent1": truncate_content(get_section(0).get("content", "")),
+            "customTitle1": truncate_title(refine_title_with_content(get_section(0).get("title", ""), get_section(0).get("content", ""))),
+            "customContent1": truncate_content(harmonize_section(get_section(0).get("title", "Section 1"), get_section(0).get("content", ""))),
             "subheading1": truncate_title(get_sub(0, 0).get("title", "")),
             "subcontent1": truncate_subcontent(get_sub(0, 0).get("content", "")),
             "boxTitle1": truncate_title(get_sub(0, 1).get("title", "")),
@@ -575,8 +741,8 @@ class PerplexityClient:
             "accentBoxContent1": truncate_subcontent(get_sub(0, 0).get("content", "")),
 
             # Page 5 (Section 2) - with length limits and quote handling
-            "customTitle2": truncate_title(get_section(1).get("title", "")),
-            "customContent2": truncate_content(get_section(1).get("content", "")),
+            "customTitle2": truncate_title(refine_title_with_content(get_section(1).get("title", ""), get_section(1).get("content", ""))),
+            "customContent2": truncate_content(harmonize_section(get_section(1).get("title", "Section 2"), get_section(1).get("content", ""))),
             "columnBoxTitle1": truncate_title(get_sub(1, 0).get("title", "")),
             "columnBoxContent1": truncate_subcontent(get_sub(1, 0).get("content", "")),
             "columnBoxTitle2": truncate_title(get_sub(1, 1).get("title", "")),
@@ -588,21 +754,21 @@ class PerplexityClient:
             "quoteAuthor1": company_name or "",
 
             # Page 6 (Section 3) - with length limits
-            "customTitle3": truncate_title(get_section(2).get("title", "")),
-            "customContent3": truncate_content(get_section(2).get("content", "")),
+            "customTitle3": truncate_title(refine_title_with_content(get_section(2).get("title", ""), get_section(2).get("content", ""))),
+            "customContent3": truncate_content(harmonize_section(get_section(2).get("title", "Section 3"), get_section(2).get("content", ""))),
             "accentBoxTitle2": truncate_title(get_sub(2, 0).get("title", "")),
             "accentBoxContent2": truncate_subcontent(get_sub(2, 0).get("content", "")),
             "subheading3": truncate_title(get_sub(2, 1).get("title", "")),
-            "listItem1": truncate_subcontent(get_or(split_sentences(get_section(2).get("content", "")), 0, "")),
-            "listItem2": truncate_subcontent(get_or(split_sentences(get_section(2).get("content", "")), 1, "")),
-            "listItem3": truncate_subcontent(get_or(split_sentences(get_section(2).get("content", "")), 2, "")),
-            "listItem4": truncate_subcontent(get_or(split_sentences(get_section(2).get("content", "")), 3, "")),
+            "listItem1": finalize_line(truncate_text(get_or(split_sentences(get_section(2).get("content", "")), 0, ""), 90)),
+            "listItem2": finalize_line(truncate_text(get_or(split_sentences(get_section(2).get("content", "")), 1, ""), 90)),
+            "listItem3": finalize_line(truncate_text(get_or(split_sentences(get_section(2).get("content", "")), 2, ""), 90)),
+            "listItem4": finalize_line(truncate_text(get_or(split_sentences(get_section(2).get("content", "")), 3, ""), 90)),
             "boxTitle2": truncate_title(get_sub(2, 0).get("title", "")),
             "boxContent2": truncate_subcontent(get_sub(2, 0).get("content", "")),
 
             # Page 7 (Section 4) - with length limits
-            "customTitle4": truncate_title(get_section(3).get("title", "")),
-            "customContent4": truncate_content(get_section(3).get("content", "")),
+            "customTitle4": truncate_title(refine_title_with_content(get_section(3).get("title", ""), get_section(3).get("content", ""))),
+            "customContent4": truncate_content(harmonize_section(get_section(3).get("title", "Section 4"), get_section(3).get("content", ""))),
             "columnTitle1": truncate_title(get_sub(3, 0).get("title", "")),
             "columnContent1": truncate_subcontent(get_sub(3, 0).get("content", "")),
             "columnTitle2": truncate_title(get_sub(3, 1).get("title", "")),
@@ -613,22 +779,57 @@ class PerplexityClient:
             "subcontent4": truncate_subcontent(get_sub(3, 1).get("content", "")),
 
             # Page 8 (Section 5) - with length limits
-            "customTitle5": truncate_title(get_section(4).get("title", "")),
-            "customContent5": truncate_content(get_section(4).get("content", "")),
+            "customTitle5": truncate_title(refine_title_with_content(get_section(4).get("title", ""), get_section(4).get("content", ""))),
+            "customContent5": truncate_content(harmonize_section(get_section(4).get("title", "Section 5"), get_section(4).get("content", ""))),
             "accentBoxTitle3": truncate_title(get_sub(4, 0).get("title", "")),
             "accentBoxContent3": truncate_subcontent(get_sub(4, 0).get("content", "")),
             "subheading5": truncate_title(get_sub(4, 1).get("title", "")),
-            "numberedItem1": truncate_subcontent(get_or(split_sentences(get_section(4).get("content", "")), 0, "")),
-            "numberedItem2": truncate_subcontent(get_or(split_sentences(get_section(4).get("content", "")), 1, "")),
-            "numberedItem3": truncate_subcontent(get_or(split_sentences(get_section(4).get("content", "")), 2, "")),
-            "numberedItem4": truncate_subcontent(get_or(split_sentences(get_section(4).get("content", "")), 3, "")),
+            "numberedItem1": finalize_line(truncate_text(get_or(split_sentences(get_section(4).get("content", "")), 0, ""), 90)),
+            "numberedItem2": finalize_line(truncate_text(get_or(split_sentences(get_section(4).get("content", "")), 1, ""), 90)),
+            "numberedItem3": finalize_line(truncate_text(get_or(split_sentences(get_section(4).get("content", "")), 2, ""), 90)),
+            "numberedItem4": finalize_line(truncate_text(get_or(split_sentences(get_section(4).get("content", "")), 3, ""), 90)),
 
             # Page 9 (Contact) - with length limits
-            "contactTitle": truncate_title(contact.get("title", "Get in Touch")),
-            "contactDescription": truncate_content(contact.get("description", "")),
-            "differentiatorTitle": truncate_title(contact.get("differentiator_title", f"Why Choose {company_name or 'Us'}")),
-            "differentiator": truncate_subcontent(contact.get("differentiator", "")),
+            "contactTitle": "Contact Us",
+            "contactDescription": truncate_content(normalize_main_content(contact.get("description", ""), contact.get("title", "Contact"))),
+            "differentiatorTitle": "Contact us",
+            "differentiator": finalize_line(truncate_text(contact.get("differentiator", ""), 180)),
+            # Quality metrics
+            "qualityWarnings": "",
+            "qualityHasWarnings": False,
         }
+
+        # Build basic quality warnings for client-side display
+        warnings: List[str] = []
+        # Incomplete titles (dangling punctuation or single-letter endings)
+        title_samples = [
+            template_vars["sectionTitle1"],
+            template_vars["sectionTitle2"],
+            template_vars["sectionTitle3"],
+            template_vars["sectionTitle4"],
+            template_vars["sectionTitle5"],
+        ]
+        if any(re.search(r"[:\-]\s*$", t) or re.search(r"\b(A|An|The)$", t, flags=re.IGNORECASE) for t in title_samples if t):
+            warnings.append("Some section titles appear incomplete (e.g., trailing colon/article).")
+
+        # Content completeness: ensure minimum sentences/words
+        content_samples = [
+            template_vars["customContent1"],
+            template_vars["customContent2"],
+            template_vars["customContent3"],
+            template_vars["customContent4"],
+            template_vars["customContent5"],
+        ]
+        if any(len(split_sentences(c)) < 3 or count_words(c) < 60 for c in content_samples if c):
+            warnings.append("Some sections may be too brief; expanded to improve coherence.")
+
+        # Tone checks: excessive exclamation or ALL CAPS streaks
+        if any(c.count("!") > 1 or re.search(r"\b[A-Z]{6,}\b", c) for c in content_samples if c):
+            warnings.append("Detected informal tone or emphasis; adjusted toward professional style.")
+
+        if warnings:
+            template_vars["qualityWarnings"] = " • ".join(warnings)
+            template_vars["qualityHasWarnings"] = True
 
         # Debug mapping summary
         print("🔎 MAP VARS: colors", {"primary": primary_color, "secondary": secondary_color, "accent": accent_color})
@@ -637,6 +838,42 @@ class PerplexityClient:
         print("🔎 MAP VARS: enhanced_title", enhanced_title)
 
         return template_vars
+
+    def _create_slogan_prompt(self, user_answers: Dict[str, Any], firm_profile: Dict[str, Any]) -> str:
+        return f"""
+        Generate a short, catchy slogan for an architecture firm.
+        Firm Name: {firm_profile.get('firm_name', 'An Architecture Firm')}
+        Specialization: {user_answers.get('lead_magnet_type', 'General Architecture')}
+        Target Audience: {user_answers.get('target_audience', 'General Clients')}
+        Pain Points: {user_answers.get('pain_points', 'Finding good design')}
+        Desired Outcome: {user_answers.get('desired_outcome', 'A beautiful, functional space')}
+        
+        Based on the above, create a slogan that is less than 10 words.
+        """
+
+    def generate_slogan(self, user_answers: Dict[str, Any], firm_profile: Dict[str, Any]) -> str:
+        """Generates a slogan using Perplexity AI."""
+        prompt = self._create_slogan_prompt(user_answers, firm_profile)
+        
+        try:
+            response = requests.post(
+                "https://api.perplexity.ai/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": "llama-3-sonar-large-32k-online",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": 30,
+                },
+            )
+            response.raise_for_status()
+            slogan = response.json()['choices'][0]['message']['content'].strip()
+            return slogan
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Error calling Perplexity API for slogan: {e}")
+            return ""
 
     def check_available_models(self):
         """Debug method to check what models are available with your API key"""

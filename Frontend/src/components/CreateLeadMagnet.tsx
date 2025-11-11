@@ -27,6 +27,7 @@ const CreateLeadMagnet: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  // Removed Review & Confirm modal staging state
 
   const handleLogout = () => {
     logout()
@@ -117,7 +118,93 @@ const CreateLeadMagnet: React.FC = () => {
     setCurrentStep('template-selection')
   }
 
+  const fileToDataUrl = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const toTitleCase = (s?: string) => (s || '').replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+
+  // Removed preflight analyzeQuality in favor of streamlined flow
+
   const handleTemplateSubmit = async (templateId: string, templateName: string, architecturalImages?: File[]) => {
+    // Directly create the lead magnet and generate the PDF, no review modal
+    setLoading(true)
+    setErrorMessage(null)
+    setSuccessMessage(null)
+    try {
+      const generationData: LeadMagnetGeneration = {
+        main_topic: capturedAnswers.main_topic,
+        lead_magnet_type: capturedAnswers.lead_magnet_type,
+        target_audience: capturedAnswers.target_audience,
+        audience_pain_points: capturedAnswers.audience_pain_points,
+        desired_outcome: capturedAnswers.desired_outcome,
+        call_to_action: capturedAnswers.call_to_action,
+        special_requests: capturedAnswers.special_requests,
+      }
+
+      const professionalTitle = (capturedAnswers.title && capturedAnswers.title.trim()) 
+        || `The ${toTitleCase(String(capturedAnswers.main_topic || 'Architectural'))} ${toTitleCase(String(capturedAnswers.lead_magnet_type || 'Guide'))}`;
+
+      const leadMagnet = await dashboardApi.createLeadMagnetWithData({
+        title: professionalTitle,
+        firm_profile: hasExistingProfile ? undefined : (firmProfile as FirmProfile),
+        generation_data: generationData,
+      })
+
+      setSuccessMessage('Lead magnet created. Saving template selection...')
+
+      const selectionRequest: TemplateSelectionRequest = {
+        lead_magnet_id: leadMagnet.id,
+        template_id: templateId,
+        template_name: templateName,
+        template_thumbnail: architecturalImages && architecturalImages.length > 0 ? architecturalImages[0].name : undefined,
+        captured_answers: capturedAnswers as unknown as Record<string, unknown>,
+        source: 'create-lead-magnet'
+      }
+
+      await dashboardApi.selectTemplate(selectionRequest)
+      setSuccessMessage('Template selected. Generating PDF with AI...')
+
+      try {
+        const architecturalImageDataUrls = architecturalImages && architecturalImages.length > 0 
+          ? await Promise.all(architecturalImages.slice(0,3).map(fileToDataUrl))
+          : [];
+
+        const url = await dashboardApi.generatePDFWithAIUrl({
+          template_id: templateId,
+          lead_magnet_id: leadMagnet.id,
+          user_answers: capturedAnswers as unknown as Record<string, unknown>,
+          architectural_images: architecturalImageDataUrls
+        })
+        setPreviewUrl(url)
+        setShowPreviewModal(true)
+        setSuccessMessage('PDF generated. Preview shown below.')
+        if (architecturalImages && architecturalImages.length > 0) {
+          console.log('Architectural images uploaded and sent to PDF:', architecturalImages.length)
+        }
+      } catch (pdfError) {
+        console.error('🔴 PDF generation failed:', pdfError)
+        setErrorMessage('PDF generation failed. You can retry from dashboard.')
+      }
+
+    } catch (err: unknown) {
+      console.error('Failed to create lead magnet with template:', err)
+      const msg = (typeof (err as { message?: unknown }).message === 'string')
+        ? ((err as { message?: string }).message as string)
+        : 'Failed to create lead magnet. Please review inputs and try again.'
+      setErrorMessage(msg)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const proceedAfterConfirm = async () => {
+    if (!pendingTemplate) return
     setLoading(true)
     setErrorMessage(null)
     setSuccessMessage(null)
@@ -133,8 +220,11 @@ const CreateLeadMagnet: React.FC = () => {
         special_requests: capturedAnswers.special_requests,
       }
 
+      const professionalTitle = (capturedAnswers.title && capturedAnswers.title.trim()) 
+        || `The ${toTitleCase(String(capturedAnswers.main_topic || 'Architectural'))} ${toTitleCase(String(capturedAnswers.lead_magnet_type || 'Guide'))}`;
+
       const leadMagnet = await dashboardApi.createLeadMagnetWithData({
-        title: capturedAnswers.title || 'Untitled Lead Magnet',
+        title: professionalTitle,
         firm_profile: hasExistingProfile ? undefined : (firmProfile as FirmProfile),
         generation_data: generationData,
       })
@@ -144,9 +234,9 @@ const CreateLeadMagnet: React.FC = () => {
       // Now save template selection and generate PDF with AI content
       const selectionRequest: TemplateSelectionRequest = {
         lead_magnet_id: leadMagnet.id,
-        template_id: templateId,
-        template_name: templateName,
-        template_thumbnail: architecturalImages && architecturalImages.length > 0 ? architecturalImages[0].name : undefined,
+        template_id: pendingTemplate.id,
+        template_name: pendingTemplate.name,
+        template_thumbnail: pendingImages && pendingImages.length > 0 ? pendingImages[0].name : undefined,
         captured_answers: capturedAnswers as unknown as Record<string, unknown>,
         source: 'create-lead-magnet'
       }
@@ -157,20 +247,21 @@ const CreateLeadMagnet: React.FC = () => {
       // Generate PDF with AI content using the new endpoint
       // Pass the user's answers to the AI content generation process
       try {
+        const architecturalImageDataUrls = pendingImages && pendingImages.length > 0 
+          ? await Promise.all(pendingImages.slice(0,3).map(fileToDataUrl))
+          : [];
+
         const url = await dashboardApi.generatePDFWithAIUrl({
-          template_id: templateId,
+          template_id: pendingTemplate.id,
           lead_magnet_id: leadMagnet.id,
-          use_ai_content: true,
-          user_answers: capturedAnswers as unknown as Record<string, unknown>
+          user_answers: capturedAnswers as unknown as Record<string, unknown>,
+          architectural_images: architecturalImageDataUrls
         })
         setPreviewUrl(url)
         setShowPreviewModal(true)
         setSuccessMessage('PDF generated. Preview shown below.')
-        
-        // Store architectural images for future use when API supports them
-        if (architecturalImages && architecturalImages.length > 0) {
-          console.log('Architectural images uploaded:', architecturalImages.length)
-          // TODO: Add API endpoint to upload architectural images when backend supports it
+        if (pendingImages && pendingImages.length > 0) {
+          console.log('Architectural images uploaded and sent to PDF:', pendingImages.length)
         }
       } catch (pdfError) {
         console.error('🔴 PDF generation failed:', pdfError)
@@ -185,6 +276,9 @@ const CreateLeadMagnet: React.FC = () => {
       setErrorMessage(msg)
     } finally {
       setLoading(false)
+      setShowConfirmModal(false)
+      setPendingTemplate(null)
+      setPendingImages(undefined)
     }
   }
 
@@ -224,10 +318,6 @@ const CreateLeadMagnet: React.FC = () => {
               <a href="/forma-ai" className="nav-item">
                 <Settings size={18} />
                 Forma AI
-              </a>
-              <a href="#" className="nav-item">
-                <Download size={18} />
-                Active Campaigns
               </a>
               <a href="/brand-assets" className="nav-item">
                 <Palette size={18} />
@@ -365,6 +455,8 @@ const CreateLeadMagnet: React.FC = () => {
           </div>
         )}
       </Modal>
+
+      {/* Review & Confirm modal removed as requested */}
     </div>
   )
 }

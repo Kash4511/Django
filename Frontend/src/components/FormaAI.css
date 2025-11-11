@@ -231,12 +231,13 @@
   border: none;
   color: #666666;
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 6px;
   transition: color 0.2s, background-color 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
 }
 
 .file-upload-btn:hover {

@@ -265,6 +265,35 @@ class SelectTemplateView(APIView):
                 'error': 'Lead magnet not found'
             }, status=status.HTTP_404_NOT_FOUND)
 
+class GenerateSloganView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user_answers = request.data.get('user_answers', {})
+        firm_profile = {}
+        try:
+            fp = FirmProfile.objects.get(user=request.user)
+            firm_profile = {
+                'firm_name': fp.firm_name,
+                'work_email': fp.work_email,
+                'phone_number': fp.phone_number,
+                'firm_website': fp.firm_website,
+                'primary_brand_color': fp.primary_brand_color,
+                'secondary_brand_color': fp.secondary_brand_color,
+                'logo_url': fp.logo.url if fp.logo else '',
+                'industry': 'Architecture'
+            }
+        except FirmProfile.DoesNotExist:
+            pass
+
+        ai_client = PerplexityClient()
+        slogan = ai_client.generate_slogan(user_answers, firm_profile)
+
+        if slogan:
+            return Response({'slogan': slogan}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Failed to generate slogan'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class GeneratePDFView(APIView):
     """Generate PDF with selected template using AI or manual content"""
     permission_classes = [permissions.IsAuthenticated]
@@ -272,27 +301,30 @@ class GeneratePDFView(APIView):
     def post(self, request):
         print("🚀 PDF Generation Started...")
         print(f"📦 Request data: {request.data}")
-        
+
         template_id = request.data.get('template_id')
         lead_magnet_id = request.data.get('lead_magnet_id')
-        use_ai_content = request.data.get('use_ai_content', True)
-        manual_variables = request.data.get('variables', {})
         user_answers = request.data.get('user_answers', {})
-        
+        architectural_images = request.data.get('architectural_images', [])
+
+        # Determine whether to use AI content based on user_answers
+        use_ai_content = bool(user_answers)
+
         print(f"🔍 Lead Magnet ID: {lead_magnet_id}")
         print(f"🔍 Use AI Content: {use_ai_content}")
         print(f"🔍 User Answers: {user_answers}")
-        
+        print(f"🖼️ Architectural Images: {len(architectural_images)} images received")
+
         if not template_id:
             return Response({'error': 'template_id is required'}, status=status.HTTP_400_BAD_REQUEST)
         if not lead_magnet_id:
             return Response({'error': 'lead_magnet_id is required'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         try:
             # Get lead magnet and template selection
             lead_magnet = LeadMagnet.objects.get(id=lead_magnet_id, owner=request.user)
             template_selection = TemplateSelection.objects.filter(lead_magnet=lead_magnet).first()
-            
+
             # If no template selection exists, create one with the specified template_id
             if not template_selection:
                 template_selection = TemplateSelection.objects.create(
@@ -302,10 +334,10 @@ class GeneratePDFView(APIView):
                     template_name="Modern Guide Template",
                     source='create-lead-magnet'
                 )
-            
+
             template_service = DocRaptorService()
             ai_client = PerplexityClient()
-            
+
             # Build firm profile dict
             firm_profile = {}
             try:
@@ -352,7 +384,7 @@ class GeneratePDFView(APIView):
                 if val:
                     firm_profile[dst_key] = val
             print(f"🔧 Firm Profile (merged): {firm_profile}")
-            
+
             # Decide which content to use
             if use_ai_content:
                 # Prefer fresh answers; else reuse captured answers; else reuse stored AI content
@@ -382,21 +414,36 @@ class GeneratePDFView(APIView):
                     print(f"❌ AI content generation failed: {str(e)}")
                     print(traceback.format_exc())
                     return Response({'error': 'AI content generation failed', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-                    
+
                 # Validate AI JSON schema before mapping
                 if not isinstance(ai_content, dict) or 'cover' not in ai_content or not ai_content.get('sections'):
                     keys = list(ai_content.keys()) if isinstance(ai_content, dict) else []
                     print(f"❌ AI JSON missing expected keys: {keys}")
                     return Response({'error': "AI content invalid — missing 'cover' or 'sections'"}, status=status.HTTP_400_BAD_REQUEST)
-                
+
                 # Map AI content to template variables and force firm info fallbacks
                 template_vars = ai_client.map_to_template_vars(ai_content, firm_profile)
-                
+
+                # Inject architectural images (base64 data URLs) if provided
+                if architectural_images:
+                    try:
+                        if isinstance(architectural_images, list) and len(architectural_images) > 0:
+                            template_vars['architecturalImages'] = []
+                            for i, img_data in enumerate(architectural_images[:3]):
+                                if isinstance(img_data, str) and ';base64,' in img_data:
+                                    template_vars['architecturalImages'].append({
+                                        'src': img_data,
+                                        'alt': f'Architectural Image {i+1}'
+                                    })
+                    except Exception:
+                        # Non-fatal: continue without images
+                        pass
+
                 # Ensure sections from ai_content are added to template_vars if present
                 if 'sections' in ai_content and isinstance(ai_content['sections'], list) and len(ai_content['sections']) > 0:
                     print(f"✅ Adding {len(ai_content['sections'])} sections from ai_content to template_vars")
                     template_vars['sections'] = ai_content['sections']
-                
+
                 # Check for flattened template variables that are actually used in the template
                 flattened_keys_present = False
                 flattened_sections_count = 0
@@ -405,10 +452,10 @@ class GeneratePDFView(APIView):
                         flattened_keys_present = True
                         flattened_sections_count += 1
                         print(f"✅ Found populated flattened variables for section {i}: {template_vars[f'customTitle{i}']}")
-                
+
                 if flattened_keys_present:
                     print(f"✅ Found {flattened_sections_count} populated flattened sections in template_vars")
-                
+
                 # Ensure cover/contact never empty
                 template_vars['companyName'] = template_vars.get('companyName') or firm_profile.get('firm_name', 'Your Company')
                 template_vars['companySubtitle'] = template_vars.get('companySubtitle') or firm_profile.get('tagline', '')
@@ -416,7 +463,24 @@ class GeneratePDFView(APIView):
                 template_vars['phoneNumber'] = template_vars.get('phoneNumber') or firm_profile.get('phone_number', '')
                 template_vars['website'] = template_vars.get('website') or firm_profile.get('firm_website', '')
                 template_vars['documentSubtitle'] = template_vars.get('documentSubtitle') or firm_profile.get('tagline', '')
-                
+
+                # Professional title fallback using user answers
+                if not template_vars.get('mainTitle'):
+                    topic = (user_answers or {}).get('main_topic') or (ai_content.get('cover', {}) or {}).get('title') or 'Architectural Design'
+                    lm_type = (user_answers or {}).get('lead_magnet_type') or 'Guide'
+                    # Title case
+                    def title_case(s):
+                        return ' '.join([w.capitalize() for w in str(s).split()])
+                    template_vars['mainTitle'] = f"The {title_case(str(topic))} {title_case(str(lm_type))}"
+
+                # Ensure subtitle ends cleanly with punctuation
+                if template_vars.get('documentSubtitle'):
+                    sub = str(template_vars['documentSubtitle']).strip()
+                    if not sub.endswith(('.', '!', '?')):
+                        # Normalize awkward trailing separators
+                        sub = sub.rstrip(';,:-–—')
+                        template_vars['documentSubtitle'] = sub + '.'
+
                 # If mainTitle is missing but we have a flattened title, use it
                 if 'mainTitle' not in template_vars or not template_vars['mainTitle']:
                     for i in range(1, 10):
@@ -424,12 +488,12 @@ class GeneratePDFView(APIView):
                             template_vars['mainTitle'] = template_vars[f'customTitle{i}'].upper()
                             print(f"✅ Set mainTitle from customTitle{i}: {template_vars['mainTitle']}")
                             break
-                
+
                 non_empty = {k: v for k, v in template_vars.items() if str(v).strip()}
                 missing_keys = [k for k, v in template_vars.items() if not str(v).strip()]
                 print(f"✅ Template Variables Mapped: {len(non_empty)} non-empty, {len(missing_keys)} missing")
                 print(f"🔍 Template vars keys: {list(template_vars.keys())}")
-                
+
                 # Debug key template variables
                 debug_keys = ['mainTitle', 'companyName', 'sections', 'accentColor', 'primaryColor']
                 for key in debug_keys:
@@ -441,25 +505,25 @@ class GeneratePDFView(APIView):
                             print(f"🔍 {key}: {value}")
                     else:
                         print(f"❌ Missing key template variable: {key}")
-                
+
                 # Validate only keys actually required by the template
                 required_keys = ['mainTitle', 'companyName']
                 missing_required = [key for key in required_keys if key not in template_vars or not template_vars[key]]
-                
+
                 # Enhanced logging for content validation
                 print(f"🔍 Content validation - Required keys: {required_keys}")
                 print(f"🔍 Content validation - Missing keys: {missing_required}")
-                
+
                 # Flag to track if we've successfully recovered content
                 content_recovered = False
-                
+
                 if missing_required:
                     print(f"⚠️ Missing required content for PDF generation: {missing_required}")
                     print(f"🔄 Attempting content recovery from AI response...")
                     print("="*50)
                     print("📋 CONTENT RECOVERY PROCESS STARTED")
                     print("="*50)
-                    
+
                     # Attempt to recover missing content from AI content if possible
                     if 'mainTitle' in missing_required and ai_content:
                         # Try multiple paths to find a title in the AI content
@@ -473,7 +537,7 @@ class GeneratePDFView(APIView):
                             content_recovered = True
                             print(f"✅ Recovered mainTitle from AI content root: {template_vars['mainTitle']}")
                         # If still missing after checks, leave as missing to fail fast
-                    
+
                     if 'companyName' in missing_required:
                         # Try to get company name from firm profile
                         if firm_profile and 'firm_name' in firm_profile and firm_profile['firm_name']:
@@ -481,19 +545,19 @@ class GeneratePDFView(APIView):
                             content_recovered = True
                             print(f"✅ Recovered companyName from firm profile: {template_vars['companyName']}")
                         # Do not create fallback company name; fail fast if absent
-                    
+
                     # Re-check missing required keys after recovery attempts
                     missing_required = [key for key in required_keys if key not in template_vars or not template_vars[key]]
-                    
+
                     if content_recovered:
                         print("✅ Successfully recovered missing content")
                     else:
                         print("⚠️ Failed to recover missing content")
-                    
+
                     print("="*50)
                     print("📋 CONTENT RECOVERY PROCESS COMPLETED")
                     print("="*50)
-                    
+
                     # Additional recovery paths for mainTitle
                     if 'mainTitle' in missing_required and ai_content:
                         if 'style' in ai_content and 'title' in ai_content['style']:
@@ -502,23 +566,23 @@ class GeneratePDFView(APIView):
                             print(f"✅ Recovered mainTitle from AI style: {template_vars['mainTitle']}")
                         else:
                             print(f"❌ Could not find mainTitle in AI content structure")
-                    
+
                     # Sections are optional for this template because we map into
                     # flattened placeholders (customTitle1, customContent1, etc.)
                     # We'll still validate if present below.
-                
+
                 # Verify sections content is properly structured and fix if needed
                 if 'sections' in template_vars and isinstance(template_vars['sections'], list):
                     print(f"🔍 Validating structure of {len(template_vars['sections'])} sections")
                     sections_fixed = False
                     section_issues = 0
-                    
+
                     for i, section in enumerate(template_vars['sections']):
                         if not isinstance(section, dict) or 'title' not in section or 'content' not in section:
                             print(f"⚠️ Section {i} is malformed, fixing structure")
                             sections_fixed = True
                             section_issues += 1
-                            
+
                             # Convert non-dict sections to dict if needed
                             if not isinstance(section, dict):
                                 template_vars['sections'][i] = {
@@ -526,19 +590,19 @@ class GeneratePDFView(APIView):
                                     'content': str(section)
                                 }
                                 continue
-                                
+
                             # Ensure required fields exist
                             if 'title' not in section:
                                 section['title'] = f"Section {i+1}"
                             if 'content' not in section:
                                 section['content'] = "Content unavailable"
-                    
+
                     if sections_fixed:
                         content_recovered = True
                         print(f"✅ Fixed {section_issues} malformed sections structure")
                     else:
                         print(f"✅ All sections have valid structure")
-                
+
                 # Final validation before PDF generation
                 critical_missing = [key for key in required_keys if key not in template_vars or not template_vars[key]]
                 if critical_missing:
@@ -555,14 +619,14 @@ class GeneratePDFView(APIView):
                     import time
                     start_time = time.time()
                     print(f"⏱️ Starting PDF generation at {time.strftime('%H:%M:%S')}")
-                    
+
                     try:
                         print(f"📊 PDF Generation Stats - Template ID: {template_id}")
                         print(f"📊 PDF Generation Stats - Template Variables Keys: {list(template_vars.keys())}")
                         print(f"📊 PDF Generation Stats - Sections Count: {len(template_vars.get('sections', []))}")
-                        
+
                         result = template_service.generate_pdf_with_ai_content(template_id, template_vars)
-                        
+
                         elapsed_time = time.time() - start_time
                         print(f"⏱️ PDF generation completed in {elapsed_time:.2f} seconds")
                     except Exception as e:
@@ -576,27 +640,36 @@ class GeneratePDFView(APIView):
                         }
                 print(f"🛠️ Service result: keys={list(result.keys())}")
             else:
-                # Fallback to manual variables with sensible defaults
-                default_vars = {
-                    'primaryColor': '#8B4513',
-                    'secondaryColor': '#D2691E',
-                    'accentColor': '#F4A460',
+                # Manual path: Use firm profile and provided images
+                template_vars = {
+                    'primaryColor': firm_profile.get('primary_brand_color', '#8B4513'),
+                    'secondaryColor': firm_profile.get('secondary_brand_color', '#D2691E'),
+                    'accentColor': firm_profile.get('accent_brand_color', '#F4A460'),
                     'companyName': firm_profile.get('firm_name', 'Your Company'),
-                    'mainTitle': 'PROFESSIONAL GUIDE',
-                    'customContent1': ''
+                    'mainTitle': 'Architectural Portfolio',
+                    'documentSubtitle': firm_profile.get('tagline', 'Modern Design Solutions'),
                 }
-                template_vars = {**default_vars, **(manual_variables or {})}
+
+                # Add architectural images if provided
+                if architectural_images:
+                    template_vars['architecturalImages'] = []
+                    for i, img_data in enumerate(architectural_images[:3]):
+                        if isinstance(img_data, str) and ';base64,' in img_data:
+                            template_vars['architecturalImages'].append({
+                                'src': img_data,
+                                'alt': f'Architectural Image {i+1}'
+                            })
+
                 result = template_service.generate_pdf(template_id, template_vars)
                 print(f"🛠️ Service result: keys={list(result.keys())}")
-                # Do not set status here; only on success below
-            
+
             if result.get('success'):
                 # Mark lead magnet completed
                 print("\n" + "="*50)
                 print("📋 PDF GENERATION COMPLETED SUCCESSFULLY")
                 print("="*50)
                 print(f"✅ PDF generated successfully for lead magnet ID: {lead_magnet.id}")
-                
+
                 lead_magnet.status = 'completed'
                 lead_magnet.save(update_fields=['status'])
 
@@ -605,7 +678,7 @@ class GeneratePDFView(APIView):
                     print(f"✅ Updating template selection ID: {template_selection.id} to 'pdf-generated'")
                     template_selection.status = 'pdf-generated'
                     template_selection.save(update_fields=['status'])
-                
+
                 pdf_data = result.get('pdf_data', b'')
                 print(f"✅ PDF generation successful, size: {len(pdf_data)} bytes")
                 response = HttpResponse(pdf_data, content_type='application/pdf')
@@ -619,28 +692,28 @@ class GeneratePDFView(APIView):
                 error_message = result.get('error', 'Unknown error during PDF generation')
                 details = result.get('details', '')
                 missing_keys = result.get('missing_keys', [])
-                
+
                 print("\n" + "="*50)
                 print("❌ PDF GENERATION FAILED")
                 print("="*50)
                 print(f"❌ PDF generation failed: {error_message}")
                 print(f"❌ Details: {details}")
-                
+
                 # Keep status in a valid state; do not set to an invalid choice
                 print(f"⚠️ Keeping lead magnet status as 'in-progress' due to failure")
                 lead_magnet.status = 'in-progress'
                 lead_magnet.save(update_fields=['status'])
-                
+
                 # Update template selection if it exists
                 if template_selection:
                     print(f"⚠️ Reverting template selection ID: {template_selection.id} to 'template-selected' status")
                     template_selection.status = 'template-selected'
                     template_selection.save(update_fields=['status'])
-                
+
                 # If missing keys were identified, try to recover and regenerate
-                if missing_keys and ai_content:
+                if missing_keys and use_ai_content and ai_content:
                     print(f"🔄 Attempting to recover missing content and regenerate PDF")
-                    
+
                     # Try to recover missing content directly from AI content
                     recovered = False
                     for key in missing_keys:
@@ -653,29 +726,29 @@ class GeneratePDFView(APIView):
                             recovered = True
                             print(f"🔄 Recovered sections: {len(template_vars['sections'])} sections")
                         # Do not create default fallbacks; only use AI content or firm data
-                    
+
                     # Do not synthesize sections; require AI-provided sections or flattened content
-                    
+
                     if recovered:
                         # Try generating PDF again with recovered content
                         print("🔄 Regenerating PDF with recovered content")
                         result = template_service.generate_pdf_with_ai_content(template_id, template_vars)
-                        
+
                         if result.get('success'):
                             pdf_data = result.get('pdf_data')
                             content_type = result.get('content_type', 'application/pdf')
                             filename = result.get('filename', 'lead-magnet.pdf')
-                            
+
                             print(f"✅ PDF regenerated successfully after content recovery")
-                            
+
                             response = HttpResponse(pdf_data, content_type=content_type)
                             response['Content-Disposition'] = f'attachment; filename="{filename}"'
                             return response
-                
+
                 print("="*50)
                 # If recovery failed or wasn't attempted, return error response
                 return Response({'error': 'PDF generation failed', 'details': error_message, 'lead_magnet_id': lead_magnet.id}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            
+
         except LeadMagnet.DoesNotExist:
             return Response({'error': 'Lead magnet not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
@@ -790,11 +863,23 @@ class FormaAIConversationView(APIView):
             }
 
         # Convert the chat message into minimal user_answers for AI JSON
+        def _derive_outcome_from_message(msg: str) -> str:
+            m = (msg or '').strip()
+            # Keep it concise and user-centered; avoid stock phrases
+            m = m.replace('\n', ' ')
+            m = m.strip(' .;:')
+            # If very short, add a minimal context
+            if len(m.split()) <= 3:
+                return f"{m}"
+            return m
+
         user_answers = {
             'main_topic': message,  # treat user message as the main topic/description
             'lead_magnet_type': 'Custom Guide',
-            'desired_outcome': 'Generate professional PDF content based on the description',
-            'industry': firm_profile.get('industry', 'Architecture'),
+            # Base subtitle on the user message directly; no 'Generate professional PDF' phrasing
+            'desired_outcome': _derive_outcome_from_message(message),
+            # Do not force architecture; allow AI to infer from main_topic
+            'industry': '',
             # brand colors and logo hints help style
             'brand_primary_color': firm_profile.get('primary_brand_color', ''),
             'brand_secondary_color': firm_profile.get('secondary_brand_color', ''),
@@ -819,11 +904,41 @@ class FormaAIConversationView(APIView):
 
         # Map AI JSON to template variables
         template_vars = ai_client.map_to_template_vars(ai_content, firm_profile)
+
+        # Clean stock subtitle phrasing if the model echoed inputs
+        import re
+        sub = (template_vars.get('documentSubtitle') or '').strip()
+        if sub:
+            # Remove leading 'Generate professional PDF content' and optional connectors
+            sub = re.sub(r"^\s*generate\s+professional\s+pdf\s+content\s*(showcasing|about|on)?\s*",
+                         "", sub, flags=re.IGNORECASE)
+            # Avoid hardcoded architecture bias tails like 'for architecture'
+            sub = re.sub(r"\s*(for|in)\s+architecture\b.*$", "", sub, flags=re.IGNORECASE)
+            sub = sub.strip(' -:;')
+            template_vars['documentSubtitle'] = sub
         # Ensure critical cover/contact fields are never empty
         template_vars['companyName'] = template_vars.get('companyName') or firm_profile.get('firm_name', 'Your Company')
         template_vars['emailAddress'] = template_vars.get('emailAddress') or firm_profile.get('work_email', '')
         template_vars['phoneNumber'] = template_vars.get('phoneNumber') or firm_profile.get('phone_number', '')
         template_vars['website'] = template_vars.get('website') or firm_profile.get('firm_website', '')
+
+        # Add sections array when present
+        if 'sections' in ai_content and isinstance(ai_content['sections'], list) and ai_content['sections']:
+            template_vars['sections'] = ai_content['sections']
+
+        # Professional title fallback and subtitle punctuation
+        if not template_vars.get('mainTitle'):
+            topic = user_answers.get('main_topic') or ai_content.get('cover', {}).get('title') or 'Architectural Design'
+            lm_type = user_answers.get('lead_magnet_type') or 'Guide'
+            def title_case(s):
+                return ' '.join([w.capitalize() for w in str(s).split()])
+            template_vars['mainTitle'] = f"The {title_case(topic)} {title_case(lm_type)}"
+
+        if template_vars.get('documentSubtitle'):
+            sub = str(template_vars['documentSubtitle']).strip()
+            if not sub.endswith(('.', '!', '?')):
+                sub = sub.rstrip(';,:-–—')
+                template_vars['documentSubtitle'] = sub + '.'
         
         # Add architectural images to template variables if provided
         if architectural_images:

@@ -222,10 +222,6 @@ const BrandAssets: React.FC = () => {
                 <Settings size={18} />
                 Forma AI
               </a>
-              <a href="#" className="nav-item">
-                <Download size={18} />
-                Active Campaigns
-              </a>
               <a href="#" className="nav-item active">
                 <Palette size={18} />
                 Brand Assets

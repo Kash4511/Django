@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, Palette, Paperclip, Send, File as PdfIcon } from 'lucide-react'
+import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, Palette, Send, File as PdfIcon } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import Modal from './Modal'
 import TemplateSelectionForm from './forms/TemplateSelectionForm'
@@ -37,12 +37,7 @@ const FormaAI: React.FC = () => {
     navigate('/dashboard')
   }
 
-  const handleFileAttach = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const newFiles = Array.from(event.target.files)
-      setAttachedFiles(prev => [...prev, ...newFiles])
-    }
-  }
+  // Upload attachments control removed; handler no longer needed
 
   const removeFile = (index: number) => {
     setAttachedFiles(prev => prev.filter((_, i) => i !== index))
@@ -72,7 +67,7 @@ const FormaAI: React.FC = () => {
 
     // Check if architectural images are uploaded
     if (architecturalImages.length === 0) {
-      setTemplateError('Upload architectural images')
+      setTemplateError('Upload images')
       return
     }
 
@@ -209,10 +204,6 @@ const FormaAI: React.FC = () => {
                 <Settings size={18} />
                 Forma AI
               </a>
-              <a href="#" className="nav-item">
-                <Download size={18} />
-                Active Campaigns
-              </a>
               <a href="/brand-assets" className="nav-item">
                 <Palette size={18} />
                 Brand Assets
@@ -296,16 +287,7 @@ const FormaAI: React.FC = () => {
                   
                   <div className="chat-controls">
                     <div className="left-controls">
-                      <label className="file-upload-btn">
-                        <Paperclip size={18} />
-                        <input
-                          type="file"
-                          multiple
-                          onChange={handleFileAttach}
-                          style={{ display: 'none' }}
-                          accept="image/*,application/pdf,.doc,.docx,.txt"
-                        />
-                      </label>
+                      {/* Upload attachments removed per request */}
                       
                       <button className="pdf-btn" onClick={() => setShowTemplateModal(true)}>
                         <PdfIcon size={18} />

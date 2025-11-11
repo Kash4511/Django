@@ -255,12 +255,17 @@
             font-weight: 600;
             color: white;
             letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
         }
 
         /* Accent bar below header */
         .header-accent-bar {
             height: 6px;
-            background: linear-gradient(90deg, var(--accent) 0%, var(--highlight) 100%);
+            background: var(--primary);
             position: relative;
         }
 
@@ -284,7 +289,7 @@
             width: 100%;
             height: 200px;
             background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
-            border: 2px solid var(--accent);
+            border: none;
             border-radius: 12px;
             display: flex;
             flex-direction: column;
@@ -353,7 +358,7 @@
             width: 100%;
             height: 150px;
             background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
-            border: 2px solid var(--accent);
+            border: none;
             border-radius: 8px;
             display: flex;
             flex-direction: column;
@@ -900,7 +905,7 @@
             <div class="header-accent-bar"></div>
             
             <div class="page-content-area">
-                <h1 style="font-size: 20px; font-weight: 700; text-transform: uppercase; color: var(--primary); margin-bottom: 25mm; letter-spacing: 0.5px; border: none;">{{contentsTitle}}</h1>
+                <h1 style="font-size: 20px; font-weight: 700; text-transform: uppercase; color: black; margin-bottom: 25mm; letter-spacing: 0.5px; border: none;">{{contentsTitle}}</h1>
                 
                 <ul style="list-style: none; font-size: 14px; line-height: 1.5; padding: 0;">
                     <li style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: flex-start;">
@@ -977,7 +982,7 @@
                 <!-- ARCHITECTURAL IMAGE 1 -->
                 {% if architecturalImages and architecturalImages|length > 0 %}
                 <div class="architectural-image">
-                    <img src="{{architecturalImages[0].src}}" alt="{{architecturalImages[0].alt}}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px; border: 2px solid var(--accent);">
+                    <img src="{{architecturalImages[0].src}}" alt="{{architecturalImages[0].alt}}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px;">
                     <div class="image-placeholder-subtext">{{architecturalImageCaption1}}</div>
                 </div>
                 {% else %}
@@ -1107,7 +1112,7 @@
                 <!-- ARCHITECTURAL IMAGE 2 -->
                 {% if architecturalImages and architecturalImages|length > 1 %}
                 <div class="architectural-image">
-                    <img src="{{architecturalImages[1].src}}" alt="{{architecturalImages[1].alt}}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px; border: 2px solid var(--accent);">
+                    <img src="{{architecturalImages[1].src}}" alt="{{architecturalImages[1].alt}}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px;">
                     <div class="image-placeholder-subtext">{{architecturalImageCaption2}}</div>
                 </div>
                 {% else %}
@@ -1181,7 +1186,7 @@
                             <!-- ARCHITECTURAL IMAGE 3 (SMALL) -->
                             {% if architecturalImages and architecturalImages|length > 2 %}
                             <div class="architectural-image-small">
-                                <img src="{{architecturalImages[2].src}}" alt="{{architecturalImages[2].alt}}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid var(--accent);">
+                                <img src="{{architecturalImages[2].src}}" alt="{{architecturalImages[2].alt}}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px;">
                                 <div class="image-placeholder-subtext">{{architecturalImageCaption3}}</div>
                             </div>
                             {% else %}
@@ -1192,12 +1197,6 @@
                             </div>
                             {% endif %}
                             <p>{{columnBoxContent1}}</p>
-                        </div>
-                    </div>
-                    <div class="column">
-                        <div class="content-box">
-                            <h3>{{columnBoxTitle2}}</h3>
-                            <p>{{columnBoxContent2}}</p>
                         </div>
                     </div>
                 </div>
@@ -1310,7 +1309,6 @@
             
             <div class="page-content-area">
                 <div class="cta-section" style="padding: 50px 40px;">
-                    <h3 class="cta-title">{{contactTitle}}</h3>
                     <p class="cta-text">{{contactDescription}}</p>
                 </div>
                 
@@ -1323,7 +1321,7 @@
                 </p>
                 
                 <div class="content-box" style="margin-top: 30px;">
-                    <h3>{{differentiatorTitle}}</h3>
+                    <h3>why choose us</h3>
                     <p>{{differentiator}}</p>
                 </div>
                 

@@ -149,10 +149,6 @@ const Dashboard: React.FC = () => {
                 <Settings size={18} />
                 Forma AI
               </a>
-              <a href="#" className="nav-item">
-                <Download size={18} />
-                Active Campaigns
-              </a>
               <a href="/brand-assets" className="nav-item">
                 <Palette size={18} />
                 Brand Assets
