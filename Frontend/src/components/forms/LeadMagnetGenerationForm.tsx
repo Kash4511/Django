@@ -128,8 +128,8 @@ const LeadMagnetGenerationForm: React.FC<LeadMagnetGenerationFormProps> = ({
     try {
       const firmProfile = await dashboardApi.getFirmProfile();
       const response = await dashboardApi.generateSlogan({
-        user_answers: formData,
-        firm_profile: firmProfile,
+        user_answers: formData as unknown as Record<string, unknown>,
+        firm_profile: firmProfile as unknown as Record<string, unknown>,
       });
       setSlogan(response.slogan);
       handleInputChange('special_requests', response.slogan);

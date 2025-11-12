@@ -281,9 +281,11 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
             </div>
 
             {error && (
-                <p>Upload {maxImages} images</p>
-                <p>Images will be automatically compressed if needed</p>
-            </div>
+              <div className="error-message-new" role="alert" aria-live="polite">
+                <span className="error-icon" aria-hidden="true"><AlertCircle size={16} /></span>
+                <span className="error-text">{error}</span>
+              </div>
+            )}
 
             <div className="browse-files-new" style={{ display: 'none' }}>
                 <button
