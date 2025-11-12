@@ -33,9 +33,17 @@ except Exception as e:
 SECRET_KEY = 'django-insecure-4ju2n@$f9d0c=h)_g0lbb%k9&@rf(xa$d$g$&5ri$uf)*gev^4'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'false').lower() == 'true'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+# Hosts and origins configured via environment variables for deployment
+# Example values:
+# ALLOWED_HOSTS=localhost,127.0.0.1,django-msvx.onrender.com
+# CSRF_TRUSTED_ORIGINS=https://django-msvx.onrender.com,https://django-six-gamma.vercel.app
+# CORS_ALLOWED_ORIGINS=https://django-six-gamma.vercel.app
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+
+# Trust proxy headers so Django can detect HTTPS behind Render
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Application definition
 
@@ -133,6 +141,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+# Where collectstatic will place compiled assets in production
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -164,13 +174,14 @@ SIMPLE_JWT = {
 # CORS Configuration
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5000",
-    "http://127.0.0.1:5000",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:5000",
-]
+CORS_ALLOWED_ORIGINS = (
+    os.getenv('CORS_ALLOWED_ORIGINS',
+              'http://localhost:5000,http://127.0.0.1:5000,http://localhost:5173,http://127.0.0.1:5173'
+    ).split(',')
+)
+
+# CSRF trusted origins for cross-site POSTs (e.g., from your Vercel app)
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if os.getenv('CSRF_TRUSTED_ORIGINS') else []
 
 # Allow all headers & methods for development
 CORS_ALLOW_HEADERS = [

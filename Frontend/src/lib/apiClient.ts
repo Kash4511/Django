@@ -1,8 +1,15 @@
 import axios from 'axios';
 
+// Resolve API base URL from environment for deployment
+// Vite env var: VITE_API_BASE_URL=https://django-msvx.onrender.com
+const API_BASE_URL =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) ||
+  (typeof window !== 'undefined' && (window as any).__API_BASE_URL) ||
+  'http://localhost:8000';
+
 // Create axios instance with default config
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -44,7 +51,7 @@ apiClient.interceptors.response.use(
         
         // Try to get a new token
         const response = await axios.post(
-          'http://localhost:8000/api/auth/token/refresh/',
+          `${apiClient.defaults.baseURL}/api/auth/token/refresh/`,
           { refresh: refreshToken }
         );
         
