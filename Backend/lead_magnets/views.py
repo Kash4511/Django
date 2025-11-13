@@ -789,6 +789,14 @@ class FormaAIConversationView(APIView):
     """Handle Forma AI conversations"""
     permission_classes = [permissions.IsAuthenticated]
     
+    # Explicit OPTIONS handler to make preflight robust
+    def options(self, request, *args, **kwargs):
+      allowed = ["POST", "OPTIONS"]
+      resp = Response(status=status.HTTP_200_OK)
+      resp["Allow"] = ", ".join(allowed)
+      # Note: django-cors-headers will inject Access-Control-* headers
+      return resp
+    
     def post(self, request):
         message = request.data.get('message')
         files = request.data.get('files', [])

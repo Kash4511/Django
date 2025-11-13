@@ -90,6 +90,31 @@ const FormaAI: React.FC = () => {
     progressTimers.current.push(window.setTimeout(() => setGenerationProgress(75), 1800))
 
     try {
+      // Helper: retry with backoff for transient network/CORS preflight hiccups
+      const tryRequestWithRetry = async (attempts = 2, baseDelayMs = 600) => {
+        let lastErr: any = null
+        for (let i = 0; i < attempts; i++) {
+          try {
+            const res = await apiClient.post('/api/ai-conversation/', formData, {
+              responseType: 'arraybuffer'
+            })
+            return res
+          } catch (err: any) {
+            lastErr = err
+            // If unauthorized, no point retrying; surface immediately
+            if (err?.response?.status === 401) {
+              throw err
+            }
+            // Network/preflight errors often have no response
+            const isCorsOrNetwork = !err?.response && (err?.message?.includes('Network Error') || err?.request)
+            if (!isCorsOrNetwork) throw err
+            // backoff
+            const delay = baseDelayMs * (i + 1)
+            await new Promise(r => setTimeout(r, delay))
+          }
+        }
+        throw lastErr
+      }
       // Create FormData to handle file uploads
       const formData = new FormData()
       formData.append('message', userMsg)
@@ -107,9 +132,7 @@ const FormaAI: React.FC = () => {
       })
 
       // Request may return either JSON or a PDF; use arraybuffer then inspect content-type
-      const res = await apiClient.post('/api/ai-conversation/', formData, { 
-        responseType: 'arraybuffer'
-      })
+      const res = await tryRequestWithRetry()
       const contentType = (res.headers && (res.headers['content-type'] || res.headers['Content-Type'])) || ''
 
       if (contentType.includes('application/pdf')) {
@@ -130,7 +153,17 @@ const FormaAI: React.FC = () => {
         setMessages(prev => [...prev, assistantMsg])
       }
     } catch (err: any) {
-      const errMsg = err?.response?.data ? 'Request failed.' : (err?.message || 'Request error.')
+      // Detailed, user-friendly messaging
+      let errMsg = 'Request error.'
+      if (err?.response?.status === 401) {
+        errMsg = 'You’re not authenticated. Please log in to continue.'
+      } else if (!err?.response && (err?.message?.includes('Network Error') || err?.request)) {
+        errMsg = 'Connection blocked or unstable. If this persists, it may be a CORS issue. Please refresh and try again.'
+      } else if (err?.response?.status === 403) {
+        errMsg = 'Access denied. Contact support if this is unexpected.'
+      } else if (err?.response?.status) {
+        errMsg = `Request failed (${err.response.status}).`
+      }
       // Show error message briefly
       setMessages(prev => [...prev, `❌ Error: ${errMsg}`])
       setTimeout(() => {

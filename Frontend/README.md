@@ -43,6 +43,20 @@ export default defineConfig([
 ])
 ```
 
+## CORS & Error Handling
+
+- Set `VITE_API_BASE_URL` to your backend, e.g., `https://django-msvx.onrender.com`.
+- Development runs on `http://localhost:5173`.
+- Requests use an Axios client with JWT in `Authorization: Bearer <token>`.
+- For file uploads, do not set `Content-Type` manually; the browser adds the multipart boundary.
+- The `FormaAI` component includes retry/backoff for transient preflight/network issues and user-friendly messages for 401/403/CORS blocks.
+
+### Troubleshooting
+
+- If a message suggests a CORS issue, refresh and retry.
+- Ensure the backend has your Vercel domain in `CORS_ALLOWED_ORIGINS` or matches the preview regex.
+- Verify you are logged in; unauthorized requests return 401.
+
 You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
 ```js
