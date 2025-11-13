@@ -55,6 +55,8 @@ export interface PDFTemplate {
   name: string;
   description?: string;
   preview_url?: string;
+  // Optional secondary image used for hover preview in selection UI
+  hover_preview_url?: string;
   thumbnail?: string;
 }
 

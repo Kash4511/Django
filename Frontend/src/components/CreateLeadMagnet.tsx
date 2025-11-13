@@ -3,26 +3,23 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, Palette, X } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { dashboardApi } from '../lib/dashboardApi'
-import type { FirmProfile, TemplateSelectionRequest } from '../lib/dashboardApi'
-import FirmProfileForm from './forms/FirmProfileForm'
+import type { TemplateSelectionRequest } from '../lib/dashboardApi'
 import LeadMagnetGenerationForm from './forms/LeadMagnetGenerationForm'
 import TemplateSelectionForm from './forms/TemplateSelectionForm'
 import './CreateLeadMagnet.css'
 import type { LeadMagnetGeneration } from '../lib/dashboardApi';
 import Modal from './Modal'
 
-type FormStep = 'firm-profile' | 'lead-magnet-generation' | 'template-selection'
+type FormStep = 'lead-magnet-generation' | 'template-selection'
 
 const CreateLeadMagnet: React.FC = () => {
   const { logout } = useAuth()
   const navigate = useNavigate()
-  const [currentStep, setCurrentStep] = useState<FormStep>('firm-profile')
-  const [firmProfile, setFirmProfile] = useState<Partial<FirmProfile>>({})
+  const [currentStep, setCurrentStep] = useState<FormStep>('lead-magnet-generation')
   const [capturedAnswers, setCapturedAnswers] = useState<LeadMagnetGeneration & { title?: string }>(
     {} as LeadMagnetGeneration & { title?: string }
   );
   const [loading, setLoading] = useState(false)
-  const [hasExistingProfile, setHasExistingProfile] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [showPreviewModal, setShowPreviewModal] = useState(false)
@@ -39,46 +36,12 @@ const CreateLeadMagnet: React.FC = () => {
     setSuccessMessage(null)
     if (currentStep === 'template-selection') {
       setCurrentStep('lead-magnet-generation')
-    } else if (currentStep === 'lead-magnet-generation') {
-      setCurrentStep('firm-profile')
     } else {
       navigate('/dashboard')
     }
   }
 
-  // Check if user has existing firm profile
-  useEffect(() => {
-    const checkExistingProfile = async () => {
-      try {
-        const profile = await dashboardApi.getFirmProfile()
-        if (profile && profile.firm_name) {
-          setFirmProfile(profile)
-          setHasExistingProfile(true)
-          setCurrentStep('lead-magnet-generation')
-        }
-      } catch {
-        // No existing profile, start with firm profile form
-        console.log('No existing profile found')
-      }
-    }
-
-    checkExistingProfile()
-  }, [])
-
-  const handleFirmProfileNext = (data: Partial<FirmProfile>) => {
-    // Filter to only include basic business info, never branding fields
-    const basicInfoOnly = {
-      firm_name: data.firm_name,
-      work_email: data.work_email,
-      phone_number: data.phone_number,
-      firm_website: data.firm_website,
-      firm_size: data.firm_size,
-      industry_specialties: data.industry_specialties,
-      location: data.location
-    }
-    setFirmProfile(basicInfoOnly)
-    setCurrentStep('lead-magnet-generation')
-  }
+  // Removed firm profile step entirely
 
   const humanizeTitle = (topic: string, type: string) => {
     const topicMap: Record<string, string> = {
@@ -111,7 +74,6 @@ const CreateLeadMagnet: React.FC = () => {
     // Just capture the data and move to template selection
     // Don't create the lead magnet yet
     setCapturedAnswers({
-      ...firmProfile,
       ...data,
       title: humanizeTitle(data.main_topic, data.lead_magnet_type)
     })
@@ -152,7 +114,6 @@ const CreateLeadMagnet: React.FC = () => {
 
       const leadMagnet = await dashboardApi.createLeadMagnetWithData({
         title: professionalTitle,
-        firm_profile: hasExistingProfile ? undefined : (firmProfile as FirmProfile),
         generation_data: generationData,
       })
 
@@ -242,10 +203,6 @@ const CreateLeadMagnet: React.FC = () => {
                 <Settings size={18} />
                 Forma AI
               </a>
-              <a href="#" className="nav-item">
-                <Download size={18} />
-                Active Campaigns
-              </a>
               <a href="/brand-assets" className="nav-item">
                 <Palette size={18} />
                 Brand Assets
@@ -257,15 +214,7 @@ const CreateLeadMagnet: React.FC = () => {
             </nav>
           </div>
 
-          <div className="sidebar-section">
-            <h4>Account</h4>
-            <nav className="sidebar-nav">
-              <a href="#" className="nav-item">
-                <Settings size={18} />
-                Settings
-              </a>
-            </nav>
-          </div>
+          
         </aside>
 
         <main className="create-content">
@@ -276,14 +225,11 @@ const CreateLeadMagnet: React.FC = () => {
             </button>
             
             <div className="step-indicator">
-              <div className={`step ${currentStep === 'firm-profile' ? 'active' : 'completed'}`}>
-                1. {hasExistingProfile ? 'Profile' : 'Firm Profile'}
-              </div>
               <div className={`step ${currentStep === 'lead-magnet-generation' ? 'active' : currentStep === 'template-selection' ? 'completed' : ''}`}>
-                2. Lead Magnet Details
+                1. Lead Magnet Details
               </div>
               <div className={`step ${currentStep === 'template-selection' ? 'active' : ''}`}>
-                3. Choose Template
+                2. Choose Template
               </div>
             </div>
 
@@ -296,14 +242,6 @@ const CreateLeadMagnet: React.FC = () => {
           </div>
 
           <div className="form-container">
-            {currentStep === 'firm-profile' && (
-              <FirmProfileForm
-                initialData={firmProfile}
-                onNext={handleFirmProfileNext}
-                isUpdate={hasExistingProfile}
-              />
-            )}
-
             {currentStep === 'lead-magnet-generation' && (
               <LeadMagnetGenerationForm
                 onSubmit={handleGenerationSubmit}

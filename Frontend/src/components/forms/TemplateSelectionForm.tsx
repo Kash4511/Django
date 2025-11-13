@@ -148,7 +148,10 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
               <div className="template-thumbnail-wrapper-new">
                 {template.preview_url ? (
                   <div className="template-thumbnail-new">
-                    <img src={template.preview_url} alt={template.name} />
+                    <img src={template.preview_url} alt={template.name} className="image-primary" />
+                    {template.hover_preview_url && (
+                      <img src={template.hover_preview_url} alt={`${template.name} (hover preview)`} className="image-hover" />
+                    )}
                   </div>
                 ) : (
                   <div className="template-thumbnail-new placeholder">
@@ -157,7 +160,7 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
                 )}
               </div>
               <div className="template-info-new">
-                <h3>{template.name}</h3>
+                <h3>{template.name.toLowerCase().includes('modern') ? 'Template 1' : template.name}</h3>
               </div>
             </motion.div>
           ))}

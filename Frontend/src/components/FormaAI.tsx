@@ -209,10 +209,6 @@ const FormaAI: React.FC = () => {
                 <Settings size={18} />
                 Forma AI
               </a>
-              <a href="#" className="nav-item">
-                <Download size={18} />
-                Active Campaigns
-              </a>
               <a href="/brand-assets" className="nav-item">
                 <Palette size={18} />
                 Brand Assets
@@ -296,18 +292,6 @@ const FormaAI: React.FC = () => {
                   
                   <div className="chat-controls">
                     <div className="left-controls">
-                      <label className="file-upload-btn" aria-label="Upload images">
-                        <Paperclip size={18} />
-                        <span className="upload-label-text">Upload images</span>
-                        <input
-                          type="file"
-                          multiple
-                          onChange={handleFileAttach}
-                          style={{ display: 'none' }}
-                          accept="image/*,application/pdf,.doc,.docx,.txt"
-                        />
-                      </label>
-                      
                       <button className="pdf-btn" onClick={() => setShowTemplateModal(true)}>
                         <PdfIcon size={18} />
                         {architecturalImages.length > 0 && (

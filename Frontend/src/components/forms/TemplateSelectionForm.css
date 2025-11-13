@@ -68,6 +68,24 @@
   object-fit: cover;
 }
 
+/* Dual-image hover swap support */
+.template-thumbnail-new .image-primary,
+.template-thumbnail-new .image-hover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.template-thumbnail-new .image-primary { opacity: 1; }
+.template-thumbnail-new .image-hover { opacity: 0; }
+
+.template-card:hover .image-hover { opacity: 1; transform: scale(1.01); }
+.template-card:hover .image-primary { opacity: 0; }
+
 .template-info-new {
   padding: 12px;
 }
