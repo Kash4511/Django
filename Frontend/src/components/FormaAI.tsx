@@ -108,10 +108,7 @@ const FormaAI: React.FC = () => {
 
       // Request may return either JSON or a PDF; use arraybuffer then inspect content-type
       const res = await apiClient.post('/api/ai-conversation/', formData, { 
-        responseType: 'arraybuffer',
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+        responseType: 'arraybuffer'
       })
       const contentType = (res.headers && (res.headers['content-type'] || res.headers['Content-Type'])) || ''
 

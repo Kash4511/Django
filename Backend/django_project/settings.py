@@ -152,6 +152,10 @@ SIMPLE_JWT = {
 # -----------------------------
 CORS_ALLOW_CREDENTIALS = True
 
+# TEMPORARY: Allow all origins to unblock production CORS while stabilizing
+# Restrict to specific origins after verification
+CORS_ALLOW_ALL_ORIGINS = True
+
 CORS_ALLOWED_ORIGINS = [
     "https://django-six-gamma.vercel.app",  # Frontend (Vercel)
     "http://localhost:5173",               # Local dev
