@@ -40,8 +40,26 @@ export default defineConfig([
       // other options...
     },
   },
-])
+ ])
 ```
+
+## Image Uploads & PDF Rendering
+
+- Supported formats: `JPG`, `PNG`, `GIF`, `SVG` (up to `10MB` each).
+- Upload UI enforces type and size with clear error messages on rejection.
+- A server-rendered HTML preview is available before generating the PDF; it uses the selected template and your uploaded images.
+- Aspect ratio is preserved in both preview and PDF using `object-fit: contain` to avoid cropping.
+- For best quality:
+  - Use images at least `1500px` wide for full-width slots.
+  - Prefer `PNG` for graphics and `JPG` for photos; use `SVG` for vector logos and line art.
+  - Animated `GIF` frames are not animated in PDFs (first frame rendered).
+  - Ensure images are under `10MB`; very large SVGs with embedded bitmaps may be slow.
+
+### Known Limitations
+
+- PDFs do not support animation; `GIF` renders as a static image.
+- Extremely large `SVG` files may impact rendering performance.
+- Images are embedded as data URLs; if you see a broken image, recheck file type/size and retry.
 
 ## CORS & Error Handling
 

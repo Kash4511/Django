@@ -119,7 +119,8 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
     return (
       <ImageUpload 
         onImagesSelected={handleImagesSelected} 
-        onClose={handleImageUploadClose} 
+        onClose={handleImageUploadClose}
+        templateId={selectedTemplate?.id}
       />
     );
   }

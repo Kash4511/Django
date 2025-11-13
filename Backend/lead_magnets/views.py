@@ -805,12 +805,27 @@ class FormaAIConversationView(APIView):
         generate_pdf = request.data.get('generate_pdf', True)
         template_id = request.data.get('template_id', 'modern-guide')
         
-        # Handle architectural images from FormData
+        # Handle architectural images from FormData with validation
         architectural_images = []
+        allowed_types = {"image/jpeg", "image/jpg", "image/png", "image/gif", "image/svg+xml"}
+        max_size_bytes = 10 * 1024 * 1024  # 10MB
         for i in range(1, 4):  # Handle up to 3 architectural images
             image_key = f'architectural_image_{i}'
             if image_key in request.FILES:
-                architectural_images.append(request.FILES[image_key])
+                img = request.FILES[image_key]
+                content_type = getattr(img, 'content_type', '') or ''
+                size = getattr(img, 'size', 0) or 0
+                if content_type not in allowed_types:
+                    return Response({
+                        'error': 'Unsupported image format',
+                        'details': f'{img.name} has type {content_type}. Allowed: JPG, PNG, GIF, SVG.'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                if size > max_size_bytes:
+                    return Response({
+                        'error': 'Image too large',
+                        'details': f'{img.name} exceeds 10MB limit'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                architectural_images.append(img)
         
         if not message:
             return Response({
@@ -954,9 +969,21 @@ class FormaAIConversationView(APIView):
             for i, image in enumerate(architectural_images[:3]):  # Limit to 3 images
                 # Convert image to base64 for embedding in template
                 import base64
-                image_data = base64.b64encode(image.read()).decode('utf-8')
-                image_extension = image.name.split('.')[-1].lower()
-                mime_type = f'image/{image_extension}' if image_extension in ['jpg', 'jpeg', 'png', 'gif'] else 'image/jpeg'
+                image_bytes = image.read()
+                image_data = base64.b64encode(image_bytes).decode('utf-8')
+                ext = image.name.split('.')[-1].lower()
+                ct = getattr(image, 'content_type', '') or ''
+                # Map correct mime types, default to image/jpeg for jpg/jpeg
+                if ct:
+                    mime_type = ct
+                else:
+                    mime_type = {
+                        'jpg': 'image/jpeg',
+                        'jpeg': 'image/jpeg',
+                        'png': 'image/png',
+                        'gif': 'image/gif',
+                        'svg': 'image/svg+xml'
+                    }.get(ext, 'image/jpeg')
                 template_vars['architecturalImages'].append({
                     'src': f'data:{mime_type};base64,{image_data}',
                     'alt': f'Architectural Image {i + 1}'
