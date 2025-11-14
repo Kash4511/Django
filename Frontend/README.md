@@ -40,40 +40,8 @@ export default defineConfig([
       // other options...
     },
   },
- ])
+])
 ```
-
-## Image Uploads & PDF Rendering
-
-- Supported formats: `JPG`, `PNG`, `GIF`, `SVG` (up to `10MB` each).
-- Upload UI enforces type and size with clear error messages on rejection.
-- A server-rendered HTML preview is available before generating the PDF; it uses the selected template and your uploaded images.
-- Aspect ratio is preserved in both preview and PDF using `object-fit: contain` to avoid cropping.
-- For best quality:
-  - Use images at least `1500px` wide for full-width slots.
-  - Prefer `PNG` for graphics and `JPG` for photos; use `SVG` for vector logos and line art.
-  - Animated `GIF` frames are not animated in PDFs (first frame rendered).
-  - Ensure images are under `10MB`; very large SVGs with embedded bitmaps may be slow.
-
-### Known Limitations
-
-- PDFs do not support animation; `GIF` renders as a static image.
-- Extremely large `SVG` files may impact rendering performance.
-- Images are embedded as data URLs; if you see a broken image, recheck file type/size and retry.
-
-## CORS & Error Handling
-
-- Set `VITE_API_BASE_URL` to your backend, e.g., `https://django-msvx.onrender.com`.
-- Development runs on `http://localhost:5173`.
-- Requests use an Axios client with JWT in `Authorization: Bearer <token>`.
-- For file uploads, do not set `Content-Type` manually; the browser adds the multipart boundary.
-- The `FormaAI` component includes retry/backoff for transient preflight/network issues and user-friendly messages for 401/403/CORS blocks.
-
-### Troubleshooting
-
-- If a message suggests a CORS issue, refresh and retry.
-- Ensure the backend has your Vercel domain in `CORS_ALLOWED_ORIGINS` or matches the preview regex.
-- Verify you are logged in; unauthorized requests return 401.
 
 You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 

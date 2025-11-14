@@ -150,30 +150,13 @@ SIMPLE_JWT = {
 # -----------------------------
 # CORS & CSRF Configuration
 # -----------------------------
-
-# Allow credentials when using cookie-based sessions; safe with JWT too
 CORS_ALLOW_CREDENTIALS = True
 
-# Env-driven toggle: in local dev you can set CORS_ALLOW_ALL_ORIGINS=true
-CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'false').lower() == 'true'
-
-# Explicit allowlist for production
 CORS_ALLOWED_ORIGINS = [
     "https://django-six-gamma.vercel.app",  # Frontend (Vercel)
     "http://localhost:5173",               # Local dev
     "http://127.0.0.1:5173",               # Local dev
 ]
-
-# Support Vercel preview deployments: match any *.vercel.app subdomain
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https:\/\/.*\.vercel\.app$",
-]
-
-# Limit CORS processing to API endpoints
-CORS_URLS_REGEX = r"^/api/.*$"
-
-# Cache preflight responses to reduce load (seconds)
-CORS_PREFLIGHT_MAX_AGE = int(os.getenv('CORS_PREFLIGHT_MAX_AGE', '600'))
 
 CSRF_TRUSTED_ORIGINS = [
     "https://django-msvx.onrender.com",    # Backend (Render)

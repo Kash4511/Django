@@ -128,21 +128,6 @@ export const dashboardApi = {
       };
     }
   },
-
-  // Preview a template with provided variables (returns HTML string)
-  previewTemplate: async (request: { template_id: string; variables: Record<string, unknown>; }): Promise<string> => {
-    try {
-      const response = await apiClient.post(`${API_BASE_URL}/preview-template/`, request);
-      // Endpoint may return { success: true, preview_html: "..." }
-      if (response.data?.preview_html) return response.data.preview_html as string;
-      // Some versions might return raw HTML string directly
-      if (typeof response.data === 'string') return response.data as string;
-      throw new Error('Invalid preview response');
-    } catch (error) {
-      handleApiError(error, 'Generating template preview');
-      throw error;
-    }
-  },
   
   // Get valid choices from server
   getValidChoices: async (): Promise<{lead_magnet_types: string[], main_topics: string[]}> => {

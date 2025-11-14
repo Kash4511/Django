@@ -982,7 +982,7 @@
                 <!-- ARCHITECTURAL IMAGE 1 -->
                 {% if architecturalImages and architecturalImages|length > 0 %}
                 <div class="architectural-image">
-                    <img src="{{architecturalImages[0].src}}" alt="{{architecturalImages[0].alt}}" style="width: 100%; height: 200px; object-fit: contain; border-radius: 12px; background: #f7f7f7;">
+                    <img src="{{architecturalImages[0].src}}" alt="{{architecturalImages[0].alt}}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px;">
                     <div class="image-placeholder-subtext">{{architecturalImageCaption1}}</div>
                 </div>
                 {% else %}
@@ -1112,7 +1112,7 @@
                 <!-- ARCHITECTURAL IMAGE 2 -->
                 {% if architecturalImages and architecturalImages|length > 1 %}
                 <div class="architectural-image">
-                    <img src="{{architecturalImages[1].src}}" alt="{{architecturalImages[1].alt}}" style="width: 100%; height: 200px; object-fit: contain; border-radius: 12px; background: #f7f7f7;">
+                    <img src="{{architecturalImages[1].src}}" alt="{{architecturalImages[1].alt}}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px;">
                     <div class="image-placeholder-subtext">{{architecturalImageCaption2}}</div>
                 </div>
                 {% else %}
@@ -1186,7 +1186,7 @@
                             <!-- ARCHITECTURAL IMAGE 3 (SMALL) -->
                             {% if architecturalImages and architecturalImages|length > 2 %}
                             <div class="architectural-image-small">
-                                <img src="{{architecturalImages[2].src}}" alt="{{architecturalImages[2].alt}}" style="width: 100%; height: 150px; object-fit: contain; border-radius: 8px; background: #f7f7f7;">
+                                <img src="{{architecturalImages[2].src}}" alt="{{architecturalImages[2].alt}}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px;">
                                 <div class="image-placeholder-subtext">{{architecturalImageCaption3}}</div>
                             </div>
                             {% else %}
