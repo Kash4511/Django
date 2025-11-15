@@ -6,8 +6,7 @@ import App from './App'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {/* Use Vite's BASE_URL to support subpath deployments */}
-    <BrowserRouter basename={import.meta.env.BASE_URL}>
+    <BrowserRouter>
       <App />
     </BrowserRouter>
   </StrictMode>,

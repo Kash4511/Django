@@ -46,3 +46,20 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+class DeleteAccountView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        password = request.data.get('password')
+        if not password:
+            return Response({'detail': 'Password is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = request.user
+        if not user.check_password(password):
+            return Response({'detail': 'Incorrect password.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Invalidate tokens by rotating refresh if desired (client should clear storage)
+        # Delete user account
+        user.delete()
+        return Response({'detail': 'Account deleted.'}, status=status.HTTP_204_NO_CONTENT)

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, Palette, X } from 'lucide-react'
+import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, Palette, X, Bot } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { dashboardApi } from '../lib/dashboardApi'
 import type { TemplateSelectionRequest } from '../lib/dashboardApi'
@@ -200,14 +200,14 @@ const CreateLeadMagnet: React.FC = () => {
                 My Lead Magnets
               </a>
               <a href="/forma-ai" className="nav-item">
-                <Settings size={18} />
+                <Bot size={18} />
                 Forma AI
               </a>
               <a href="/brand-assets" className="nav-item">
                 <Palette size={18} />
                 Brand Assets
               </a>
-              <a href="#" className="nav-item">
+              <a href="/settings" className="nav-item">
                 <Settings size={18} />
                 Settings
               </a>

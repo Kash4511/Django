@@ -1,0 +1,122 @@
+/* Settings page styles - consistent with existing dashboard aesthetics */
+.settings-page {
+  color: #ffffff;
+  background: #1a1a1a;
+  min-height: 100vh;
+}
+
+.settings-container {
+  max-width: 960px;
+  margin: 90px auto 2rem;
+  padding: 0 1.5rem;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.settings-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: 1px solid #333;
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.back-button:hover { border-color: #2A5766; }
+
+.settings-section {
+  background: #121212;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-top: 1rem;
+}
+.settings-section.danger { border-color: #5a1f1f; }
+
+.section-label {
+  font-size: 1rem;
+  color: #cccccc;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.field-label {
+  font-size: 0.95rem;
+  color: #aaaaaa;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.read-only-field {
+  background: #0f0f0f;
+  border: 1px solid #333;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group { display: flex; flex-direction: column; }
+
+.form-input {
+  background: #0f0f0f;
+  border: 1px solid #333;
+  color: #ffffff;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+.form-input::placeholder { color: #777; }
+.form-input:focus { outline: none; border-color: #2A5766; }
+
+.actions { display: flex; gap: 12px; align-items: center; margin-top: 12px; }
+
+.btn { 
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: 8px; border: none; cursor: pointer; 
+}
+.btn-primary { background: #2A5766; color: #fff; }
+.btn-primary:hover { background: #1E404A; }
+.btn-secondary { background: #333; color: #fff; }
+.btn-secondary:hover { background: #444; }
+.btn-danger { background: #b00020; color: #fff; }
+.btn-danger:hover { background: #8c001a; }
+
+.status { font-size: 0.9rem; }
+.status.success { color: #0b7a0b; }
+.status.error { color: #b00020; }
+
+.warning-text { color: #ffb4b4; margin: 8px 0 12px; }
+.modal-warning { color: #ffb4b4; margin-bottom: 12px; }
+
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+@media (max-width: 768px) {
+  .settings-container { margin-top: 80px; }
+  .form-grid { grid-template-columns: 1fr; }
+}
+
+/* User name next to logout in top nav */
+.user-name {
+  color: #e5e7eb;
+  font-weight: 500;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

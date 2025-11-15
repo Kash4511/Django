@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FileText, Download, Plus, Settings, LogOut, User, Palette, Trash2 } from 'lucide-react'
+import { FileText, Download, Plus, Settings, LogOut, User, Palette, Trash2, Bot } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { dashboardApi } from '../lib/dashboardApi'
 import type { DashboardStats, LeadMagnet } from '../lib/dashboardApi'
@@ -70,6 +70,30 @@ const Dashboard: React.FC = () => {
     }
 
     fetchDashboardData()
+
+    // Real-time refresh when Forma AI creates a lead magnet
+    const onCreated = async () => {
+      try {
+        const [statsData, projectsData] = await Promise.all([
+          dashboardApi.getStats(),
+          dashboardApi.getLeadMagnets()
+        ])
+        setStats(statsData)
+        setProjects(projectsData)
+      } catch (err) {
+        console.warn('Live refresh failed:', err)
+      }
+    }
+    const listener = (e: Event) => { onCreated() }
+    window.addEventListener('leadMagnetCreated', listener as EventListener)
+    const storageListener = (e: StorageEvent) => {
+      if (e.key === 'leadMagnetCreatedEvent') onCreated()
+    }
+    window.addEventListener('storage', storageListener)
+    return () => {
+      window.removeEventListener('leadMagnetCreated', listener as EventListener)
+      window.removeEventListener('storage', storageListener)
+    }
   }, [])
 
   const filteredProjects = useMemo(() => {
@@ -146,14 +170,14 @@ const Dashboard: React.FC = () => {
                 My Lead Magnets
               </a>
               <a href="/forma-ai" className="nav-item">
-                <Settings size={18} />
+                <Bot size={18} />
                 Forma AI
               </a>
               <a href="/brand-assets" className="nav-item">
                 <Palette size={18} />
                 Brand Assets
               </a>
-              <a href="#" className="nav-item">
+              <a href="/settings" className="nav-item">
                 <Settings size={18} />
                 Settings
               </a>
