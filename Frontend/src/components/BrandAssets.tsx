@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, Palette, Bot } from 'lucide-react'
+import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, Palette } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useBrand } from '../contexts/BrandContext'
 import { dashboardApi } from '../lib/dashboardApi'
@@ -219,14 +219,14 @@ const BrandAssets: React.FC = () => {
                 My Lead Magnets
               </a>
               <a href="/forma-ai" className="nav-item">
-                <Bot size={18} />
+                <Settings size={18} />
                 Forma AI
               </a>
               <a href="#" className="nav-item active">
                 <Palette size={18} />
                 Brand Assets
               </a>
-              <a href="/settings" className="nav-item">
+              <a href="#" className="nav-item">
                 <Settings size={18} />
                 Settings
               </a>

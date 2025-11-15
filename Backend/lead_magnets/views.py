@@ -963,61 +963,14 @@ class FormaAIConversationView(APIView):
         # If requested, generate PDF and return as file response
         if generate_pdf:
             try:
-                # Ensure we persist a lead magnet record for this Forma AI generation
-                # Derive a professional title from computed template vars
-                lm_title = template_vars.get('mainTitle') or 'Forma AI Lead Magnet'
-                lead_magnet = LeadMagnet.objects.create(
-                    title=lm_title,
-                    description=template_vars.get('documentSubtitle', '') or '',
-                    owner=request.user,
-                    status='in-progress'
-                )
-
-                # Store template selection record with captured answers
-                TemplateSelection.objects.create(
-                    user=request.user,
-                    lead_magnet=lead_magnet,
-                    template_id=template_id,
-                    template_name=template_id,
-                    captured_answers=user_answers,
-                    ai_generated_content=ai_content if ai_content is not None else {},
-                    source='forma-ai',
-                    status='template-selected'
-                )
-
-                # Link the conversation to the newly created lead magnet
-                try:
-                    conversation.lead_magnet = lead_magnet
-                    conversation.save(update_fields=['lead_magnet'])
-                except Exception:
-                    pass
-
                 result = template_service.generate_pdf_with_ai_content(template_id, template_vars)
                 if result.get('success'):
                     pdf_data = result.get('pdf_data', b'')
                     response = HttpResponse(pdf_data, content_type=result.get('content_type', 'application/pdf'))
                     filename = result.get('filename', f'forma-ai-{template_id}.pdf')
                     response['Content-Disposition'] = f'attachment; filename="{filename}"'
-                    # Mark lead magnet as completed and include ID header for frontend
-                    try:
-                        lead_magnet.status = 'completed'
-                        lead_magnet.save(update_fields=['status'])
-                        # Update template selection status
-                        ts = TemplateSelection.objects.filter(lead_magnet=lead_magnet).first()
-                        if ts:
-                            ts.status = 'pdf-generated'
-                            ts.save(update_fields=['status'])
-                        response['X-LeadMagnet-Id'] = str(lead_magnet.id)
-                    except Exception:
-                        pass
                     return response
                 else:
-                    # If generation failed, keep record but set status appropriately
-                    try:
-                        lead_magnet.status = 'in-progress'
-                        lead_magnet.save(update_fields=['status'])
-                    except Exception:
-                        pass
                     return Response({'error': result.get('error', 'PDF generation failed'), 'details': result.get('details', '')}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             except Exception as e:
                 return Response({'error': 'PDF generation failed', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

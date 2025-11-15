@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, Palette, Paperclip, Send, File as PdfIcon, Bot } from 'lucide-react'
+import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, Palette, Paperclip, Send, File as PdfIcon } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import Modal from './Modal'
 import TemplateSelectionForm from './forms/TemplateSelectionForm'
@@ -121,18 +121,6 @@ const FormaAI: React.FC = () => {
         setPreviewUrl(url)
         setShowPreviewModal(true)
 
-        // Emit lead magnet creation event for real-time dashboard updates
-        const leadMagnetIdHeader = (res.headers['x-leadmagnet-id'] || res.headers['X-LeadMagnet-Id']) as string | undefined
-        if (leadMagnetIdHeader) {
-          const leadMagnetId = Number(leadMagnetIdHeader)
-          const event = new CustomEvent('leadMagnetCreated', { detail: { id: leadMagnetId } })
-          window.dispatchEvent(event)
-          // Also use localStorage to trigger cross-route updates
-          try {
-            localStorage.setItem('leadMagnetCreatedEvent', JSON.stringify({ id: leadMagnetId, ts: Date.now() }))
-          } catch {}
-        }
-
         setMessages(prev => [...prev, '✅ PDF generated. Preview opened.'])
         setTimeout(() => {
           setMessages(prev => prev.filter(msg => msg !== '✅ PDF generated. Preview opened.'))
@@ -218,14 +206,14 @@ const FormaAI: React.FC = () => {
                 My Lead Magnets
               </a>
               <a href="/forma-ai" className="nav-item active">
-                <Bot size={18} />
+                <Settings size={18} />
                 Forma AI
               </a>
               <a href="/brand-assets" className="nav-item">
                 <Palette size={18} />
                 Brand Assets
               </a>
-              <a href="/settings" className="nav-item">
+              <a href="#" className="nav-item">
                 <Settings size={18} />
                 Settings
               </a>

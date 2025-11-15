@@ -11,6 +11,34 @@ class FirmProfileSerializer(serializers.ModelSerializer):
         model = FirmProfile
         fields = "__all__"
 
+    def create(self, validated_data):
+        from django.core.files.storage import default_storage
+        logo = validated_data.get('logo')
+        if logo is not None:
+            print(f"[Cloudinary Debug] Default storage: {default_storage.__class__.__name__}")
+            print(f"[Cloudinary Debug] Uploading logo file: {getattr(logo, 'name', str(logo))}")
+        instance = super().create(validated_data)
+        try:
+            if getattr(instance, 'logo', None):
+                print(f"[Cloudinary Debug] Logo stored URL: {instance.logo.url}")
+        except Exception as e:
+            print(f"[Cloudinary Debug] Unable to read logo URL after save: {e}")
+        return instance
+
+    def update(self, instance, validated_data):
+        from django.core.files.storage import default_storage
+        logo = validated_data.get('logo')
+        if logo is not None:
+            print(f"[Cloudinary Debug] Default storage: {default_storage.__class__.__name__}")
+            print(f"[Cloudinary Debug] Uploading new logo file: {getattr(logo, 'name', str(logo))}")
+        instance = super().update(instance, validated_data)
+        try:
+            if getattr(instance, 'logo', None):
+                print(f"[Cloudinary Debug] Logo stored URL: {instance.logo.url}")
+        except Exception as e:
+            print(f"[Cloudinary Debug] Unable to read logo URL after update: {e}")
+        return instance
+
 
 class LeadMagnetGenerationSerializer(serializers.ModelSerializer):
     class Meta:

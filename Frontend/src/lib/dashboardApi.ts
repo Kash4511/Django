@@ -296,15 +296,22 @@ export const dashboardApi = {
     user_answers?: Record<string, unknown>;
   }): Promise<void> => {
     try {
-      console.log('🔄 Generating PDF with user answers...', request);
+      console.log('[PDF] Calling /generate-pdf with params:', {
+        template_id: request.template_id,
+        lead_magnet_id: request.lead_magnet_id,
+        use_ai_content: request.use_ai_content,
+        has_user_answers: !!request.user_answers,
+      });
       const response = await apiClient.post(`${API_BASE_URL}/generate-pdf/`, request, {
         responseType: 'blob'
       });
       
-      console.log('✅ PDF generated successfully');
+      console.log('[PDF] Response status:', response.status);
+      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+      console.log('[PDF] Received blob size:', pdfBlob.size);
       
       // Create download link for the PDF
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `lead-magnet-${request.lead_magnet_id}.pdf`);

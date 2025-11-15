@@ -10,7 +10,6 @@ import Dashboard from './components/Dashboard'
 import CreateLeadMagnet from './components/CreateLeadMagnet'
 import BrandAssets from './components/BrandAssets'
 import FormaAI from './components/FormaAI'
-import Settings from './components/Settings'
 import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
 
@@ -54,14 +53,6 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <FormaAI />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/settings" 
-                  element={
-                    <ProtectedRoute>
-                      <Settings />
                     </ProtectedRoute>
                   } 
                 />
