@@ -273,6 +273,9 @@ export const dashboardApi = {
             const hasProtocol = /^https?:\/\//i.test(trimmed);
             const normalized = trimmed && !hasProtocol ? `https://${trimmed}` : trimmed;
             formData.append(key, normalized);
+          } else if (key === 'work_email' && typeof value === 'string') {
+            const normalizedEmail = value.trim();
+            formData.append(key, normalizedEmail);
           } else {
             formData.append(key, String(value));
           }

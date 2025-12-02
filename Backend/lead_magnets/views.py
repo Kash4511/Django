@@ -457,7 +457,7 @@ class GeneratePDFView(APIView):
                     print(f"✅ Found {flattened_sections_count} populated flattened sections in template_vars")
 
                 # Ensure cover/contact never empty
-                template_vars['companyName'] = template_vars.get('companyName') or firm_profile.get('firm_name', 'Your Company')
+                template_vars['companyName'] = template_vars.get('companyName') or (firm_profile.get('firm_name') or 'Your Company')
                 template_vars['companySubtitle'] = template_vars.get('companySubtitle') or firm_profile.get('tagline', '')
                 template_vars['emailAddress'] = template_vars.get('emailAddress') or firm_profile.get('work_email', '')
                 template_vars['phoneNumber'] = template_vars.get('phoneNumber') or firm_profile.get('phone_number', '')
@@ -645,7 +645,7 @@ class GeneratePDFView(APIView):
                     'primaryColor': firm_profile.get('primary_brand_color', '#8B4513'),
                     'secondaryColor': firm_profile.get('secondary_brand_color', '#D2691E'),
                     'accentColor': firm_profile.get('accent_brand_color', '#F4A460'),
-                    'companyName': firm_profile.get('firm_name', 'Your Company'),
+                    'companyName': (firm_profile.get('firm_name') or 'Your Company'),
                     'mainTitle': 'Architectural Portfolio',
                     'documentSubtitle': firm_profile.get('tagline', 'Modern Design Solutions'),
                 }
@@ -917,7 +917,7 @@ class FormaAIConversationView(APIView):
             sub = sub.strip(' -:;')
             template_vars['documentSubtitle'] = sub
         # Ensure critical cover/contact fields are never empty
-        template_vars['companyName'] = template_vars.get('companyName') or firm_profile.get('firm_name', 'Your Company')
+        template_vars['companyName'] = template_vars.get('companyName') or (firm_profile.get('firm_name') or 'Your Company')
         template_vars['emailAddress'] = template_vars.get('emailAddress') or firm_profile.get('work_email', '')
         template_vars['phoneNumber'] = template_vars.get('phoneNumber') or firm_profile.get('phone_number', '')
         template_vars['website'] = template_vars.get('website') or firm_profile.get('firm_website', '')

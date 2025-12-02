@@ -13,8 +13,7 @@ class DocRaptorService:
         self.api_key = os.getenv('DOCRAPTOR_API_KEY')
         self.base_url = "https://api.docraptor.com/docs"
         self.templates_dir = os.path.join(settings.BASE_DIR, 'lead_magnets', 'templates')
-        # Use env-driven test mode; default to True for safety
-        self.test_mode = str(os.getenv('DOCRAPTOR_TEST_MODE', 'true')).lower() in ('1', 'true', 'yes')
+        self.test_mode = True
 
     def list_templates(self) -> List[Dict[str, Any]]:
         template_path = os.path.join(self.templates_dir, 'Template.html')

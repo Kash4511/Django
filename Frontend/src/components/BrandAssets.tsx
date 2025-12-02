@@ -121,23 +121,21 @@ const BrandAssets: React.FC = () => {
   };
 
   const handleSave = async () => {
+    if (!validateForm()) {
+      return;
+    }
     setSaving(true)
     try {
       await dashboardApi.updateFirmProfile(formData)
       setHasExistingAssets(true)
-      
-      // Update brand colors in context
       updateBrandColors({
         primaryColor: formData.primary_brand_color || '#2a5766',
         secondaryColor: formData.secondary_brand_color || '#ffffff',
         fontStyle: formData.preferred_font_style || 'no-preference'
       })
       setShowConfirmation(true);
-      
-      // Could add success notification here
     } catch (err) {
       console.error('Failed to save brand assets:', err)
-      // Could add error notification here
     } finally {
       setSaving(false)
     }
@@ -146,8 +144,13 @@ const BrandAssets: React.FC = () => {
   const validateForm = (): boolean => {
     const errors: string[] = [];
     const hex = /^#([A-Fa-f0-9]{6})$/;
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.firm_name) errors.push('Firm name is required');
-    if (!formData.work_email) errors.push('Work email is required');
+    if (!formData.work_email) {
+      errors.push('Work email is required');
+    } else if (!emailRe.test(String(formData.work_email).trim())) {
+      errors.push('Work email must be a valid email address');
+    }
     if (!formData.phone_number) errors.push('Phone number is required');
     if (!formData.primary_brand_color || !hex.test(formData.primary_brand_color)) errors.push('Primary color must be a valid hex like #2a5766');
     if (!formData.secondary_brand_color || !hex.test(formData.secondary_brand_color)) errors.push('Secondary color must be a valid hex like #ffffff');
