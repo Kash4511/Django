@@ -411,10 +411,16 @@ export const dashboardApi = {
           try {
             errorData = JSON.parse(text);
             // Extract error message from various possible fields
-            errorMessage = errorData.error || errorData.message || 'PDF generation failed';
-            errorDetails = errorData.details || '';
+            if (errorData) {
+              errorMessage = errorData.error || errorData.message || 'PDF generation failed';
+              errorDetails = errorData.details || '';
+            } else {
+              errorMessage = text || 'PDF generation failed';
+              errorDetails = 'Could not parse error response as JSON';
+            }
           } catch (jsonError) {
             // If JSON parsing fails, use the raw text
+            errorData = null;
             errorMessage = text || 'PDF generation failed';
             errorDetails = 'Could not parse error response as JSON';
           }
