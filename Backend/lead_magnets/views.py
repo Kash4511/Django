@@ -411,9 +411,20 @@ class GeneratePDFView(APIView):
                         return Response({'error': 'AI content not available'}, status=status.HTTP_400_BAD_REQUEST)
                 except Exception as e:
                     import traceback
-                    print(f"❌ AI content generation failed: {str(e)}")
+                    error_message = str(e) if str(e) else 'Unknown error occurred'
+                    print(f"❌ AI content generation failed: {error_message}")
                     print(traceback.format_exc())
-                    return Response({'error': 'AI content generation failed', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    
+                    # Provide helpful message for missing API key
+                    if 'PERPLEXITY_API_KEY' in error_message or 'not configured' in error_message.lower():
+                        error_message = f"{error_message}. Please set PERPLEXITY_API_KEY in your .env file."
+                    
+                    # Return JSON response that can be parsed even when responseType is 'blob'
+                    return Response({
+                        'error': 'AI content generation failed',
+                        'details': error_message,
+                        'type': type(e).__name__
+                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
                 # Validate AI JSON schema before mapping
                 if not isinstance(ai_content, dict) or 'cover' not in ai_content or not ai_content.get('sections'):
@@ -747,15 +758,29 @@ class GeneratePDFView(APIView):
 
                 print("="*50)
                 # If recovery failed or wasn't attempted, return error response
-                return Response({'error': 'PDF generation failed', 'details': error_message, 'lead_magnet_id': lead_magnet.id}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                error_response_data = {
+                    'error': 'PDF generation failed',
+                    'details': error_message or 'Unknown error occurred during PDF generation',
+                    'lead_magnet_id': lead_magnet.id
+                }
+                if missing_keys:
+                    error_response_data['missing_keys'] = missing_keys
+                print(f"❌ Returning error response: {error_response_data}")
+                return Response(error_response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         except LeadMagnet.DoesNotExist:
-            return Response({'error': 'Lead magnet not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Lead magnet not found', 'details': f'Lead magnet with ID {lead_magnet_id} does not exist or you do not have permission to access it'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             import traceback
+            error_trace = traceback.format_exc()
             print(f"❌ PDF Generation Error: {str(e)}")
-            print(f"🔍 Stack Trace: {traceback.format_exc()}")
-            return Response({'error': 'PDF generation failed', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            print(f"🔍 Stack Trace: {error_trace}")
+            error_details = str(e) if str(e) else 'An unexpected error occurred during PDF generation'
+            return Response({
+                'error': 'PDF generation failed',
+                'details': error_details,
+                'type': type(e).__name__
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class PreviewTemplateView(APIView):
     """Preview template with custom variables"""

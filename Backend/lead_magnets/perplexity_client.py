@@ -33,7 +33,7 @@ class PerplexityClient:
         """
         if not self.api_key:
             print("❌ PERPLEXITY_API_KEY missing")
-            raise Exception("PERPLEXITY_API_KEY is not configured; cannot generate AI content")
+            raise Exception("PERPLEXITY_API_KEY is not configured; cannot generate AI content. Please add PERPLEXITY_API_KEY=your_key_here to your Backend/.env file")
         
         # Retry logic for API calls with fallback model
         max_retries = 2

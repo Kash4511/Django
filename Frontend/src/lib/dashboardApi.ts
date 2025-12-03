@@ -89,9 +89,21 @@ const handleApiError = (error: unknown, context: string) => {
       headers: err.response.headers,
       url: err.response.config?.url
     });
+    
+    // Handle blob error responses (for PDF generation errors)
+    let errorMessage: string;
+    if (err.response.data instanceof Blob) {
+      errorMessage = 'PDF generation failed. Check server logs for details.';
+    } else if (typeof err.response.data === 'object' && err.response.data !== null) {
+      const errorData = err.response.data as { error?: string; details?: string };
+      errorMessage = errorData.error || errorData.details || JSON.stringify(err.response.data);
+    } else {
+      errorMessage = String(err.response.data || 'Unknown error');
+    }
+    
     throw new Error(
       `${context} failed: ${err.response.status} ${err.response.statusText}\n` +
-      `Details: ${JSON.stringify(err.response.data, null, 2)}`
+      `Details: ${errorMessage}`
     );
   } else if (Object.prototype.hasOwnProperty.call(error as object, 'request')) {
     const reqErr = error as { request?: unknown; code?: string; config?: { timeout?: number } };
@@ -341,11 +353,104 @@ export const dashboardApi = {
       const response = await apiClient.post(`${API_BASE_URL}/generate-pdf/`, request, {
         responseType: 'blob'
       });
-      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
-      return url; // caller should revoke when done
+      
+      // Success response (status 200), check if response is actually a PDF
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const arrayBuffer = await blob.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      
+      // Check for PDF magic bytes: %PDF (first 4 bytes should be 0x25 0x50 0x44 0x46)
+      if (uint8Array.length >= 4 && 
+          uint8Array[0] === 0x25 && 
+          uint8Array[1] === 0x50 && 
+          uint8Array[2] === 0x44 && 
+          uint8Array[3] === 0x46) {
+        const url = window.URL.createObjectURL(blob);
+        return url; // caller should revoke when done
+      } else {
+        // Response is not a PDF, likely an error message in JSON format
+        const text = await blob.text();
+        let errorData: { error?: string; details?: string };
+        try {
+          errorData = JSON.parse(text);
+        } catch {
+          errorData = { error: 'PDF generation failed', details: 'Response was not a valid PDF' };
+        }
+        throw new Error(
+          `PDF generation failed: ${errorData.error || 'Unknown error'}\n` +
+          `Details: ${errorData.details || 'No details available'}`
+        );
+      }
     } catch (error) {
-      handleApiError(error, 'Generating PDF preview URL');
-      throw error;
+      // Handle blob error responses (when axios converts error response to blob)
+      const err = error as AxiosError;
+      
+      // If this is already our formatted error, re-throw it
+      if (error instanceof Error && error.message.includes('Generating PDF preview URL failed')) {
+        throw error;
+      }
+      
+      if (err.response && err.response.data instanceof Blob) {
+        const blob = err.response.data as Blob;
+        let text = '';
+        let parseError: Error | null = null;
+        
+        try {
+          text = await blob.text();
+        } catch (textError) {
+          parseError = textError as Error;
+          console.error('Generating PDF preview URL - Error reading blob as text:', textError);
+        }
+        
+        if (text) {
+          // Try to parse as JSON
+          let errorData: { error?: string; details?: string; message?: string } | null = null;
+          let errorMessage = 'Unknown error';
+          let errorDetails = '';
+          
+          try {
+            errorData = JSON.parse(text);
+            // Extract error message from various possible fields
+            errorMessage = errorData.error || errorData.message || 'PDF generation failed';
+            errorDetails = errorData.details || '';
+          } catch (jsonError) {
+            // If JSON parsing fails, use the raw text
+            errorMessage = text || 'PDF generation failed';
+            errorDetails = 'Could not parse error response as JSON';
+          }
+          
+          // Build the full error message
+          const fullErrorMessage = errorDetails 
+            ? `${errorMessage}\nDetails: ${errorDetails}`
+            : errorMessage;
+          
+          console.error('Generating PDF preview URL - Server Error:', {
+            status: err.response.status,
+            statusText: err.response.statusText,
+            error: errorMessage,
+            details: errorDetails,
+            rawText: text.length > 200 ? text.substring(0, 200) + '...' : text
+          });
+          
+          throw new Error(
+            `Generating PDF preview URL failed: ${err.response.status} ${err.response.statusText}\n` +
+            `${fullErrorMessage}`
+          );
+        } else {
+          // Could not read blob text
+          const status = err.response?.status || 500;
+          const statusText = err.response?.statusText || 'Internal Server Error';
+          console.error('Generating PDF preview URL - Could not read error blob:', parseError);
+          throw new Error(
+            `Generating PDF preview URL failed: ${status} ${statusText}\n` +
+            `Details: Unable to read server error response. Please check server logs.`
+          );
+        }
+      } else {
+        // Not a blob error, use standard error handling
+        handleApiError(error, 'Generating PDF preview URL');
+        throw error;
+      }
     }
   },
 

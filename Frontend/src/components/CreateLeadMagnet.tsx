@@ -207,7 +207,7 @@ const CreateLeadMagnet: React.FC = () => {
                 <Palette size={18} />
                 Brand Assets
               </a>
-              <a href="#" className="nav-item">
+              <a href="/settings" className="nav-item">
                 <Settings size={18} />
                 Settings
               </a>

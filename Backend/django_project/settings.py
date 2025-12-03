@@ -2,6 +2,21 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    # Load .env from Backend directory (parent of django_project)
+    env_path = Path(__file__).resolve().parent.parent / '.env'
+    if env_path.exists():
+        load_dotenv(env_path)
+        print(f"✅ Loaded .env from: {env_path}")
+    else:
+        print(f"⚠️  .env file not found at: {env_path}")
+except ImportError:
+    print("⚠️  python-dotenv not installed. Install with: pip install python-dotenv")
+except Exception as e:
+    print(f"⚠️  Error loading .env: {e}")
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # -----------------------------
