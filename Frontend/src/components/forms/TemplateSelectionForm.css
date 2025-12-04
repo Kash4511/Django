@@ -36,6 +36,7 @@
 }
 
 .template-card {
+  position: relative;
   border: 2px solid transparent;
   border-radius: 8px;
   overflow: hidden;
@@ -90,6 +91,29 @@
   padding: 12px;
 }
 
+/* Dual image layout for Template 1 */
+.template-dual-preview {
+  display: grid;
+  grid-template-columns: 1fr 0.6fr;
+  gap: 6px;
+  padding: 6px;
+}
+
+.dual-image-left,
+.dual-image-right {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+@media (max-width: 768px) {
+  .template-dual-preview {
+    grid-template-columns: 1fr;
+    grid-auto-rows: 1fr 1fr;
+  }
+}
+
 .form-actions-new {
   display: flex;
   justify-content: flex-end;
@@ -131,6 +155,7 @@
 }
 
 .template-thumbnail-new img {
+
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -182,4 +207,81 @@
   cursor: not-allowed;
   box-shadow: none;
   transform: none;
+}
+
+.template-preview-wrapper {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.template-preview-img {
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.template-preview-placeholder {
+  width: 100%;
+  height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #3a3a3e;
+  border-radius: 8px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.selected-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #0ea5e9;
+  color: #ffffff;
+  border-radius: 9999px;
+  padding: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  z-index: 2;
+}
+
+/* Template 1 specific visual refinement */
+.template-card.template-1 {
+  border-color: #2a5766;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(24, 56, 64, 0.45);
+}
+
+.template-card.template-1 .template-thumbnail-wrapper-new {
+  border-radius: 16px 16px 0 0;
+}
+
+.template-card.template-1 .template-thumbnail-new img,
+.template-card.template-1 .dual-image-left,
+.template-card.template-1 .dual-image-right {
+  object-fit: cover;
+}
+
+.template-card.template-1 .template-info-new {
+  background: #244c57;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  border-radius: 0 0 16px 16px;
+  padding-top: 0.75rem;
+}
+
+.template-card.template-1 .template-info-new h3 {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.template-card.template-1:hover {
+  box-shadow: 0 12px 32px rgba(24, 56, 64, 0.55);
 }

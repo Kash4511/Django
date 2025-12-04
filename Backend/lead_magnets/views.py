@@ -12,11 +12,13 @@ from .models import (
 )
 from .serializers import (
     LeadMagnetSerializer, LeadSerializer, DashboardStatsSerializer,
-    FirmProfileSerializer, LeadMagnetGenerationSerializer, CreateLeadMagnetSerializer
+    FirmProfileSerializer, LeadMagnetGenerationSerializer, CreateLeadMagnetSerializer,
+    TemplateSerializer
 )
 from .services import DocRaptorService
 from .perplexity_client import PerplexityClient
 from .services import render_template
+from .models import Template
 
 class DashboardStatsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -168,10 +170,14 @@ class ListTemplatesView(APIView):
 
     def get(self, request):
         try:
+            db_templates = Template.objects.all()
+            if db_templates.exists():
+                data = TemplateSerializer(db_templates, many=True, context={'request': request}).data
+                return Response({'success': True, 'templates': data, 'count': len(data)})
+
             template_service = DocRaptorService()
             templates = template_service.list_templates()
 
-            # Add preview URLs
             for template in templates:
                 template_id = template['id']
                 preview_filename = f"{template_id}.jpg"
@@ -182,16 +188,11 @@ class ListTemplatesView(APIView):
                         f"{settings.MEDIA_URL}template_previews/{preview_filename}"
                     )
                 else:
-                    # fallback to default preview
                     template['preview_url'] = request.build_absolute_uri(
                         f"{settings.MEDIA_URL}template_previews/default.jpg"
                     )
 
-            return Response({
-                'success': True,
-                'templates': templates,
-                'count': len(templates)
-            })
+            return Response({'success': True, 'templates': templates, 'count': len(templates)})
 
         except ValueError as e:
             return Response({

@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Core Configuration
 # -----------------------------
 SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-me')
-DEBUG = os.getenv('DEBUG', 'false').lower() == 'true'
+DEBUG = os.getenv('DEBUG', 'true').lower() == 'true'
 
 # Hosts (Backend + Local)
 ALLOWED_HOSTS = os.getenv(

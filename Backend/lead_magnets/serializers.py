@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import LeadMagnet, Lead, Download, FirmProfile, LeadMagnetGeneration
+from .models import LeadMagnet, Lead, Download, FirmProfile, LeadMagnetGeneration, Template
 
 from rest_framework import serializers
 from .models import LeadMagnet, LeadMagnetGeneration, FirmProfile
@@ -120,6 +120,25 @@ class DashboardStatsSerializer(serializers.Serializer):
     active_lead_magnets = serializers.IntegerField()
     total_downloads = serializers.IntegerField()
     leads_generated = serializers.IntegerField()
+
+
+class TemplateSerializer(serializers.ModelSerializer):
+    preview_url = serializers.SerializerMethodField()
+
+    def get_preview_url(self, obj: Template):
+        try:
+            if obj.preview_image:
+                request = self.context.get('request')
+                url = obj.preview_image.url
+                # Ensure absolute URL
+                return request.build_absolute_uri(url) if request else url
+        except Exception:
+            pass
+        return None
+
+    class Meta:
+        model = Template
+        fields = ['id', 'name', 'preview_url']
 
 # class FirmProfileSerializer(serializers.ModelSerializer):
 #     class Meta:

@@ -58,6 +58,7 @@ export interface PDFTemplate {
   // Optional secondary image used for hover preview in selection UI
   hover_preview_url?: string;
   thumbnail?: string;
+  secondary_preview_url?: string;
 }
 
 export interface CreateLeadMagnetRequest {
@@ -418,7 +419,7 @@ export const dashboardApi = {
               errorMessage = text || 'PDF generation failed';
               errorDetails = 'Could not parse error response as JSON';
             }
-          } catch (jsonError) {
+          } catch {
             // If JSON parsing fails, use the raw text
             errorData = null;
             errorMessage = text || 'PDF generation failed';
