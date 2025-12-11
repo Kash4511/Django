@@ -81,12 +81,20 @@ class FirmProfileView(generics.RetrieveUpdateAPIView):
         return profile
 
 class CreateLeadMagnetView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         try:
             data = request.data
-            user = request.user
+            user = request.user if getattr(request.user, 'is_authenticated', False) else None
+            if not user:
+                from django.contrib.auth import get_user_model
+                UserModel = get_user_model()
+                owner_email = data.get('owner_email')
+                if owner_email:
+                    user = UserModel.objects.filter(email=owner_email).first()
+                if not user:
+                    return Response({'error': 'Owner not provided or invalid'}, status=status.HTTP_400_BAD_REQUEST)
 
             # Create the lead magnet
             lead_magnet = LeadMagnet.objects.create(
