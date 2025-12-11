@@ -521,12 +521,11 @@ class GeneratePDFView(APIView):
                 critical_missing = [key for key in required_keys if key not in template_vars or not template_vars[key]]
                 if critical_missing:
                     print(f"❌ Critical content missing for PDF generation: {critical_missing}")
-                    result = {
-                        'success': False,
+                    return Response({
                         'error': 'Missing critical content for PDF generation',
                         'details': f'Required content missing: {critical_missing}',
                         'missing_keys': critical_missing
-                    }
+                    }, status=status.HTTP_400_BAD_REQUEST)
                 else:
                     print(f"🚀 Proceeding with PDF generation - Content validation passed")
                     # Add timing information
@@ -668,7 +667,7 @@ class GeneratePDFView(APIView):
                 if missing_keys:
                     error_response_data['missing_keys'] = missing_keys
                 print(f"❌ Returning error response: {error_response_data}")
-                return Response(error_response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response(error_response_data, status=(status.HTTP_400_BAD_REQUEST if missing_keys else status.HTTP_500_INTERNAL_SERVER_ERROR))
 
         except LeadMagnet.DoesNotExist:
             return Response({'error': 'Lead magnet not found', 'details': f'Lead magnet with ID {lead_magnet_id} does not exist or you do not have permission to access it'}, status=status.HTTP_404_NOT_FOUND)
