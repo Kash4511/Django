@@ -27,29 +27,22 @@ class PerplexityClient:
         print(f"DEBUG: PerplexityClient initialized; key present: {bool(self.api_key)}")
         
     def generate_lead_magnet_json(self, user_answers: Dict[str, Any], firm_profile: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Generate structured JSON content for lead magnet using Perplexity AI.
-        No mock/fallback data is used. Errors are raised on failures.
-        """
         if not self.api_key:
             print("❌ PERPLEXITY_API_KEY missing")
             raise Exception("PERPLEXITY_API_KEY is not configured; cannot generate AI content. Please add PERPLEXITY_API_KEY=your_key_here to your Backend/.env file")
-        
-        # Retry logic for API calls with fallback model
+
         max_retries = 2
         retry_count = 0
-        models_to_try = ["sonar-pro", "sonar"]  # Fallback to simpler model if needed
-        
+        models_to_try = ["sonar-pro", "sonar"]
+
         while retry_count <= max_retries:
-            # Use fallback model on final retry
             model_to_use = models_to_try[1] if retry_count == max_retries else models_to_try[0]
-            
             try:
                 if retry_count > 0:
                     print(f"🔄 Retrying AI content generation (attempt {retry_count + 1}/{max_retries + 1}) with model: {model_to_use}...")
                 else:
                     print(f"Generating AI content with model: {model_to_use}...")
-                
+
                 response = requests.post(
                     self.base_url,
                     headers={
@@ -72,12 +65,9 @@ class PerplexityClient:
                         "max_tokens": 4000,
                         "temperature": 0.7
                     },
-                    timeout=60  # Increased timeout to 60 seconds
+                    timeout=60
                 )
-                
-                # If we get here, the request succeeded, break out of retry loop
                 break
-                
             except requests.exceptions.Timeout:
                 retry_count += 1
                 if retry_count > max_retries:
@@ -87,22 +77,17 @@ class PerplexityClient:
                     print(f"⚠️ API timeout on attempt {retry_count}, retrying...")
                     continue
             except Exception as e:
-                # For non-timeout errors, don't retry
                 print(f"❌ Error calling Perplexity API: {str(e)}")
                 raise
-        # Handle response after successful API call
+
         print(f"Perplexity response status: {response.status_code}")
-        
         if response.status_code != 200:
             print(f"❌ Perplexity API error: {response.status_code} - {response.text}")
             raise Exception(f"Perplexity API error: {response.status_code} - {response.text}")
-        
+
         result = response.json()
         message_content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
-        
-        # Handle markdown-wrapped JSON (```json ... ```)
         json_content = self._extract_json_from_markdown(message_content)
-        
         try:
             content = json.loads(json_content)
             return content
@@ -168,6 +153,7 @@ class PerplexityClient:
             print(f"Contact: {ai_content.get('contact', {})}")
         except Exception as e:
             print(f"🔴 DEBUG AI CONTENT ERROR: {e}")
+
 
     def _create_content_prompt(self, user_answers: Dict[str, Any], firm_profile: Dict[str, Any]) -> str:
         """

@@ -105,13 +105,11 @@ class DocRaptorService:
         rendered_html = self.render_template_with_vars(template_id, variables)
 
         if not self.api_key:
-            print("⚠️ DEBUG: No DocRaptor API key. Returning mock PDF bytes.")
+            print("❌ DEBUG: No DocRaptor API key configured")
             return {
-                'success': True,
-                'pdf_data': self._build_mock_pdf_bytes(template_id),
-                'content_type': 'application/pdf',
-                'filename': f'lead-magnet-{template_id}.pdf',
-                'template_id': template_id
+                'success': False,
+                'error': 'DocRaptor API key missing',
+                'details': 'Set DOCRAPTOR_API_KEY in environment to enable PDF generation'
             }
 
         try:

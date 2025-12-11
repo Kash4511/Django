@@ -421,7 +421,7 @@ class GeneratePDFView(APIView):
                     
                     # Provide helpful message for missing API key
                     if 'PERPLEXITY_API_KEY' in error_message or 'not configured' in error_message.lower():
-                        error_message = f"{error_message}. Please set PERPLEXITY_API_KEY in your .env file."
+                        error_message = f"{error_message}. Please set PERPLEXITY_API_KEY in your environment configuration."
                     
                     # Return JSON response that can be parsed even when responseType is 'blob'
                     return Response({
@@ -471,38 +471,8 @@ class GeneratePDFView(APIView):
                 if flattened_keys_present:
                     print(f"✅ Found {flattened_sections_count} populated flattened sections in template_vars")
 
-                # Ensure cover/contact never empty
-                template_vars['companyName'] = template_vars.get('companyName') or (firm_profile.get('firm_name') or 'Your Company')
-                template_vars['companySubtitle'] = template_vars.get('companySubtitle') or firm_profile.get('tagline', '')
-                template_vars['emailAddress'] = template_vars.get('emailAddress') or firm_profile.get('work_email', '')
-                template_vars['phoneNumber'] = template_vars.get('phoneNumber') or firm_profile.get('phone_number', '')
-                template_vars['website'] = template_vars.get('website') or firm_profile.get('firm_website', '')
-                template_vars['documentSubtitle'] = template_vars.get('documentSubtitle') or firm_profile.get('tagline', '')
-
-                # Professional title fallback using user answers
-                if not template_vars.get('mainTitle'):
-                    topic = (user_answers or {}).get('main_topic') or (ai_content.get('cover', {}) or {}).get('title') or 'Architectural Design'
-                    lm_type = (user_answers or {}).get('lead_magnet_type') or 'Guide'
-                    # Title case
-                    def title_case(s):
-                        return ' '.join([w.capitalize() for w in str(s).split()])
-                    template_vars['mainTitle'] = f"The {title_case(str(topic))} {title_case(str(lm_type))}"
-
-                # Ensure subtitle ends cleanly with punctuation
-                if template_vars.get('documentSubtitle'):
-                    sub = str(template_vars['documentSubtitle']).strip()
-                    if not sub.endswith(('.', '!', '?')):
-                        # Normalize awkward trailing separators
-                        sub = sub.rstrip(';,:-–—')
-                        template_vars['documentSubtitle'] = sub + '.'
-
-                # If mainTitle is missing but we have a flattened title, use it
-                if 'mainTitle' not in template_vars or not template_vars['mainTitle']:
-                    for i in range(1, 10):
-                        if f'customTitle{i}' in template_vars and template_vars[f'customTitle{i}']:
-                            template_vars['mainTitle'] = template_vars[f'customTitle{i}'].upper()
-                            print(f"✅ Set mainTitle from customTitle{i}: {template_vars['mainTitle']}")
-                            break
+                # Strict mode: no auto-population of missing firm fields or title
+                # Leave values as provided by AI mapping; fail validation below if required keys are missing
 
                 non_empty = {k: v for k, v in template_vars.items() if str(v).strip()}
                 missing_keys = [k for k, v in template_vars.items() if not str(v).strip()]
@@ -529,94 +499,15 @@ class GeneratePDFView(APIView):
                 print(f"🔍 Content validation - Required keys: {required_keys}")
                 print(f"🔍 Content validation - Missing keys: {missing_required}")
 
-                # Flag to track if we've successfully recovered content
-                content_recovered = False
-
-                if missing_required:
-                    print(f"⚠️ Missing required content for PDF generation: {missing_required}")
-                    print(f"🔄 Attempting content recovery from AI response...")
-                    print("="*50)
-                    print("📋 CONTENT RECOVERY PROCESS STARTED")
-                    print("="*50)
-
-                    # Attempt to recover missing content from AI content if possible
-                    if 'mainTitle' in missing_required and ai_content:
-                        # Try multiple paths to find a title in the AI content
-                        print(f"🔍 Searching for mainTitle in AI content structure...")
-                        if 'cover' in ai_content and 'title' in ai_content['cover']:
-                            template_vars['mainTitle'] = ai_content['cover']['title']
-                            content_recovered = True
-                            print(f"✅ Recovered mainTitle from AI content cover: {template_vars['mainTitle']}")
-                        elif 'title' in ai_content:
-                            template_vars['mainTitle'] = ai_content['title']
-                            content_recovered = True
-                            print(f"✅ Recovered mainTitle from AI content root: {template_vars['mainTitle']}")
-                        # If still missing after checks, leave as missing to fail fast
-
-                    if 'companyName' in missing_required:
-                        # Try to get company name from firm profile
-                        if firm_profile and 'firm_name' in firm_profile and firm_profile['firm_name']:
-                            template_vars['companyName'] = firm_profile['firm_name']
-                            content_recovered = True
-                            print(f"✅ Recovered companyName from firm profile: {template_vars['companyName']}")
-                        # Do not create fallback company name; fail fast if absent
-
-                    # Re-check missing required keys after recovery attempts
-                    missing_required = [key for key in required_keys if key not in template_vars or not template_vars[key]]
-
-                    if content_recovered:
-                        print("✅ Successfully recovered missing content")
-                    else:
-                        print("⚠️ Failed to recover missing content")
-
-                    print("="*50)
-                    print("📋 CONTENT RECOVERY PROCESS COMPLETED")
-                    print("="*50)
-
-                    # Additional recovery paths for mainTitle
-                    if 'mainTitle' in missing_required and ai_content:
-                        if 'style' in ai_content and 'title' in ai_content['style']:
-                            template_vars['mainTitle'] = ai_content['style']['title']
-                            content_recovered = True
-                            print(f"✅ Recovered mainTitle from AI style: {template_vars['mainTitle']}")
-                        else:
-                            print(f"❌ Could not find mainTitle in AI content structure")
+                # Strict mode: no content recovery
 
                     # Sections are optional for this template because we map into
                     # flattened placeholders (customTitle1, customContent1, etc.)
                     # We'll still validate if present below.
 
-                # Verify sections content is properly structured and fix if needed
+                # Strict mode: do not mutate sections; validate only
                 if 'sections' in template_vars and isinstance(template_vars['sections'], list):
-                    print(f"🔍 Validating structure of {len(template_vars['sections'])} sections")
-                    sections_fixed = False
-                    section_issues = 0
-
-                    for i, section in enumerate(template_vars['sections']):
-                        if not isinstance(section, dict) or 'title' not in section or 'content' not in section:
-                            print(f"⚠️ Section {i} is malformed, fixing structure")
-                            sections_fixed = True
-                            section_issues += 1
-
-                            # Convert non-dict sections to dict if needed
-                            if not isinstance(section, dict):
-                                template_vars['sections'][i] = {
-                                    'title': f"Section {i+1}",
-                                    'content': str(section)
-                                }
-                                continue
-
-                            # Ensure required fields exist
-                            if 'title' not in section:
-                                section['title'] = f"Section {i+1}"
-                            if 'content' not in section:
-                                section['content'] = "Content unavailable"
-
-                    if sections_fixed:
-                        content_recovered = True
-                        print(f"✅ Fixed {section_issues} malformed sections structure")
-                    else:
-                        print(f"✅ All sections have valid structure")
+                    print(f"🔍 Validating structure of {len(template_vars['sections'])} sections (strict mode)")
 
                 # Final validation before PDF generation
                 critical_missing = [key for key in required_keys if key not in template_vars or not template_vars[key]]
@@ -655,17 +546,16 @@ class GeneratePDFView(APIView):
                         }
                 print(f"🛠️ Service result: keys={list(result.keys())}")
             else:
-                # Manual path: Use firm profile and provided images
+                # Manual path: strict mode — do not inject defaults
                 template_vars = {
-                    'primaryColor': firm_profile.get('primary_brand_color', '#8B4513'),
-                    'secondaryColor': firm_profile.get('secondary_brand_color', '#D2691E'),
-                    'accentColor': firm_profile.get('accent_brand_color', '#F4A460'),
-                    'companyName': (firm_profile.get('firm_name') or 'Your Company'),
-                    'mainTitle': 'Architectural Portfolio',
-                    'documentSubtitle': firm_profile.get('tagline', 'Modern Design Solutions'),
+                    'primaryColor': firm_profile.get('primary_brand_color') or '',
+                    'secondaryColor': firm_profile.get('secondary_brand_color') or '',
+                    'accentColor': firm_profile.get('accent_brand_color') or '',
+                    'companyName': firm_profile.get('firm_name') or '',
+                    'mainTitle': '',
+                    'documentSubtitle': firm_profile.get('tagline') or '',
                 }
 
-                # Add architectural images if provided
                 if architectural_images:
                     template_vars['architecturalImages'] = []
                     for i, img_data in enumerate(architectural_images[:3]):
