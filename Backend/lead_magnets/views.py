@@ -147,17 +147,18 @@ class CreateLeadMagnetView(APIView):
                     special_requests=generation_data.get('special_requests', '')
                 )
 
-                # Store template selection; include AI content if available
-                TemplateSelection.objects.create(
-                    user=user,
-                    lead_magnet=lead_magnet,
-                    template_id="professional-guide",
-                    template_name="Professional Guide Template",
-                    captured_answers=generation_data,
-                    ai_generated_content=ai_content if ai_content is not None else {},
-                    source='create-lead-magnet',
-                    status='content-generated' if ai_content else 'content-pending'
-                )
+            # Store template selection; include AI content if available
+            TemplateSelection.objects.create(
+                user=user,
+                lead_magnet=lead_magnet,
+                template_id="professional-guide",
+                template_name="Professional Guide Template",
+                captured_answers=generation_data,
+                ai_generated_content=ai_content if ai_content is not None else {},
+                image_upload_preference='no',
+                source='create-lead-magnet',
+                status='content-generated' if ai_content else 'content-pending'
+            )
 
             serializer = LeadMagnetSerializer(lead_magnet)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -246,6 +247,7 @@ class SelectTemplateView(APIView):
                     'template_name': template_name,
                     'template_thumbnail': template_thumbnail,
                     'captured_answers': captured_answers,
+                    'image_upload_preference': request.data.get('image_upload_preference', 'no'),
                     'source': source,
                     'status': 'template-selected'
                 }
@@ -333,6 +335,7 @@ class GeneratePDFView(APIView):
                     lead_magnet=lead_magnet,
                     template_id=template_id,
                     template_name="Modern Guide Template",
+                    image_upload_preference=('no' if (not architectural_images or str(request.data.get('continue_without_images', '')).lower() in ('true','1','yes')) else 'yes'),
                     source='create-lead-magnet'
                 )
 

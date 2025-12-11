@@ -245,6 +245,8 @@ class TemplateSelection(models.Model):
     # User answers that will be used to populate the template
     # Can come from either Create Lead Magnet or Forma AI
     captured_answers = models.JSONField(default=dict)
+
+    image_upload_preference = models.CharField(max_length=3, default='no')
     
     # Source of the answers
     SOURCE_CHOICES = [
