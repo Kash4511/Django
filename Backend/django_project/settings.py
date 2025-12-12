@@ -161,7 +161,10 @@ SIMPLE_JWT = {
 # -----------------------------
 # CORS + CSRF
 # -----------------------------
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = False
+
+# Allow cross-origin requests only for API routes
+CORS_URLS_REGEX = r"^/api/.*$"
 
 CORS_ALLOWED_ORIGINS = [
     "https://django-six-gamma.vercel.app",
@@ -171,8 +174,8 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://django-msvx.onrender.com",      # backend
-    "https://django-six-gamma.vercel.app",   # frontend
+    "https://django-six-gamma.vercel.app",
+    "https://django-msvx.onrender.com",
 ]
 
 CORS_ALLOW_HEADERS = [

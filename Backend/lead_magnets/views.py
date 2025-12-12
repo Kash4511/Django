@@ -86,29 +86,9 @@ class CreateLeadMagnetView(APIView):
     def post(self, request):
         try:
             data = request.data
-            user = request.user if getattr(request.user, 'is_authenticated', False) else None
-            if not user:
-                from django.contrib.auth import get_user_model
-                UserModel = get_user_model()
-                owner_email = data.get('owner_email')
-                if owner_email:
-                    user = UserModel.objects.filter(email=owner_email).first()
-                if not user:
-                    return Response({'error': 'Owner not provided or invalid'}, status=status.HTTP_400_BAD_REQUEST)
-
-            # Create the lead magnet
-            lead_magnet = LeadMagnet.objects.create(
-                title=data.get('title'),
-                description=data.get('description', ''),
-                owner=user,
                 status='draft'
             )
 
-            # Generate AI content if generation_data is provided
-            generation_data = data.get('generation_data', {})
-            if generation_data:
-                # Get user's firm profile
-                firm_profile = {}
                 try:
                     firm_profile_obj = user.firm_profile
                     firm_profile = {
@@ -212,15 +192,7 @@ class ListTemplatesView(APIView):
 
         except Exception as e:
             return Response({
-                'success': False,
-                'error': 'Failed to fetch templates',
-                'details': str(e)
-            }, status=status.HTTP_502_BAD_GATEWAY)
-
-class SelectTemplateView(APIView):
-    """Handle template selection for a lead magnet"""
-    permission_classes = [permissions.IsAuthenticated]
-    
+            return Response(response_payload, status=status.HTTP_201_CREATED)
     @transaction.atomic
     def post(self, request):
         lead_magnet_id = request.data.get('lead_magnet_id')
@@ -284,32 +256,12 @@ class GenerateSloganView(APIView):
         firm_profile = {}
         try:
             fp = FirmProfile.objects.get(user=request.user)
-            firm_profile = {
-                'firm_name': fp.firm_name,
-                'work_email': fp.work_email,
-                'phone_number': fp.phone_number,
-                'firm_website': fp.firm_website,
-                'primary_brand_color': fp.primary_brand_color,
-                'secondary_brand_color': fp.secondary_brand_color,
-                'logo_url': fp.logo.url if fp.logo else '',
-                'industry': 'Architecture'
-            }
+        
+        if not all([lead_magnet_id, template_id, template_name]):
         except FirmProfile.DoesNotExist:
-            pass
-
-        ai_client = PerplexityClient()
-        slogan = ai_client.generate_slogan(user_answers, firm_profile)
-
-        if slogan:
-            return Response({'slogan': slogan}, status=status.HTTP_200_OK)
-        else:
-            return Response({'error': 'Failed to generate slogan'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-class GeneratePDFView(APIView):
-    """Generate PDF with selected template using AI or manual content"""
-    permission_classes = [permissions.IsAuthenticated]
+                'error': 'lead_magnet_id, template_id, and template_name are required'
     
-    def post(self, request):
+        
         print("🚀 PDF Generation Started...")
         print(f"📦 Request data: {request.data}")
 
@@ -329,7 +281,7 @@ class GeneratePDFView(APIView):
         if not template_id:
             return Response({'error': 'template_id is required'}, status=status.HTTP_400_BAD_REQUEST)
         if not lead_magnet_id:
-            return Response({'error': 'lead_magnet_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+                    'captured_answers': captured_answers,
 
         try:
             # Get lead magnet and template selection
@@ -810,12 +762,6 @@ class FormaAIConversationView(APIView):
             'brand_primary_color': firm_profile.get('primary_brand_color', ''),
             'brand_secondary_color': firm_profile.get('secondary_brand_color', ''),
             'brand_logo_url': firm_profile.get('logo_url', ''),
-        }
-
-        ai_client = PerplexityClient()
-        template_service = DocRaptorService()
-
-        try:
             ai_content = ai_client.generate_lead_magnet_json(user_answers=user_answers, firm_profile=firm_profile)
             ai_client.debug_ai_content(ai_content)
         except Exception as e:
