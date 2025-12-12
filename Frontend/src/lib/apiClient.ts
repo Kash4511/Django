@@ -78,3 +78,27 @@ apiClient.interceptors.response.use(
 );
 
 export { apiClient };
+
+export async function requestWithRetry<T = any>(
+  config: import('axios').AxiosRequestConfig,
+  retries = 3,
+  baseDelayMs = 500
+): Promise<T> {
+  let attempt = 0;
+  while (true) {
+    try {
+      const response = await apiClient.request<T>(config);
+      return response.data as T;
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const isNetworkError = !err?.response && (err?.code === 'ECONNABORTED' || err?.message?.includes('Network Error'));
+      const isRetryable = isNetworkError || (status && status >= 500 && status < 600);
+      if (attempt >= retries || !isRetryable) {
+        throw err;
+      }
+      const delay = baseDelayMs * Math.pow(2, attempt);
+      await new Promise((res) => setTimeout(res, delay));
+      attempt += 1;
+    }
+  }
+}

@@ -81,7 +81,7 @@ class FirmProfileView(generics.RetrieveUpdateAPIView):
         return profile
 
 class CreateLeadMagnetView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         try:

@@ -1,5 +1,5 @@
 import type { AxiosError } from 'axios';
-import { apiClient } from './apiClient';
+import { apiClient, requestWithRetry } from './apiClient';
 
 // Define the base URL for API requests
 const API_BASE_URL = '/api';
@@ -192,10 +192,17 @@ export const dashboardApi = {
       if (!data.title || !data.generation_data) {
         throw new Error('Title and generation_data are required');
       }
-      const response = await apiClient.post(`${API_BASE_URL}/create-lead-magnet/`, data);
-      
-      console.log('✅ Lead magnet created successfully:', response.data);
-      return response.data;
+      const resData = await requestWithRetry<{ id: number; title: string; status: string }>(
+        {
+          url: `${API_BASE_URL}/create-lead-magnet/`,
+          method: 'POST',
+          data,
+        },
+        3,
+        400
+      );
+      console.log('✅ Lead magnet created successfully:', resData);
+      return resData as unknown as LeadMagnet;
     } catch (error) {
       handleApiError(error, 'Creating lead magnet');
       throw error;
@@ -228,10 +235,17 @@ export const dashboardApi = {
 
       console.log('📤 Sending validated data:', JSON.stringify(validatedData, null, 2));
 
-      const response = await apiClient.post(`${API_BASE_URL}/create-lead-magnet/`, validatedData);
-      
-      console.log('✅ Lead magnet created successfully:', response.data);
-      return response.data;
+      const resData = await requestWithRetry<{ id: number; title: string; status: string }>(
+        {
+          url: `${API_BASE_URL}/create-lead-magnet/`,
+          method: 'POST',
+          data: validatedData,
+        },
+        3,
+        400
+      );
+      console.log('✅ Lead magnet created successfully:', resData);
+      return resData as unknown as LeadMagnet;
     } catch (error) {
       handleApiError(error, 'Creating lead magnet with validated data');
       throw error;
@@ -248,10 +262,17 @@ export const dashboardApi = {
     try {
       console.log('🚀 Creating lead magnet with data:', JSON.stringify(data, null, 2));
       
-      const response = await apiClient.post(`${API_BASE_URL}/create-lead-magnet/`, data);
-      
-      console.log('✅ Lead magnet created successfully:', response.data);
-      return response.data;
+      const resData = await requestWithRetry<{ id: number; title: string; status: string }>(
+        {
+          url: `${API_BASE_URL}/create-lead-magnet/`,
+          method: 'POST',
+          data,
+        },
+        3,
+        400
+      );
+      console.log('✅ Lead magnet created successfully:', resData);
+      return resData as unknown as LeadMagnet;
     } catch (error) {
       handleApiError(error, 'Creating lead magnet with data');
       throw error;
