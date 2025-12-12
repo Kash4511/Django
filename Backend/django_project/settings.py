@@ -159,12 +159,10 @@ SIMPLE_JWT = {
 }
 
 # -----------------------------
-# CORS + CSRF
+# CORS + CSRF (FIXED)
 # -----------------------------
-CORS_ALLOW_CREDENTIALS = False
-
-# Allow cross-origin requests only for API routes
-CORS_URLS_REGEX = r"^/api/.*$"
+CORS_ALLOW_ALL_ORIGINS = True  # TEMPORARY for debugging
+CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     "https://django-six-gamma.vercel.app",
@@ -198,8 +196,3 @@ CORS_ALLOW_METHODS = [
     "POST",
     "PUT",
 ]
-
-# -----------------------------
-# Auto Field
-# -----------------------------
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
