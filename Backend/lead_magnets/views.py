@@ -20,6 +20,16 @@ from .perplexity_client import PerplexityClient
 from .services import render_template
 from .models import Template
 
+class HealthCheckView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        try:
+            return Response({'status': 'ok'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            import traceback
+            return Response({'error': 'health check failed', 'details': str(e), 'trace': traceback.format_exc()}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class DashboardStatsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
