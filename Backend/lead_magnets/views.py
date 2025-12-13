@@ -6,6 +6,7 @@ from django.db.models import Count, Q
 from django.db import transaction
 from django.conf import settings
 from django.http import HttpResponse
+import requests
 from .models import (
     LeadMagnet, Lead, Download, FirmProfile, LeadMagnetGeneration,
     FormaAIConversation, TemplateSelection
@@ -141,6 +142,10 @@ class GeneratePDFView(APIView):
                         template_selection.ai_generated_content = ai_content
                         template_selection.captured_answers = answers_for_ai
                         template_selection.save(update_fields=['ai_generated_content', 'captured_answers'])
+                except requests.exceptions.Timeout as e:
+                    return Response({'error': 'AI content generation timed out', 'details': str(e)}, status=status.HTTP_504_GATEWAY_TIMEOUT)
+                except requests.exceptions.RequestException as e:
+                    return Response({'error': 'AI content generation failed', 'details': str(e)}, status=status.HTTP_502_BAD_GATEWAY)
                 except Exception as e:
                     import traceback
                     trace = traceback.format_exc() if settings.DEBUG else None
@@ -185,6 +190,10 @@ class GeneratePDFView(APIView):
                 result = template_service.generate_pdf_with_ai_content(template_id, template_vars)
             except MemoryError:
                 return Response({'error': 'PDF generation failed', 'details': 'Memory limit exceeded', 'type': 'MemoryError'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            except requests.exceptions.Timeout as e:
+                return Response({'error': 'PDF generation timed out', 'details': str(e)}, status=status.HTTP_504_GATEWAY_TIMEOUT)
+            except requests.exceptions.RequestException as e:
+                return Response({'error': 'PDF generation failed', 'details': str(e)}, status=status.HTTP_502_BAD_GATEWAY)
             except Exception as e:
                 import traceback
                 trace = traceback.format_exc() if settings.DEBUG else None
@@ -227,6 +236,9 @@ class GeneratePDFView(APIView):
                 payload['trace'] = trace
             return Response(payload, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def options(self, request, *args, **kwargs):
+        return Response({'status': 'ok'}, status=status.HTTP_200_OK)
+
 class CreateLeadMagnetView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -246,6 +258,9 @@ class CreateLeadMagnetView(APIView):
             if trace:
                 payload['trace'] = trace
             return Response(payload, status=status.HTTP_400_BAD_REQUEST)
+
+    def options(self, request, *args, **kwargs):
+        return Response({'status': 'ok'}, status=status.HTTP_200_OK)
 
 class ListTemplatesView(APIView):
     """Get all available PDF templates from DocRaptor service"""

@@ -127,7 +127,7 @@ class DocRaptorService:
                 self.base_url,
                 json=doc_data,
                 headers={'Content-Type': 'application/json'},
-                timeout=30
+                timeout=20
             )
             if response.status_code == 200:
                 print("✅ DEBUG: DocRaptor API success")
@@ -145,6 +145,20 @@ class DocRaptorService:
                     'error': f'DocRaptor API error: {response.status_code}',
                     'details': response.text
                 }
+        except requests.exceptions.Timeout as e:
+            print(f"❌ DEBUG: DocRaptor request timeout: {e}")
+            return {
+                'success': False,
+                'error': 'DocRaptor request timeout',
+                'details': str(e)
+            }
+        except requests.exceptions.RequestException as e:
+            print(f"❌ DEBUG: DocRaptor request error: {e}")
+            return {
+                'success': False,
+                'error': 'DocRaptor request failed',
+                'details': str(e)
+            }
         except Exception as e:
             print(f"❌ DEBUG: DocRaptor request failed: {e}")
             return {

@@ -65,17 +65,20 @@ class PerplexityClient:
                         "max_tokens": 4000,
                         "temperature": 0.7
                     },
-                    timeout=60
+                    timeout=20
                 )
                 break
             except requests.exceptions.Timeout:
                 retry_count += 1
                 if retry_count > max_retries:
                     print("❌ Perplexity API timeout after multiple attempts")
-                    raise Exception("Perplexity API timeout after multiple attempts (60s each)")
+                    raise Exception("Perplexity API timeout after multiple attempts (20s each)")
                 else:
                     print(f"⚠️ API timeout on attempt {retry_count}, retrying...")
                     continue
+            except requests.exceptions.RequestException as e:
+                print(f"❌ Perplexity API request error: {e}")
+                raise Exception(f"Perplexity API request error: {e}")
             except Exception as e:
                 print(f"❌ Error calling Perplexity API: {str(e)}")
                 raise
@@ -853,10 +856,14 @@ class PerplexityClient:
                     "messages": [{"role": "user", "content": prompt}],
                     "max_tokens": 30,
                 },
+                timeout=15
             )
             response.raise_for_status()
             slogan = response.json()['choices'][0]['message']['content'].strip()
             return slogan
+        except requests.exceptions.Timeout as e:
+            print(f"❌ Error calling Perplexity API for slogan: {e}")
+            return ""
         except requests.exceptions.RequestException as e:
             print(f"❌ Error calling Perplexity API for slogan: {e}")
             return ""
