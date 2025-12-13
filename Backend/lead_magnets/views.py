@@ -91,11 +91,19 @@ class FirmProfileView(generics.RetrieveUpdateAPIView):
         return profile
 
 class CreateLeadMagnetView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         try:
             data = request.data
+            if not request.user.is_authenticated:
+                return Response(
+                    {
+                        'error': 'Authentication credentials were not provided.',
+                        'details': {'detail': 'Authentication credentials were not provided.'}
+                    },
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
             user = request.user
             title = data.get("title") or "Untitled"
             lead_magnet = LeadMagnet.objects.create(
