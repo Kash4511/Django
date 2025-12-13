@@ -2,7 +2,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('health/', views.HealthCheckView.as_view(), name='health'),
     path('dashboard/stats/', views.DashboardStatsView.as_view(), name='dashboard-stats'),
     path('lead-magnets/', views.LeadMagnetListCreateView.as_view(), name='lead-magnet-list-create'),
     path('lead-magnets/<int:pk>/', views.LeadMagnetDetailView.as_view(), name='lead-magnet-detail'),
@@ -14,6 +13,7 @@ urlpatterns = [
     path('select-template/', views.SelectTemplateView.as_view(), name='select-template'),
     path('generate-slogan/', views.GenerateSloganView.as_view(), name='generate-slogan'),
     path('generate-pdf/', views.GeneratePDFView.as_view(), name='generate-pdf'),
+    path('health/', views.HealthView.as_view(), name='health'),
     path('brand-assets/preview-pdf/', views.BrandAssetsPDFPreviewView.as_view(), name='brand-assets-preview-pdf'),
     path('preview-template/', views.PreviewTemplateView.as_view(), name='preview-template'),
     path('generate-document-preview/', views.GenerateDocumentPreviewView.as_view(), name='generate-document-preview'),
