@@ -149,6 +149,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'EXCEPTION_HANDLER': 'django_project.exceptions.custom_exception_handler',
 }
 
 SIMPLE_JWT = {
@@ -159,10 +160,10 @@ SIMPLE_JWT = {
 }
 
 # -----------------------------
-# CORS + CSRF (FIXED)
+# CORS + CSRF
 # -----------------------------
-CORS_ALLOW_ALL_ORIGINS = True  # TEMPORARY for debugging
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = False
+CORS_URLS_REGEX = r"^/api/.*$"
 
 CORS_ALLOWED_ORIGINS = [
     "https://django-six-gamma.vercel.app",

@@ -150,7 +150,10 @@ class CreateLeadMagnetView(APIView):
             serializer = LeadMagnetSerializer(lead_magnet)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            import traceback
+            print(f"❌ CreateLeadMagnetView error: {e}")
+            print(traceback.format_exc())
+            return Response({"error": "Lead magnet creation failed", "details": str(e), "trace": traceback.format_exc()}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class ListTemplatesView(APIView):
     """Get all available PDF templates from DocRaptor service"""
