@@ -98,6 +98,9 @@ class GeneratePDFView(APIView):
                 return Response({'error': 'lead_magnet_id is required', 'details': 'Missing lead_magnet_id'}, status=status.HTTP_400_BAD_REQUEST)
 
             lead_magnet = LeadMagnet.objects.get(id=lead_magnet_id, owner=request.user)
+            # Prevent overlapping generation requests that can cause timeouts/crashes
+            if str(lead_magnet.status) == 'in-progress':
+                return Response({'error': 'Generation already in progress', 'details': 'Please wait or retry after completion'}, status=status.HTTP_409_CONFLICT)
             template_selection = TemplateSelection.objects.filter(lead_magnet=lead_magnet).first()
 
             try:
