@@ -124,6 +124,12 @@ class GeneratePDFView(APIView):
                     'industry': 'Architecture',
                 }
 
+            # Validate required fields before any AI/PDF usage
+            required_firm_fields = ['firm_name']
+            missing_firm = [k for k in required_firm_fields if not str(firm_profile.get(k, '')).strip()]
+            if missing_firm:
+                return Response({'error': 'Missing required fields', 'fields': missing_firm}, status=status.HTTP_400_BAD_REQUEST)
+
             ai_client = PerplexityClient()
             template_service = DocRaptorService()
 
@@ -138,6 +144,9 @@ class GeneratePDFView(APIView):
                     ai_content = ai_client.generate_lead_magnet_json(user_answers=answers_for_ai, firm_profile=firm_profile)
                     ai_client.debug_ai_content(ai_content)
                     template_vars = ai_client.map_to_template_vars(ai_content, firm_profile)
+                    # Enforce companyName present after mapping
+                    if not str(template_vars.get('companyName', '')).strip():
+                        template_vars['companyName'] = firm_profile.get('firm_name') or ''
                     if template_selection:
                         template_selection.ai_generated_content = ai_content
                         template_selection.captured_answers = answers_for_ai

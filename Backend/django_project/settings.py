@@ -172,6 +172,9 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_URLS_REGEX = r'^/api/.*$'
 
+# Temporary safety net to guarantee CORS headers during stabilization
+CORS_ALLOW_ALL_ORIGINS = True
+
 CORS_ALLOW_HEADERS = [
     "accept",
     "accept-encoding",
