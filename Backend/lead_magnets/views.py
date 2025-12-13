@@ -242,28 +242,32 @@ class GeneratePDFView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        return Response({'success': True}, status=status.HTTP_200_OK)
-
         try:
-            # Get lead magnet and template selection
+            template_id = request.data.get('template_id')
+            lead_magnet_id = request.data.get('lead_magnet_id')
+            user_answers = request.data.get('user_answers') or {}
+            architectural_images = request.data.get('architectural_images') or []
+
+            if not template_id:
+                return Response({'error': 'template_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+            if not lead_magnet_id:
+                return Response({'error': 'lead_magnet_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
             lead_magnet = LeadMagnet.objects.get(id=lead_magnet_id, owner=request.user)
             template_selection = TemplateSelection.objects.filter(lead_magnet=lead_magnet).first()
-
-            # If no template selection exists, create one with the specified template_id
             if not template_selection:
                 template_selection = TemplateSelection.objects.create(
                     user=request.user,
                     lead_magnet=lead_magnet,
                     template_id=template_id,
                     template_name="Modern Guide Template",
-                    image_upload_preference=('no' if (not architectural_images or str(request.data.get('continue_without_images', '')).lower() in ('true','1','yes')) else 'yes'),
+                    image_upload_preference=('no' if not architectural_images else 'yes'),
                     source='create-lead-magnet'
                 )
 
             template_service = DocRaptorService()
             ai_client = PerplexityClient()
 
-            # Build firm profile dict
             firm_profile = {}
             try:
                 fp = FirmProfile.objects.get(user=request.user)
@@ -286,6 +290,58 @@ class GeneratePDFView(APIView):
                     'logo_url': '',
                     'industry': 'Architecture'
                 }
+
+            # Choose answers: prefer provided user_answers, fallback to captured answers
+            answers_source = user_answers if isinstance(user_answers, dict) and user_answers else (template_selection.captured_answers or {})
+            try:
+                ai_content = ai_client.generate_lead_magnet_json(
+                    user_answers=answers_source,
+                    firm_profile=firm_profile
+                )
+            except Exception as e:
+                import traceback
+                return Response({
+                    'error': 'AI content generation failed',
+                    'details': str(e),
+                    'trace': traceback.format_exc()
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            template_vars = ai_client.map_to_template_vars(ai_content, firm_profile)
+
+            # Attach images if provided (data URLs)
+            if architectural_images:
+                template_vars['architecturalImages'] = [
+                    {'src': img, 'alt': f'Architectural Image {i+1}'}
+                    for i, img in enumerate(architectural_images[:3])
+                ]
+
+            result = template_service.generate_pdf_with_ai_content(template_id, template_vars)
+            if result.get('success'):
+                pdf_data = result.get('pdf_data', b'')
+                response = HttpResponse(pdf_data, content_type=result.get('content_type', 'application/pdf'))
+                filename = result.get('filename', f'lead-magnet-{template_id}.pdf')
+                response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                return response
+            else:
+                return Response({
+                    'error': result.get('error', 'PDF generation failed'),
+                    'details': result.get('details', ''),
+                    'context': {
+                        'template_id': template_id,
+                        'lead_magnet_id': lead_magnet_id,
+                        'has_user_answers': bool(answers_source),
+                        'vars_count': len(template_vars or {}),
+                    }
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except LeadMagnet.DoesNotExist:
+            return Response({'error': 'Lead magnet not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            import traceback
+            return Response({
+                'error': 'Unhandled PDF generation error',
+                'details': str(e),
+                'trace': traceback.format_exc()
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             # Merge firm details from user-provided answers so cover and contacts are never empty
             answers_source = {}
             if isinstance(user_answers, dict) and user_answers:
@@ -858,7 +914,7 @@ class GenerateDocumentPreviewView(APIView):
             import traceback
             print(f"❌ GenerateDocumentPreviewView error: {e}")
             print(traceback.format_exc())
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'error': 'Preview generation failed', 'details': str(e), 'trace': traceback.format_exc()}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class BrandAssetsPDFPreviewView(APIView):
     """Generate a PDF preview of saved brand assets (company info, colors, logo)."""
