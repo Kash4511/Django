@@ -1,4 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
+import { apiClient } from './lib/apiClient'
 import { AuthProvider } from './contexts/AuthContext'
 import { BrandProvider } from './contexts/BrandContext'
 import { BrandThemeProvider } from './contexts/BrandThemeProvider'
@@ -15,6 +17,10 @@ import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
 
 function App() {
+  useEffect(() => {
+    apiClient.options('/api/health/').catch(() => {});
+    apiClient.get('/api/health/').catch(() => {});
+  }, []);
   return (
     <div className="App">
       <AuthProvider>

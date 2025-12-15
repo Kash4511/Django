@@ -25,6 +25,7 @@ const CreateLeadMagnet: React.FC = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   // Removed Review & Confirm modal staging state
+  const [isGenerating, setIsGenerating] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -95,6 +96,7 @@ const CreateLeadMagnet: React.FC = () => {
 
   const handleTemplateSubmit = async (templateId: string, templateName: string, architecturalImages?: File[]) => {
     // Directly create the lead magnet and generate the PDF, no review modal
+    if (loading || isGenerating) return
     setLoading(true)
     setErrorMessage(null)
     setSuccessMessage(null)
@@ -135,22 +137,30 @@ const CreateLeadMagnet: React.FC = () => {
         const architecturalImageDataUrls = architecturalImages && architecturalImages.length > 0 
           ? await Promise.all(architecturalImages.slice(0,3).map(fileToDataUrl))
           : [];
-
+        setIsGenerating(true)
         const url = await dashboardApi.generatePDFWithAIUrl({
           template_id: templateId,
           lead_magnet_id: leadMagnet.id,
           user_answers: capturedAnswers as unknown as Record<string, unknown>,
           architectural_images: architecturalImageDataUrls
         })
-        setPreviewUrl(url)
-        setShowPreviewModal(true)
-        setSuccessMessage('PDF generated. Preview shown below.')
+        if (url) {
+          setPreviewUrl(url)
+          setShowPreviewModal(true)
+          setSuccessMessage('PDF generated. Preview shown below.')
+        } else {
+          setSuccessMessage('PDF generation is already in progress. Please wait.')
+        }
         if (architecturalImages && architecturalImages.length > 0) {
           console.log('Architectural images uploaded and sent to PDF:', architecturalImages.length)
         }
       } catch (pdfError) {
-        console.error('🔴 PDF generation failed:', pdfError)
-        setErrorMessage('PDF generation failed. You can retry from dashboard.')
+        const e = pdfError as { message?: string }
+        if (typeof e.message === 'string' && e.message.includes('409')) {
+          setSuccessMessage('PDF generation is already in progress. Please wait.')
+        } else {
+          setErrorMessage('PDF generation failed. You can retry from dashboard.')
+        }
       }
 
     } catch (err: unknown) {
@@ -160,6 +170,7 @@ const CreateLeadMagnet: React.FC = () => {
         : 'Failed to create lead magnet. Please review inputs and try again.'
       setErrorMessage(msg)
     } finally {
+      setIsGenerating(false)
       setLoading(false)
     }
   }
@@ -253,7 +264,7 @@ const CreateLeadMagnet: React.FC = () => {
   <TemplateSelectionForm
     onSubmit={handleTemplateSubmit}
     onClose={handleBack}
-    loading={loading}
+    loading={loading || isGenerating}
   />
 )}
 

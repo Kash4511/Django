@@ -383,10 +383,10 @@ export const dashboardApi = {
         );
       }
     } catch (error) {
-      // Handle blob error responses (when axios converts error response to blob)
       const err = error as AxiosError;
-      
-      // If this is already our formatted error, re-throw it
+      if (err.response && err.response.status === 409) {
+        return '';
+      }
       if (error instanceof Error && error.message.includes('Generating PDF preview URL failed')) {
         throw error;
       }
@@ -454,7 +454,15 @@ export const dashboardApi = {
           );
         }
       } else {
-        // Not a blob error, use standard error handling
+        if (err.response) {
+          const status = err.response.status;
+          if (status >= 500) {
+            throw new Error('Server error, try again later');
+          }
+          const data = err.response.data as { error?: string; details?: string };
+          const msg = (data && (data.error || data.details)) || `${status} Error`;
+          throw new Error(msg);
+        }
         handleApiError(error, 'Generating PDF preview URL');
         throw error;
       }
