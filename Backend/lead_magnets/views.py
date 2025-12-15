@@ -6,6 +6,7 @@ from django.db.models import Count, Q
 from django.db import transaction
 from django.conf import settings
 from django.http import HttpResponse
+from django.core.files.base import ContentFile
 import requests
 from .models import (
     LeadMagnet, Lead, Download, FirmProfile, LeadMagnetGeneration,
@@ -222,6 +223,11 @@ class GeneratePDFView(APIView):
                     template_selection.status = 'pdf-generated'
                     template_selection.save(update_fields=['status'])
                 pdf_data = result.get('pdf_data', b'')
+                try:
+                    filename = result.get('filename', f'lead-magnet-{lead_magnet_id}.pdf')
+                    lead_magnet.pdf_file.save(filename, ContentFile(pdf_data), save=True)
+                except Exception:
+                    pass
                 response = HttpResponse(pdf_data, content_type=result.get('content_type', 'application/pdf'))
                 filename = result.get('filename', 'lead-magnet.pdf')
                 response['Content-Disposition'] = f'attachment; filename="{filename}"'
@@ -251,6 +257,27 @@ class GeneratePDFView(APIView):
 
     def options(self, request, *args, **kwargs):
         return Response({'status': 'ok'}, status=status.HTTP_200_OK)
+
+class GeneratePDFStatusView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        lead_magnet_id = request.query_params.get('lead_magnet_id')
+        if not lead_magnet_id:
+            return Response({'error': 'lead_magnet_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            lead_magnet = LeadMagnet.objects.get(id=lead_magnet_id, owner=request.user)
+        except LeadMagnet.DoesNotExist:
+            return Response({'error': 'Lead magnet not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if str(lead_magnet.status) == 'in-progress':
+            return Response({'status': 'in_progress'}, status=status.HTTP_200_OK)
+
+        if str(lead_magnet.status) == 'completed' and lead_magnet.pdf_file:
+            url = request.build_absolute_uri(lead_magnet.pdf_file.url)
+            return Response({'status': 'ready', 'pdf_url': url}, status=status.HTTP_200_OK)
+
+        return Response({'status': 'pending'}, status=status.HTTP_200_OK)
 
 class CreateLeadMagnetView(APIView):
     permission_classes = [permissions.IsAuthenticated]

@@ -138,29 +138,17 @@ const CreateLeadMagnet: React.FC = () => {
           ? await Promise.all(architecturalImages.slice(0,3).map(fileToDataUrl))
           : [];
         setIsGenerating(true)
-        const url = await dashboardApi.generatePDFWithAIUrl({
+        await dashboardApi.generatePDFWithAI({
           template_id: templateId,
           lead_magnet_id: leadMagnet.id,
+          use_ai_content: true,
           user_answers: capturedAnswers as unknown as Record<string, unknown>,
           architectural_images: architecturalImageDataUrls
         })
-        if (url) {
-          setPreviewUrl(url)
-          setShowPreviewModal(true)
-          setSuccessMessage('PDF generated. Preview shown below.')
-        } else {
-          setSuccessMessage('PDF generation is already in progress. Please wait.')
-        }
-        if (architecturalImages && architecturalImages.length > 0) {
-          console.log('Architectural images uploaded and sent to PDF:', architecturalImages.length)
-        }
+        setSuccessMessage('PDF generated and downloaded')
       } catch (pdfError) {
         const e = pdfError as { message?: string }
-        if (typeof e.message === 'string' && e.message.includes('409')) {
-          setSuccessMessage('PDF generation is already in progress. Please wait.')
-        } else {
-          setErrorMessage('PDF generation failed. You can retry from dashboard.')
-        }
+        setErrorMessage(typeof e.message === 'string' ? e.message : 'PDF generation failed')
       }
 
     } catch (err: unknown) {

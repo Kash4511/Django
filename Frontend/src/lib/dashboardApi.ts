@@ -3,6 +3,7 @@ import { apiClient } from './apiClient';
 
 // Define the base URL for API requests
 const API_BASE_URL = '/api';
+let pdfGenerationRunning = false;
 
 // Define types with valid choices
 export interface FirmProfile {
@@ -310,23 +311,17 @@ export const dashboardApi = {
     lead_magnet_id: number; 
     use_ai_content: boolean;
     user_answers?: Record<string, unknown>;
+    architectural_images?: string[];
   }): Promise<void> => {
+    if (pdfGenerationRunning) {
+      return;
+    }
+    pdfGenerationRunning = true;
     try {
-      console.log('[PDF] Calling /generate-pdf with params:', {
-        template_id: request.template_id,
-        lead_magnet_id: request.lead_magnet_id,
-        use_ai_content: request.use_ai_content,
-        has_user_answers: !!request.user_answers,
-      });
       const response = await apiClient.post(`${API_BASE_URL}/generate-pdf/`, request, {
         responseType: 'blob'
       });
-      
-      console.log('[PDF] Response status:', response.status);
       const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
-      console.log('[PDF] Received blob size:', pdfBlob.size);
-      
-      // Create download link for the PDF
       const url = window.URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
@@ -335,12 +330,52 @@ export const dashboardApi = {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      
       return;
     } catch (error) {
+      const err = error as AxiosError;
+      if (err.response && err.response.status === 409) {
+        const poll = async (): Promise<string> => {
+          const statusResp = await apiClient.get(`${API_BASE_URL}/generate-pdf/status/`, {
+            params: { lead_magnet_id: request.lead_magnet_id }
+          });
+          const data = statusResp.data as { status?: string; pdf_url?: string };
+          if (data && data.status === 'ready' && data.pdf_url) {
+            return data.pdf_url;
+          }
+          return '';
+        };
+        const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+        let attempts = 0;
+        const maxAttempts = 40;
+        const intervalMs = 2500;
+        while (attempts < maxAttempts) {
+          const pdfUrl = await poll();
+          if (pdfUrl) {
+            const link = document.createElement('a');
+            link.href = pdfUrl;
+            link.download = '';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            return;
+          }
+          attempts += 1;
+          await wait(intervalMs);
+        }
+        throw new Error('PDF generation did not complete in time');
+      }
       handleApiError(error, 'Generating PDF with AI');
       throw error;
+    } finally {
+      pdfGenerationRunning = false;
     }
+  },
+
+  getGeneratePDFStatus: async (lead_magnet_id: number): Promise<{ status: string; pdf_url?: string }> => {
+    const response = await apiClient.get(`${API_BASE_URL}/generate-pdf/status/`, {
+      params: { lead_magnet_id }
+    });
+    return response.data;
   },
 
   // Lead magnets - Generate PDF and return a preview URL (no auto-download)
