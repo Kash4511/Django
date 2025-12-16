@@ -92,14 +92,68 @@ TEMPLATES = [
 WSGI_APPLICATION = 'django_project.wsgi.application'
 
 # -----------------------------
-# Database (SQLite)
+# Database
 # -----------------------------
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Defaults to SQLite for local development. If Postgres env vars are present,
+# configures Postgres (compatible with Supabase).
+POSTGRES_DB = os.getenv("POSTGRES_DB")
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
+POSTGRES_SSLMODE = os.getenv("POSTGRES_SSLMODE", "require")
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if all([POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST]):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': POSTGRES_DB,
+            'USER': POSTGRES_USER,
+            'PASSWORD': POSTGRES_PASSWORD,
+            'HOST': POSTGRES_HOST,
+            'PORT': POSTGRES_PORT,
+            'CONN_MAX_AGE': 600,
+            'OPTIONS': {
+                'sslmode': POSTGRES_SSLMODE,
+            },
+        }
     }
-}
+elif DATABASE_URL and DATABASE_URL.startswith(('postgres://', 'postgresql://')):
+    # Minimal parser for DATABASE_URL if provided
+    # Example: postgresql://user:pass@host:5432/dbname?sslmode=require
+    try:
+        from urllib.parse import urlparse, parse_qs
+        parsed = urlparse(DATABASE_URL)
+        qs = parse_qs(parsed.query)
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': parsed.path.lstrip('/'),
+                'USER': parsed.username or '',
+                'PASSWORD': parsed.password or '',
+                'HOST': parsed.hostname or '',
+                'PORT': str(parsed.port or '5432'),
+                'CONN_MAX_AGE': 600,
+                'OPTIONS': {
+                    'sslmode': (qs.get('sslmode', ['require'])[0]),
+                },
+            }
+        }
+    except Exception:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # -----------------------------
 # Password Validation
