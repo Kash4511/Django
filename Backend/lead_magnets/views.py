@@ -1,4 +1,5 @@
 import os
+import logging
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -21,6 +22,8 @@ from .services import DocRaptorService
 from .perplexity_client import PerplexityClient
 from .services import render_template
 from .models import Template
+
+logger = logging.getLogger(__name__)
 
 class DashboardStatsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -87,6 +90,10 @@ class GeneratePDFView(APIView):
 
     def post(self, request):
         try:
+            logger.info('GeneratePDFView: request received', extra={
+                'user': str(getattr(request.user, 'id', 'anonymous')),
+                'path': str(getattr(request, 'path', ''))
+            })
             template_id = request.data.get('template_id')
             lead_magnet_id = request.data.get('lead_magnet_id')
             use_ai_content = bool(request.data.get('use_ai_content', True))
@@ -100,7 +107,19 @@ class GeneratePDFView(APIView):
 
             lead_magnet = LeadMagnet.objects.get(id=lead_magnet_id, owner=request.user)
             if str(lead_magnet.status) == 'in-progress':
-                return Response({'error': 'Generation already in progress', 'details': 'Please wait or retry after completion'}, status=status.HTTP_409_CONFLICT)
+                status_url = request.build_absolute_uri(f"/api/generate-pdf/status/?lead_magnet_id={lead_magnet_id}")
+                logger.info('GeneratePDFView: 409 conflict - already in progress', extra={
+                    'lead_magnet_id': lead_magnet_id,
+                    'user': str(getattr(request.user, 'id', 'anonymous'))
+                })
+                return Response({
+                    'status': 'in_progress',
+                    'error': 'Generation already in progress',
+                    'details': 'Please wait or retry after completion',
+                    'lead_magnet_id': lead_magnet_id,
+                    'status_url': status_url,
+                    'retry_after_seconds': 3
+                }, status=status.HTTP_409_CONFLICT)
             lead_magnet.status = 'in-progress'
             lead_magnet.save(update_fields=['status'])
             template_selection = TemplateSelection.objects.filter(lead_magnet=lead_magnet).first()
@@ -231,6 +250,10 @@ class GeneratePDFView(APIView):
                 response = HttpResponse(pdf_data, content_type=result.get('content_type', 'application/pdf'))
                 filename = result.get('filename', 'lead-magnet.pdf')
                 response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                logger.info('GeneratePDFView: generation completed', extra={
+                    'lead_magnet_id': lead_magnet_id,
+                    'user': str(getattr(request.user, 'id', 'anonymous'))
+                })
                 return response
             else:
                 error_message = result.get('error', 'Unknown error during PDF generation')
@@ -385,9 +408,8 @@ class SelectTemplateView(APIView):
                 }
             )
             
-            # Update lead magnet status to in-progress as soon as a template is selected
-            lead_magnet.status = 'in-progress'
-            lead_magnet.save(update_fields=['status'])
+            # Do not mark lead magnet as in-progress on template selection.
+            # Status will be set to in-progress when PDF generation starts.
             
             return Response({
                 'success': True,
