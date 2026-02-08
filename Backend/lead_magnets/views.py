@@ -127,8 +127,8 @@ class GeneratePDFView(APIView):
             try:
                 fp = FirmProfile.objects.get(user=request.user)
                 firm_profile = {
-                    'firm_name': fp.firm_name,
-                    'work_email': fp.work_email,
+                    'firm_name': fp.firm_name or request.user.email.split('@')[0],
+                    'work_email': fp.work_email or request.user.email,
                     'phone_number': fp.phone_number,
                     'firm_website': fp.firm_website,
                     'primary_brand_color': fp.primary_brand_color,
@@ -152,7 +152,13 @@ class GeneratePDFView(APIView):
             required_firm_fields = ['firm_name']
             missing_firm = [k for k in required_firm_fields if not str(firm_profile.get(k, '')).strip()]
             if missing_firm:
-                return Response({'error': 'Missing required fields', 'fields': missing_firm}, status=status.HTTP_400_BAD_REQUEST)
+                # Last resort fallback for firm_name
+                if 'firm_name' in missing_firm:
+                    firm_profile['firm_name'] = request.user.email.split('@')[0]
+                    missing_firm.remove('firm_name')
+                
+                if missing_firm:
+                     return Response({'error': f'Missing required fields: {", ".join(missing_firm)}', 'fields': missing_firm}, status=status.HTTP_400_BAD_REQUEST)
 
             ai_client = PerplexityClient()
             template_service = DocRaptorService()
@@ -163,8 +169,27 @@ class GeneratePDFView(APIView):
             if use_ai_content:
                 try:
                     answers_for_ai = user_answers or (template_selection.captured_answers if template_selection else {})
+                    
+                    # Fallback: Try to get answers from LeadMagnetGeneration
                     if not answers_for_ai:
-                        return Response({'error': 'AI content not available', 'details': 'user_answers or captured_answers required'}, status=status.HTTP_400_BAD_REQUEST)
+                        try:
+                            gen_data = lead_magnet.generation_data
+                            answers_for_ai = {
+                                'lead_magnet_type': gen_data.lead_magnet_type,
+                                'main_topic': gen_data.main_topic,
+                                'target_audience': gen_data.target_audience,
+                                'audience_pain_points': gen_data.audience_pain_points,
+                                'desired_outcome': gen_data.desired_outcome,
+                                'call_to_action': gen_data.call_to_action,
+                                'special_requests': gen_data.special_requests,
+                            }
+                        except Exception:
+                            # generation_data might not exist or other error
+                            pass
+
+                    if not answers_for_ai:
+                        return Response({'error': 'AI content not available', 'details': 'Could not find generation data. Please recreate the lead magnet.'}, status=status.HTTP_400_BAD_REQUEST)
+                    
                     ai_content = ai_client.generate_lead_magnet_json(user_answers=answers_for_ai, firm_profile=firm_profile)
                     ai_client.debug_ai_content(ai_content)
                     template_vars = ai_client.map_to_template_vars(ai_content, firm_profile)
@@ -215,7 +240,7 @@ class GeneratePDFView(APIView):
             if missing:
                 return Response({
                     'error': 'Missing critical content for PDF generation',
-                    'details': f"Required content missing: {missing}",
+                    'details': f"Required content missing: {', '.join(missing)}",
                     'missing_keys': missing
                 }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -258,16 +283,22 @@ class GeneratePDFView(APIView):
             else:
                 error_message = result.get('error', 'Unknown error during PDF generation')
                 details = result.get('details', '')
-                payload = {'error': 'PDF generation failed', 'details': details or error_message}
+                full_error = f"{error_message}: {details}" if details else error_message
+                payload = {'error': 'PDF generation failed', 'details': full_error}
+                
                 missing_keys = result.get('missing_keys')
                 if missing_keys:
                     payload['missing_keys'] = missing_keys
+                
                 lead_magnet.status = 'in-progress'
                 lead_magnet.save(update_fields=['status'])
                 if template_selection:
                     template_selection.status = 'template-selected'
                     template_selection.save(update_fields=['status'])
-                return Response(payload, status=(status.HTTP_400_BAD_REQUEST if missing_keys else status.HTTP_500_INTERNAL_SERVER_ERROR))
+                
+                # If it's an API key error or empty variables, we might want to return 500 or 400 depending on cause
+                # But to help the user debug, we ensure the details are clear
+                return Response(payload, status=(status.HTTP_400_BAD_REQUEST if missing_keys or 'Empty template variables' in error_message else status.HTTP_500_INTERNAL_SERVER_ERROR))
         except LeadMagnet.DoesNotExist:
             return Response({'error': 'Lead magnet not found', 'details': f"Lead magnet with ID {request.data.get('lead_magnet_id')} not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
