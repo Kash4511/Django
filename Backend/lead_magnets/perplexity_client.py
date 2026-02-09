@@ -672,9 +672,9 @@ class PerplexityClient:
             # Section titles used in headers - explicitly set for pages 2 and 3
             "sectionTitle1": "Terms of Use",
             "sectionTitle2": "Contents",
-            "sectionTitle3": truncate_title(clean_title(get_section(2).get("title", ""))),
-            "sectionTitle4": truncate_title(clean_title(get_section(3).get("title", ""))),
-            "sectionTitle5": truncate_title(clean_title(get_section(4).get("title", ""))),
+            "sectionTitle3": truncate_title(clean_title(get_section(0).get("title", ""))),
+            "sectionTitle4": truncate_title(clean_title(get_section(1).get("title", ""))),
+            "sectionTitle5": truncate_title(clean_title(get_section(2).get("title", ""))),
             "sectionTitle6": truncate_title(clean_title(get_section(3).get("title", ""))),
             "sectionTitle7": truncate_title(clean_title(get_section(4).get("title", ""))),
             "sectionTitle8": "REACH OUT TO OUR TEAM",
