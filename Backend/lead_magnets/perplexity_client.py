@@ -720,8 +720,8 @@ class PerplexityClient:
             "footerText": f"© {now_year} {company_name}. All rights reserved.",
 
             # Page 4 (Section 1) - with length limits
-            "customTitle1": truncate_title(refine_title_with_content(get_section(0).get("title", ""), get_section(0).get("content", ""))),
-            "customContent1": truncate_content(harmonize_section(get_section(0).get("title", "Section 1"), get_section(0).get("content", ""))),
+            "customTitle1": truncate_title(clean_title(get_section(0).get("title", ""))),
+            "customContent1": truncate_content(standardize_sustainable_terms(normalize_main_content(get_section(0).get("content", ""), get_section(0).get("title", "Section 1")))),
             "subheading1": truncate_title(get_sub(0, 0).get("title", "")),
             "subcontent1": truncate_subcontent(get_sub(0, 0).get("content", "")),
             "boxTitle1": truncate_title(get_sub(0, 1).get("title", "")),
@@ -730,36 +730,33 @@ class PerplexityClient:
             "accentBoxContent1": truncate_subcontent(get_sub(0, 0).get("content", "")),
 
             # Page 5 (Section 2) - with length limits and quote handling
-            "customTitle2": truncate_title(refine_title_with_content(get_section(1).get("title", ""), get_section(1).get("content", ""))),
-            "customContent2": truncate_content(harmonize_section(get_section(1).get("title", "Section 2"), get_section(1).get("content", ""))),
-            "columnBoxTitle1": truncate_title(get_sub(1, 0).get("title", "")),
-            "columnBoxContent1": truncate_subcontent(get_sub(1, 0).get("content", "")),
-            "columnBoxTitle2": truncate_title(get_sub(1, 1).get("title", "")),
-            "columnBoxContent2": truncate_subcontent(get_sub(1, 1).get("content", "")),
-            "subheading2": truncate_title(get_sub(1, 1).get("title", "")),
-            "subcontent2": truncate_subcontent(get_sub(1, 1).get("content", "")),
+            "customTitle2": truncate_title(clean_title(get_section(1).get("title", ""))),
+            "customContent2": truncate_content(standardize_sustainable_terms(normalize_main_content(get_section(1).get("content", ""), get_section(1).get("title", "Section 2")))),
+            "subheading2": truncate_title(get_sub(1, 0).get("title", "")),
+            "subcontent2": truncate_subcontent(get_sub(1, 0).get("content", "")),
+            "listItem1": finalize_line(truncate_text(get_or(split_sentences(get_section(1).get("content", "")), 0, ""), 90)),
+            "listItem2": finalize_line(truncate_text(get_or(split_sentences(get_section(1).get("content", "")), 1, ""), 90)),
+            "listItem3": finalize_line(truncate_text(get_or(split_sentences(get_section(1).get("content", "")), 2, ""), 90)),
+            "listItem4": finalize_line(truncate_text(get_or(split_sentences(get_section(1).get("content", "")), 3, ""), 90)),
             # Quote: fill only if we have content; otherwise leave empty for template to hide
             "quoteText1": truncate_subcontent(split_sentences(get_section(1).get("content", ""))[0] if split_sentences(get_section(1).get("content", "")) else ""),
             "quoteAuthor1": company_name or "",
 
             # Page 6 (Section 3) - with length limits
-            "customTitle3": truncate_title(refine_title_with_content(get_section(2).get("title", ""), get_section(2).get("content", ""))),
-            "customContent3": truncate_content(harmonize_section(get_section(2).get("title", "Section 3"), get_section(2).get("content", ""))),
+            "customTitle3": truncate_title(clean_title(get_section(2).get("title", ""))),
+            "customContent3": truncate_content(standardize_sustainable_terms(normalize_main_content(get_section(2).get("content", ""), get_section(2).get("title", "Section 3")))),
             "accentBoxTitle2": truncate_title(get_sub(2, 0).get("title", "")),
             "accentBoxContent2": truncate_subcontent(get_sub(2, 0).get("content", "")),
             "subheading3": truncate_title(get_sub(2, 1).get("title", "")),
-            "listItem1": finalize_line(truncate_text(get_or(split_sentences(get_section(2).get("content", "")), 0, ""), 90)),
-            "listItem2": finalize_line(truncate_text(get_or(split_sentences(get_section(2).get("content", "")), 1, ""), 90)),
-            "listItem3": finalize_line(truncate_text(get_or(split_sentences(get_section(2).get("content", "")), 2, ""), 90)),
-            "listItem4": finalize_line(truncate_text(get_or(split_sentences(get_section(2).get("content", "")), 3, ""), 90)),
+            "subcontent3": truncate_subcontent(get_sub(2, 1).get("content", "")),
             "boxTitle2": truncate_title(get_sub(2, 0).get("title", "")),
             "boxContent2": truncate_subcontent(get_sub(2, 0).get("content", "")),
 
             # Page 7 (Section 4) - with length limits
-            "customTitle4": truncate_title(refine_title_with_content(get_section(3).get("title", ""), get_section(3).get("content", ""))),
-            "customContent4": truncate_content(harmonize_section(get_section(3).get("title", "Section 4"), get_section(3).get("content", ""))),
-            "columnTitle1": truncate_title(get_sub(3, 0).get("title", "")),
-            "columnContent1": truncate_subcontent(get_sub(3, 0).get("content", "")),
+            "customTitle4": truncate_title(clean_title(get_section(3).get("title", ""))),
+            "customContent4": truncate_content(standardize_sustainable_terms(normalize_main_content(get_section(3).get("content", ""), get_section(3).get("title", "Section 4")))),
+            "columnBoxTitle1": truncate_title(get_sub(3, 0).get("title", "")),
+            "columnBoxContent1": truncate_subcontent(get_sub(3, 0).get("content", "")),
             "columnTitle2": truncate_title(get_sub(3, 1).get("title", "")),
             "columnContent2": truncate_subcontent(get_sub(3, 1).get("content", "")),
             "boxTitle3": truncate_title(get_section(3).get("title", "")),
@@ -768,8 +765,8 @@ class PerplexityClient:
             "subcontent4": truncate_subcontent(get_sub(3, 1).get("content", "")),
 
             # Page 8 (Section 5) - with length limits
-            "customTitle5": truncate_title(refine_title_with_content(get_section(4).get("title", ""), get_section(4).get("content", ""))),
-            "customContent5": truncate_content(harmonize_section(get_section(4).get("title", "Section 5"), get_section(4).get("content", ""))),
+            "customTitle5": truncate_title(clean_title(get_section(4).get("title", ""))),
+            "customContent5": truncate_content(standardize_sustainable_terms(normalize_main_content(get_section(4).get("content", ""), get_section(4).get("title", "Section 5")))),
             "accentBoxTitle3": truncate_title(get_sub(4, 0).get("title", "")),
             "accentBoxContent3": truncate_subcontent(get_sub(4, 0).get("content", "")),
             "subheading5": truncate_title(get_sub(4, 1).get("title", "")),
@@ -777,6 +774,8 @@ class PerplexityClient:
             "numberedItem2": finalize_line(truncate_text(get_or(split_sentences(get_section(4).get("content", "")), 1, ""), 90)),
             "numberedItem3": finalize_line(truncate_text(get_or(split_sentences(get_section(4).get("content", "")), 2, ""), 90)),
             "numberedItem4": finalize_line(truncate_text(get_or(split_sentences(get_section(4).get("content", "")), 3, ""), 90)),
+            "quoteText2": truncate_subcontent(split_sentences(get_section(4).get("content", ""))[0] if split_sentences(get_section(4).get("content", "")) else ""),
+            "quoteAuthor2": company_name or "",
 
             # Page 9 (Contact) - with length limits
             "contactTitle": "Contact Us",
