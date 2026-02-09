@@ -207,6 +207,15 @@ class GeneratePDFView(APIView):
                 except Exception as e:
                     import traceback
                     trace = traceback.format_exc() if settings.DEBUG else None
+                    # Fallback to non-AI generation if AI fails? For now, report error clearly
+                    # Check if it's a JSON error
+                    if 'JSON' in str(e) or 'parse' in str(e).lower():
+                        return Response({'error': 'AI content generation failed', 'details': 'AI response was not valid JSON. Please try again.'}, status=status.HTTP_502_BAD_GATEWAY)
+                    
+                    # Check for API Key error
+                    if 'API_KEY' in str(e):
+                         return Response({'error': 'Service Configuration Error', 'details': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
                     payload = {'error': 'AI content generation failed', 'details': str(e), 'type': type(e).__name__}
                     if trace:
                         payload['trace'] = trace
@@ -502,6 +511,7 @@ class PreviewTemplateView(APIView):
 
 class HealthView(APIView):
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []
 
     def get(self, request):
         return Response({'status': 'ok'}, status=status.HTTP_200_OK)
