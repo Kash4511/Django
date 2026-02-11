@@ -210,7 +210,12 @@ class GeneratePDFView(APIView):
                     # Fallback to non-AI generation if AI fails? For now, report error clearly
                     # Check if it's a JSON error
                     if 'JSON' in str(e) or 'parse' in str(e).lower():
-                        return Response({'error': 'AI content generation failed', 'details': 'AI response was not valid JSON. Please try again.'}, status=status.HTTP_502_BAD_GATEWAY)
+                        error_detail = str(e)
+                        return Response({
+                            'error': 'AI content generation failed', 
+                            'details': f'AI response was not valid JSON. Error: {error_detail}. Please try again.',
+                            'suggestion': 'This usually happens when the AI model returns malformed data. Retrying often fixes it.'
+                        }, status=status.HTTP_502_BAD_GATEWAY)
                     
                     # Check for API Key error
                     if 'API_KEY' in str(e):

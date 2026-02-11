@@ -55,7 +55,11 @@ class PerplexityClient:
                         "messages": [
                             {
                                 "role": "system",
-                                "content": "You are an expert content creator specializing in professional lead magnets. Generate comprehensive, valuable content in strict JSON format. Your response must be valid JSON only, no other text."
+                                "content": (
+                                    "You are an expert content creator specializing in professional lead magnets. "
+                                    "Your response must be STRICTLY valid JSON. Do not include any text, markdown code blocks, "
+                                    "or explanations before or after the JSON. The JSON must be parseable by Python's json.loads()."
+                                )
                             },
                             {
                                 "role": "user",
@@ -90,52 +94,67 @@ class PerplexityClient:
 
         result = response.json()
         message_content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
+        
+        # Log message content length and first few chars for debugging
+        print(f"DEBUG: AI response content length: {len(message_content)}")
+        if len(message_content) > 0:
+            print(f"DEBUG: AI response preview: {message_content[:100]}...")
+
         json_content = self._extract_json_from_markdown(message_content)
         try:
             content = json.loads(json_content)
             return content
         except json.JSONDecodeError as e:
             print(f"❌ Failed to parse JSON from Perplexity response: {e}")
+            # Log the full raw content for debugging in server logs
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"AI JSON Parse Error: {str(e)}")
+            logger.error(f"Raw message content: {message_content}")
+            logger.error(f"Extracted JSON content: {json_content}")
+            
+            # Print more details to console
             print(f"Raw content: {repr(message_content)}")
             print(f"Extracted JSON: {repr(json_content)}")
-            raise Exception("Invalid JSON returned from Perplexity API")
+            raise Exception(f"Invalid JSON returned from Perplexity API: {str(e)}")
 
     def _extract_json_from_markdown(self, content: str) -> str:
         """
-        Extract JSON from markdown code blocks.
-        Handles formats like:
-        ```json
-        { ... }
-        ```
-        or just plain JSON
+        Extract JSON from markdown code blocks or find the first/last braces.
         """
+        if not content:
+            return ""
+
         # Remove leading/trailing whitespace
         content = content.strip()
         
-        # Check if content is wrapped in markdown code blocks
+        # 1. Try regex for ```json { ... } ```
+        json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', content, re.DOTALL)
+        if json_match:
+            return json_match.group(1).strip()
+
+        # 2. Try finding the first '{' and last '}'
+        start_idx = content.find('{')
+        end_idx = content.rfind('}')
+        
+        if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+            return content[start_idx:end_idx + 1].strip()
+        
+        # 3. Fallback to original logic if no braces found (though likely to fail json.loads)
         if content.startswith('```'):
-            # Find the start and end of the code block
             lines = content.split('\n')
-            start_idx = 0
-            end_idx = len(lines)
-            
-            # Find the first line that starts with ```
+            start_line = 0
+            end_line = len(lines)
             for i, line in enumerate(lines):
                 if line.strip().startswith('```'):
-                    start_idx = i + 1
+                    start_line = i + 1
                     break
-            
-            # Find the last line that starts with ```
             for i in range(len(lines) - 1, -1, -1):
                 if lines[i].strip().startswith('```'):
-                    end_idx = i
+                    end_line = i
                     break
-            
-            # Extract content between code blocks
-            json_lines = lines[start_idx:end_idx]
-            return '\n'.join(json_lines)
+            return '\n'.join(lines[start_line:end_line]).strip()
         
-        # If not wrapped in code blocks, return as-is
         return content
 
     def debug_ai_content(self, ai_content: Dict[str, Any]):
@@ -329,6 +348,7 @@ class PerplexityClient:
             "- Contents.items must have 6 descriptive entries aligned to the sections.\n"
             "- NO extra text outside JSON, NO Markdown, NO comments.\n"
             "- Do NOT use any placeholder like 'TEST DOCUMENT'.\n"
+            "- JSON Safety: Ensure all quotes inside strings are properly escaped. Do not use unescaped newlines within strings.\n"
         )
 
         return prompt
