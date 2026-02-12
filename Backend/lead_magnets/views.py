@@ -1,5 +1,7 @@
 import os
 import logging
+import threading
+from django.db import connection
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -85,11 +87,158 @@ class FirmProfileView(generics.RetrieveUpdateAPIView):
         profile, created = FirmProfile.objects.get_or_create(user=self.request.user)
         return profile
 
+def _run_pdf_generation(lead_magnet_id, user_id, template_id, use_ai_content, user_answers, architectural_images):
+    """
+    Background task to generate AI content and PDF.
+    This runs in a separate thread to avoid HTTP timeouts (502 errors).
+    """
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    
+    lead_magnet = None
+    try:
+        user = User.objects.get(id=user_id)
+        lead_magnet = LeadMagnet.objects.get(id=lead_magnet_id)
+        
+        template_selection = TemplateSelection.objects.filter(lead_magnet=lead_magnet).first()
+
+        try:
+            fp = FirmProfile.objects.get(user=user)
+            firm_profile = {
+                'firm_name': fp.firm_name or user.email.split('@')[0],
+                'work_email': fp.work_email or user.email,
+                'phone_number': fp.phone_number,
+                'firm_website': fp.firm_website,
+                'primary_brand_color': fp.primary_brand_color,
+                'secondary_brand_color': fp.secondary_brand_color,
+                'logo_url': fp.logo.url if fp.logo else '',
+                'industry': 'Architecture',
+            }
+        except FirmProfile.DoesNotExist:
+            firm_profile = {
+                'firm_name': user.email.split('@')[0],
+                'work_email': user.email,
+                'phone_number': '',
+                'firm_website': '',
+                'primary_brand_color': '',
+                'secondary_brand_color': '',
+                'logo_url': '',
+                'industry': 'Architecture',
+            }
+
+        # Validate required fields
+        if not str(firm_profile.get('firm_name', '')).strip():
+            firm_profile['firm_name'] = user.email.split('@')[0]
+
+        ai_client = PerplexityClient()
+        template_service = DocRaptorService()
+        template_vars = {}
+
+        if use_ai_content:
+            try:
+                answers_for_ai = user_answers or (template_selection.captured_answers if template_selection else {})
+                
+                if not answers_for_ai:
+                    try:
+                        gen_data = lead_magnet.generation_data
+                        answers_for_ai = {
+                            'lead_magnet_type': gen_data.lead_magnet_type,
+                            'main_topic': gen_data.main_topic,
+                            'target_audience': gen_data.target_audience,
+                            'audience_pain_points': gen_data.audience_pain_points,
+                            'desired_outcome': gen_data.desired_outcome,
+                            'call_to_action': gen_data.call_to_action,
+                            'special_requests': gen_data.special_requests,
+                        }
+                    except Exception:
+                        pass
+
+                if not answers_for_ai:
+                    lead_magnet.status = 'draft'
+                    lead_magnet.save(update_fields=['status'])
+                    return
+                
+                # Include architectural images in answers for AI
+                if architectural_images:
+                    answers_for_ai['architectural_images'] = architectural_images
+
+                ai_content = ai_client.generate_lead_magnet_json(user_answers=answers_for_ai, firm_profile=firm_profile)
+                template_vars = ai_client.map_to_template_vars(ai_content, firm_profile)
+                
+                if not str(template_vars.get('companyName', '')).strip():
+                    template_vars['companyName'] = firm_profile.get('firm_name') or ''
+                
+                if template_selection:
+                    template_selection.ai_generated_content = ai_content
+                    template_selection.captured_answers = answers_for_ai
+                    template_selection.save(update_fields=['ai_generated_content', 'captured_answers'])
+
+            except Exception as e:
+                logger.error(f"AI content generation failed in background: {str(e)}")
+                lead_magnet.status = 'draft'
+                lead_magnet.save(update_fields=['status'])
+                return
+        else:
+            template_vars = {
+                'primaryColor': firm_profile.get('primary_brand_color') or '',
+                'secondaryColor': firm_profile.get('secondary_brand_color') or '',
+                'accentColor': '',
+                'companyName': firm_profile.get('firm_name') or '',
+                'mainTitle': user_answers.get('main_topic') or '',
+                'documentSubtitle': user_answers.get('desired_outcome') or '',
+                'emailAddress': firm_profile.get('work_email') or '',
+                'phoneNumber': firm_profile.get('phone_number') or '',
+                'website': firm_profile.get('firm_website') or '',
+            }
+
+        # Handle images
+        if isinstance(architectural_images, list) and architectural_images:
+            try:
+                img_list = []
+                for i, img in enumerate(architectural_images[:3]):
+                    if isinstance(img, str) and ';base64,' in img:
+                        img_list.append({'src': img, 'alt': f'Architectural Image {i+1}'})
+                if img_list:
+                    template_vars['architecturalImages'] = img_list
+            except Exception:
+                pass
+
+        # Final PDF generation
+        try:
+            result = template_service.generate_pdf_with_ai_content(template_id, template_vars)
+            if result.get('success'):
+                lead_magnet.status = 'completed'
+                if template_selection:
+                    template_selection.status = 'pdf-generated'
+                    template_selection.save(update_fields=['status'])
+                
+                pdf_data = result.get('pdf_data', b'')
+                filename = result.get('filename', f'lead-magnet-{lead_magnet_id}.pdf')
+                lead_magnet.pdf_file.save(filename, ContentFile(pdf_data), save=False)
+                lead_magnet.save(update_fields=['status', 'pdf_file'])
+                logger.info(f"Successfully generated PDF for lead magnet {lead_magnet_id} in background")
+            else:
+                logger.error(f"PDF generation failed in background: {result.get('error')}")
+                lead_magnet.status = 'draft'
+                lead_magnet.save(update_fields=['status'])
+        except Exception as e:
+            logger.error(f"PDF generation failed in background with exception: {str(e)}")
+            if lead_magnet:
+                lead_magnet.status = 'draft'
+                lead_magnet.save(update_fields=['status'])
+
+    except Exception as e:
+        logger.error(f"Unexpected error in background PDF generation: {str(e)}")
+        if lead_magnet:
+            lead_magnet.status = 'draft'
+            lead_magnet.save(update_fields=['status'])
+    finally:
+        connection.close()
+
 class GeneratePDFView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        lead_magnet = None
         try:
             logger.info('GeneratePDFView: request received', extra={
                 'user': str(getattr(request.user, 'id', 'anonymous')),
@@ -111,161 +260,55 @@ class GeneratePDFView(APIView):
             except LeadMagnet.DoesNotExist:
                 return Response({'error': 'Lead magnet not found', 'details': f"Lead magnet with ID {lead_magnet_id} not found"}, status=status.HTTP_404_NOT_FOUND)
 
-            if str(lead_magnet.status) == 'in-progress':
-                status_url = request.build_absolute_uri(f"/api/generate-pdf/status/?lead_magnet_id={lead_magnet_id}")
-                logger.info('GeneratePDFView: 409 conflict - already in progress', extra={
-                    'lead_magnet_id': lead_magnet_id,
-                    'user': str(getattr(request.user, 'id', 'anonymous'))
-                })
-                return Response({
-                    'status': 'in_progress',
-                    'error': 'Generation already in progress',
-                    'details': 'Please wait or retry after completion',
-                    'lead_magnet_id': lead_magnet_id,
-                    'status_url': status_url,
-                    'retry_after_seconds': 3
-                }, status=status.HTTP_409_CONFLICT)
+            # Check for API keys before starting
+            if not os.getenv('DOCRAPTOR_API_KEY'):
+                return Response({'error': 'DocRaptor API key missing', 'details': 'Set DOCRAPTOR_API_KEY in environment'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            if use_ai_content and not os.getenv('PERPLEXITY_API_KEY'):
+                return Response({'error': 'Perplexity API key missing', 'details': 'Set PERPLEXITY_API_KEY in environment'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-            # Start processing
+            status_url = request.build_absolute_uri(f"/api/generate-pdf/status/?lead_magnet_id={lead_magnet_id}")
+
+            # If already in progress, check if it's stuck
+            if str(lead_magnet.status) == 'in-progress':
+                # If stuck for more than 5 minutes, allow retry
+                from django.utils import timezone
+                from datetime import timedelta
+                if lead_magnet.updated_at < timezone.now() - timedelta(minutes=5):
+                    logger.warning(f"Lead magnet {lead_magnet_id} stuck in in-progress since {lead_magnet.updated_at}. Allowing retry.")
+                else:
+                    return Response({
+                        'status': 'in_progress',
+                        'error': 'Generation already in progress',
+                        'details': 'Please wait or retry after completion',
+                        'lead_magnet_id': lead_magnet_id,
+                        'status_url': status_url,
+                        'retry_after_seconds': 3
+                    }, status=status.HTTP_409_CONFLICT)
+
+            # Start processing in background
             lead_magnet.status = 'in-progress'
             lead_magnet.save(update_fields=['status'])
             
-            template_selection = TemplateSelection.objects.filter(lead_magnet=lead_magnet).first()
+            # Start background thread
+            thread = threading.Thread(
+                target=_run_pdf_generation,
+                args=(lead_magnet_id, request.user.id, template_id, use_ai_content, user_answers, architectural_images)
+            )
+            thread.daemon = True
+            thread.start()
 
-            try:
-                fp = FirmProfile.objects.get(user=request.user)
-                firm_profile = {
-                    'firm_name': fp.firm_name or request.user.email.split('@')[0],
-                    'work_email': fp.work_email or request.user.email,
-                    'phone_number': fp.phone_number,
-                    'firm_website': fp.firm_website,
-                    'primary_brand_color': fp.primary_brand_color,
-                    'secondary_brand_color': fp.secondary_brand_color,
-                    'logo_url': fp.logo.url if fp.logo else '',
-                    'industry': 'Architecture',
-                }
-            except FirmProfile.DoesNotExist:
-                firm_profile = {
-                    'firm_name': request.user.email.split('@')[0],
-                    'work_email': request.user.email,
-                    'phone_number': '',
-                    'firm_website': '',
-                    'primary_brand_color': '',
-                    'secondary_brand_color': '',
-                    'logo_url': '',
-                    'industry': 'Architecture',
-                }
-
-            # Validate required fields
-            if not str(firm_profile.get('firm_name', '')).strip():
-                firm_profile['firm_name'] = request.user.email.split('@')[0]
-
-            ai_client = PerplexityClient()
-            template_service = DocRaptorService()
-            template_vars = {}
-
-            if use_ai_content:
-                try:
-                    answers_for_ai = user_answers or (template_selection.captured_answers if template_selection else {})
-                    
-                    if not answers_for_ai:
-                        try:
-                            gen_data = lead_magnet.generation_data
-                            answers_for_ai = {
-                                'lead_magnet_type': gen_data.lead_magnet_type,
-                                'main_topic': gen_data.main_topic,
-                                'target_audience': gen_data.target_audience,
-                                'audience_pain_points': gen_data.audience_pain_points,
-                                'desired_outcome': gen_data.desired_outcome,
-                                'call_to_action': gen_data.call_to_action,
-                                'special_requests': gen_data.special_requests,
-                            }
-                        except Exception:
-                            pass
-
-                    if not answers_for_ai:
-                        lead_magnet.status = 'draft'
-                        lead_magnet.save(update_fields=['status'])
-                        return Response({'error': 'AI content not available', 'details': 'Could not find generation data.'}, status=status.HTTP_400_BAD_REQUEST)
-                    
-                    # Include architectural images in answers for AI to inform the prompt if needed
-                    if architectural_images:
-                        answers_for_ai['architectural_images'] = architectural_images
-
-                    ai_content = ai_client.generate_lead_magnet_json(user_answers=answers_for_ai, firm_profile=firm_profile)
-                    template_vars = ai_client.map_to_template_vars(ai_content, firm_profile)
-                    
-                    if not str(template_vars.get('companyName', '')).strip():
-                        template_vars['companyName'] = firm_profile.get('firm_name') or ''
-                    
-                    if template_selection:
-                        template_selection.ai_generated_content = ai_content
-                        template_selection.captured_answers = answers_for_ai
-                        template_selection.save(update_fields=['ai_generated_content', 'captured_answers'])
-
-                except requests.exceptions.Timeout as e:
-                    lead_magnet.status = 'draft'
-                    lead_magnet.save(update_fields=['status'])
-                    return Response({'error': 'AI content generation timed out', 'details': str(e)}, status=status.HTTP_504_GATEWAY_TIMEOUT)
-                except Exception as e:
-                    lead_magnet.status = 'draft'
-                    lead_magnet.save(update_fields=['status'])
-                    return Response({'error': 'AI content generation failed', 'details': str(e)}, status=status.HTTP_502_BAD_GATEWAY)
-            else:
-                template_vars = {
-                    'primaryColor': firm_profile.get('primary_brand_color') or '',
-                    'secondaryColor': firm_profile.get('secondary_brand_color') or '',
-                    'accentColor': '',
-                    'companyName': firm_profile.get('firm_name') or '',
-                    'mainTitle': user_answers.get('main_topic') or '',
-                    'documentSubtitle': user_answers.get('desired_outcome') or '',
-                    'emailAddress': firm_profile.get('work_email') or '',
-                    'phoneNumber': firm_profile.get('phone_number') or '',
-                    'website': firm_profile.get('firm_website') or '',
-                }
-
-            # Handle images
-            if isinstance(architectural_images, list) and architectural_images:
-                try:
-                    img_list = []
-                    for i, img in enumerate(architectural_images[:3]):
-                        if isinstance(img, str) and ';base64,' in img:
-                            img_list.append({'src': img, 'alt': f'Architectural Image {i+1}'})
-                    if img_list:
-                        template_vars['architecturalImages'] = img_list
-                except Exception:
-                    pass
-
-            # Final PDF generation
-            try:
-                result = template_service.generate_pdf_with_ai_content(template_id, template_vars)
-                if result.get('success'):
-                    lead_magnet.status = 'completed'
-                    lead_magnet.save(update_fields=['status'])
-                    if template_selection:
-                        template_selection.status = 'pdf-generated'
-                        template_selection.save(update_fields=['status'])
-                    
-                    pdf_data = result.get('pdf_data', b'')
-                    filename = result.get('filename', f'lead-magnet-{lead_magnet_id}.pdf')
-                    lead_magnet.pdf_file.save(filename, ContentFile(pdf_data), save=True)
-                    
-                    response = HttpResponse(pdf_data, content_type='application/pdf')
-                    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-                    return response
-                else:
-                    lead_magnet.status = 'draft'
-                    lead_magnet.save(update_fields=['status'])
-                    return Response({'error': 'PDF generation failed', 'details': result.get('error')}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            except Exception as e:
-                lead_magnet.status = 'draft'
-                lead_magnet.save(update_fields=['status'])
-                return Response({'error': 'PDF generation failed', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # Return 409 immediately. 
+            # The frontend is already designed to catch 409 and start polling status.
+            # This prevents the 30s load balancer timeout (502 error).
+            return Response({
+                'status': 'in_progress',
+                'message': 'PDF generation started in background',
+                'lead_magnet_id': lead_magnet_id,
+                'status_url': status_url,
+                'retry_after_seconds': 2
+            }, status=status.HTTP_409_CONFLICT)
 
         except Exception as e:
-            if lead_magnet:
-                lead_magnet.status = 'draft'
-                lead_magnet.save(update_fields=['status'])
             import traceback
             logger.error(f"GeneratePDFView unexpected error: {str(e)}\n{traceback.format_exc()}")
             return Response({'error': 'Unexpected error', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
