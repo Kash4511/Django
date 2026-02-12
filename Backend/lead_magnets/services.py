@@ -127,7 +127,7 @@ class DocRaptorService:
                 self.base_url,
                 json=doc_data,
                 headers={'Content-Type': 'application/json'},
-                timeout=20
+                timeout=12  # Reduced from 20 to fit within Render's 30s limit
             )
             if response.status_code == 200:
                 print("✅ DEBUG: DocRaptor API success")

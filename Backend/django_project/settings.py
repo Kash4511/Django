@@ -217,8 +217,9 @@ SIMPLE_JWT = {
 # -----------------------------
 # CORS + CSRF
 # -----------------------------
-CORS_ALLOW_CREDENTIALS = True  # Changed from False to support authenticated requests
+CORS_ALLOW_CREDENTIALS = True
 
+# Explicitly list origins instead of using ALLOW_ALL when credentials are True
 CORS_ALLOWED_ORIGINS = [
     "https://django-six-gamma.vercel.app",
     "http://localhost:3000",
@@ -227,8 +228,8 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_URLS_REGEX = r'^/api/.*$'
 
-# Temporary safety net to guarantee CORS headers during stabilization
-CORS_ALLOW_ALL_ORIGINS = True
+# Disable ALLOW_ALL to ensure ALLOWED_ORIGINS is used correctly with credentials
+CORS_ALLOW_ALL_ORIGINS = False
 
 # Explicitly allow common headers used by frontend
 CORS_ALLOW_HEADERS = [
@@ -253,6 +254,11 @@ CORS_ALLOW_METHODS = [
     "POST",
     "PUT",
 ]
+
+# Increase upload limits for large base64 images in PDF generation
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
 
 # Ensure CSRF is trusted for the frontend origin
 CSRF_TRUSTED_ORIGINS = [

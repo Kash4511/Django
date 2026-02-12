@@ -31,7 +31,7 @@ class PerplexityClient:
             print("❌ PERPLEXITY_API_KEY missing")
             raise Exception("PERPLEXITY_API_KEY is not configured; cannot generate AI content. Please add PERPLEXITY_API_KEY=your_key_here to your Backend/.env file")
 
-        max_retries = 2
+        max_retries = 1  # Reduced from 2
         retry_count = 0
         models_to_try = ["sonar-pro", "sonar"]
 
@@ -69,14 +69,14 @@ class PerplexityClient:
                         "max_tokens": 4000,
                         "temperature": 0.7
                     },
-                    timeout=20
+                    timeout=12  # Reduced from 20 to fit within Render's 30s limit
                 )
                 break
             except requests.exceptions.Timeout:
                 retry_count += 1
                 if retry_count > max_retries:
                     print("❌ Perplexity API timeout after multiple attempts")
-                    raise Exception("Perplexity API timeout after multiple attempts (20s each)")
+                    raise Exception("Perplexity API timeout (12s per attempt). Try again with less complex input.")
                 else:
                     print(f"⚠️ API timeout on attempt {retry_count}, retrying...")
                     continue
@@ -191,6 +191,9 @@ class PerplexityClient:
         tagline = (firm_profile.get('tagline') or '').strip()
         logo_url = (user_answers.get('brand_logo_url') or firm_profile.get('logo_url') or '').strip()
 
+        # Architectural images from user_answers
+        architectural_images = user_answers.get('architectural_images', [])
+        
         # Brand colors: prefer user_answers brand_* then firm_profile brand_*, then generic; no hardcoded defaults
         primary_color = (
             (user_answers.get('brand_primary_color') or '').strip()
@@ -256,6 +259,7 @@ class PerplexityClient:
                     "audience_pain_points": audience_pain_points,
                     "call_to_action": call_to_action,
                     "industry": industry,
+                    "architectural_images_count": len(architectural_images) if isinstance(architectural_images, list) else 0
                 }
             }, ensure_ascii=False) + "\n\n" +
             "Output Schema (keys must match EXACTLY):\n" +
@@ -284,83 +288,11 @@ class PerplexityClient:
                     ]
                 },
                 "contents": {
-                    "items": ["<6 descriptive items for TOC>"]
+                    "items": ["<10 descriptive items for TOC>"]
                 },
                 "sections": [
                     {
                         "title": "<Section 1 title>",
-                        "content": "<1-2 detailed paragraphs with specific examples>",
-                        "subsections": [
-                            {"title": "<Sub 1>", "content": "<2-3 detailed sentences with specific information>"},
-                            {"title": "<Sub 2>", "content": "<2-3 detailed sentences with specific information>"}
-                        ]
-                    },
-                    {
-                        "title": "<Section 2 title>",
-                        "content": "<1-2 detailed paragraphs with specific examples>",
-                        "subsections": [
-                            {"title": "<Sub 1>", "content": "<2-3 detailed sentences with specific information>"},
-                            {"title": "<Sub 2>", "content": "<2-3 detailed sentences with specific information>"}
-                        ]
-                    },
-                    {
-                        "title": "<Section 3 title>",
-                        "content": "<1-2 detailed paragraphs with specific examples>",
-                        "subsections": [
-                            {"title": "<Sub 1>", "content": "<2-3 detailed sentences with specific information>"},
-                            {"title": "<Sub 2>", "content": "<2-3 detailed sentences with specific information>"}
-                        ]
-                    },
-                    {
-                        "title": "<Section 4 title>",
-                        "content": "<1-2 detailed paragraphs with specific examples>",
-                        "subsections": [
-                            {"title": "<Sub 1>", "content": "<2-3 detailed sentences with specific information>"},
-                            {"title": "<Sub 2>", "content": "<2-3 detailed sentences with specific information>"}
-                        ]
-                    },
-                    {
-                        "title": "<Section 5 title>",
-                        "content": "<1-2 detailed paragraphs with specific examples>",
-                        "subsections": [
-                            {"title": "<Sub 1>", "content": "<2-3 detailed sentences with specific information>"},
-                            {"title": "<Sub 2>", "content": "<2-3 detailed sentences with specific information>"}
-                        ]
-                    },
-                    {
-                        "title": "<Section 6 title>",
-                        "content": "<1-2 detailed paragraphs with specific examples>",
-                        "subsections": [
-                            {"title": "<Sub 1>", "content": "<2-3 detailed sentences with specific information>"},
-                            {"title": "<Sub 2>", "content": "<2-3 detailed sentences with specific information>"}
-                        ]
-                    },
-                    {
-                        "title": "<Section 7 title>",
-                        "content": "<1-2 detailed paragraphs with specific examples>",
-                        "subsections": [
-                            {"title": "<Sub 1>", "content": "<2-3 detailed sentences with specific information>"},
-                            {"title": "<Sub 2>", "content": "<2-3 detailed sentences with specific information>"}
-                        ]
-                    },
-                    {
-                        "title": "<Section 8 title>",
-                        "content": "<1-2 detailed paragraphs with specific examples>",
-                        "subsections": [
-                            {"title": "<Sub 1>", "content": "<2-3 detailed sentences with specific information>"},
-                            {"title": "<Sub 2>", "content": "<2-3 detailed sentences with specific information>"}
-                        ]
-                    },
-                    {
-                        "title": "<Section 9 title>",
-                        "content": "<1-2 detailed paragraphs with specific examples>",
-                        "subsections": [
-                            {"title": "<Sub 1>", "content": "<2-3 detailed sentences with specific information>"},
-                            {"title": "<Sub 2>", "content": "<2-3 detailed sentences with specific information>"}
-                        ]
-                    },
-                    {
-                        "title": "<Section 10 title>",
                         "content": "<1-2 detailed paragraphs with specific examples>",
                         "subsections": [
                             {"title": "<Sub 1>", "content": "<2-3 detailed sentences with specific information>"},
@@ -383,9 +315,9 @@ class PerplexityClient:
             "- Use firm_name, work_email, phone_number, firm_website, tagline EXACTLY as provided.\n"
             "- Use brand colors EXACTLY as provided (primary, secondary, accent). If any input color is missing, set that field to an empty string rather than inventing a color.\n"
             "- Include logo_url if provided; else set to an empty string.\n"
-            "- Generate concise sections: each section has 1 paragraph; each subsection 1–2 sentences.\n"
+            "- Generate 10 complete sections: each section has 1 paragraph; each subsection 1–2 sentences.\n"
             "- Terms must include a summary and 3 paragraphs (2–3 sentences each).\n"
-            "- Contents.items must have 10 descriptive entries aligned to the sections.\n"
+            "- Contents.items must have EXACTLY 10 descriptive entries aligned to the sections.\n"
             "- NO extra text outside JSON, NO Markdown, NO comments.\n"
             "- Do NOT use any placeholder like 'TEST DOCUMENT'.\n"
             "- JSON Safety: Ensure all quotes inside strings are properly escaped. Do not use unescaped newlines within strings.\n"
