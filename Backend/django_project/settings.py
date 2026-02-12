@@ -217,7 +217,7 @@ SIMPLE_JWT = {
 # -----------------------------
 # CORS + CSRF
 # -----------------------------
-CORS_ALLOW_CREDENTIALS = False
+CORS_ALLOW_CREDENTIALS = True  # Changed from False to support authenticated requests
 
 CORS_ALLOWED_ORIGINS = [
     "https://django-six-gamma.vercel.app",
@@ -230,6 +230,7 @@ CORS_URLS_REGEX = r'^/api/.*$'
 # Temporary safety net to guarantee CORS headers during stabilization
 CORS_ALLOW_ALL_ORIGINS = True
 
+# Explicitly allow common headers used by frontend
 CORS_ALLOW_HEADERS = [
     "accept",
     "accept-encoding",
@@ -240,6 +241,8 @@ CORS_ALLOW_HEADERS = [
     "user-agent",
     "x-csrftoken",
     "x-requested-with",
+    "cache-control",
+    "pragma",
 ]
 
 CORS_ALLOW_METHODS = [
@@ -249,6 +252,11 @@ CORS_ALLOW_METHODS = [
     "PATCH",
     "POST",
     "PUT",
+]
+
+# Ensure CSRF is trusted for the frontend origin
+CSRF_TRUSTED_ORIGINS = [
+    "https://django-six-gamma.vercel.app",
 ]
 
 # -----------------------------
