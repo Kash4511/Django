@@ -326,6 +326,46 @@ class PerplexityClient:
                             {"title": "<Sub 1>", "content": "<2-3 detailed sentences with specific information>"},
                             {"title": "<Sub 2>", "content": "<2-3 detailed sentences with specific information>"}
                         ]
+                    },
+                    {
+                        "title": "<Section 6 title>",
+                        "content": "<1-2 detailed paragraphs with specific examples>",
+                        "subsections": [
+                            {"title": "<Sub 1>", "content": "<2-3 detailed sentences with specific information>"},
+                            {"title": "<Sub 2>", "content": "<2-3 detailed sentences with specific information>"}
+                        ]
+                    },
+                    {
+                        "title": "<Section 7 title>",
+                        "content": "<1-2 detailed paragraphs with specific examples>",
+                        "subsections": [
+                            {"title": "<Sub 1>", "content": "<2-3 detailed sentences with specific information>"},
+                            {"title": "<Sub 2>", "content": "<2-3 detailed sentences with specific information>"}
+                        ]
+                    },
+                    {
+                        "title": "<Section 8 title>",
+                        "content": "<1-2 detailed paragraphs with specific examples>",
+                        "subsections": [
+                            {"title": "<Sub 1>", "content": "<2-3 detailed sentences with specific information>"},
+                            {"title": "<Sub 2>", "content": "<2-3 detailed sentences with specific information>"}
+                        ]
+                    },
+                    {
+                        "title": "<Section 9 title>",
+                        "content": "<1-2 detailed paragraphs with specific examples>",
+                        "subsections": [
+                            {"title": "<Sub 1>", "content": "<2-3 detailed sentences with specific information>"},
+                            {"title": "<Sub 2>", "content": "<2-3 detailed sentences with specific information>"}
+                        ]
+                    },
+                    {
+                        "title": "<Section 10 title>",
+                        "content": "<1-2 detailed paragraphs with specific examples>",
+                        "subsections": [
+                            {"title": "<Sub 1>", "content": "<2-3 detailed sentences with specific information>"},
+                            {"title": "<Sub 2>", "content": "<2-3 detailed sentences with specific information>"}
+                        ]
                     }
                 ],
                 "contact": {
@@ -345,7 +385,7 @@ class PerplexityClient:
             "- Include logo_url if provided; else set to an empty string.\n"
             "- Generate concise sections: each section has 1 paragraph; each subsection 1–2 sentences.\n"
             "- Terms must include a summary and 3 paragraphs (2–3 sentences each).\n"
-            "- Contents.items must have 6 descriptive entries aligned to the sections.\n"
+            "- Contents.items must have 10 descriptive entries aligned to the sections.\n"
             "- NO extra text outside JSON, NO Markdown, NO comments.\n"
             "- Do NOT use any placeholder like 'TEST DOCUMENT'.\n"
             "- JSON Safety: Ensure all quotes inside strings are properly escaped. Do not use unescaped newlines within strings.\n"
@@ -697,7 +737,12 @@ class PerplexityClient:
             "sectionTitle5": truncate_title(clean_title(get_section(2).get("title", ""))),
             "sectionTitle6": truncate_title(clean_title(get_section(3).get("title", ""))),
             "sectionTitle7": truncate_title(clean_title(get_section(4).get("title", ""))),
-            "sectionTitle8": "REACH OUT TO OUR TEAM",
+            "sectionTitle8": truncate_title(clean_title(get_section(5).get("title", ""))),
+            "sectionTitle9": truncate_title(clean_title(get_section(6).get("title", ""))),
+            "sectionTitle10": truncate_title(clean_title(get_section(7).get("title", ""))),
+            "sectionTitle11": truncate_title(clean_title(get_section(8).get("title", ""))),
+            "sectionTitle12": truncate_title(clean_title(get_section(9).get("title", ""))),
+            "sectionTitle13": "REACH OUT TO OUR TEAM",
 
             # Page numbers in headers ("PAGE N") and footers (N)
             "pageNumberHeader2": page_hdr(2),
@@ -708,6 +753,11 @@ class PerplexityClient:
             "pageNumberHeader7": page_hdr(7),
             "pageNumberHeader8": page_hdr(8),
             "pageNumberHeader9": page_hdr(9),
+            "pageNumberHeader10": page_hdr(10),
+            "pageNumberHeader11": page_hdr(11),
+            "pageNumberHeader12": page_hdr(12),
+            "pageNumberHeader13": page_hdr(13),
+            "pageNumberHeader14": page_hdr(14),
 
             "pageNumber2": 2,
             "pageNumber3": 3,
@@ -717,6 +767,11 @@ class PerplexityClient:
             "pageNumber7": 7,
             "pageNumber8": 8,
             "pageNumber9": 9,
+            "pageNumber10": 10,
+            "pageNumber11": 11,
+            "pageNumber12": 12,
+            "pageNumber13": 13,
+            "pageNumber14": 14,
 
             # Contents page
             "contentsTitle": contents.get("title", "Contents"),
@@ -725,7 +780,11 @@ class PerplexityClient:
             "contentItem3": truncate_title(clean_title(get_or(content_items, 2, get_section(2).get("title", "")))),
             "contentItem4": truncate_title(clean_title(get_or(content_items, 3, get_section(3).get("title", "")))),
             "contentItem5": truncate_title(clean_title(get_or(content_items, 4, get_section(4).get("title", "")))),
-            "contentItem6": truncate_title(clean_title(get_or(content_items, 5, contact.get("title", "Contact & Next Steps")))),
+            "contentItem6": truncate_title(clean_title(get_or(content_items, 5, get_section(5).get("title", "")))),
+            "contentItem7": truncate_title(clean_title(get_or(content_items, 6, get_section(6).get("title", "")))),
+            "contentItem8": truncate_title(clean_title(get_or(content_items, 7, get_section(7).get("title", "")))),
+            "contentItem9": truncate_title(clean_title(get_or(content_items, 8, get_section(8).get("title", "")))),
+            "contentItem10": truncate_title(clean_title(get_or(content_items, 9, get_section(9).get("title", "")))),
 
             # Terms
             "termsTitle": terms_title,
@@ -797,7 +856,49 @@ class PerplexityClient:
             "quoteText2": truncate_subcontent(split_sentences(get_section(4).get("content", ""))[0] if split_sentences(get_section(4).get("content", "")) else ""),
             "quoteAuthor2": company_name or "",
 
-            # Page 9 (Contact) - with length limits
+            # Page 9 (Section 6)
+            "customTitle6": truncate_title(clean_title(get_section(5).get("title", ""))),
+            "customContent6": truncate_content(standardize_sustainable_terms(normalize_main_content(get_section(5).get("content", ""), get_section(5).get("title", "Section 6")))),
+            "subheading6": truncate_title(get_sub(5, 0).get("title", "")),
+            "subcontent6": truncate_subcontent(get_sub(5, 0).get("content", "")),
+            "boxTitle3": truncate_title(get_sub(5, 1).get("title", "")),
+            "boxContent3": truncate_subcontent(get_sub(5, 1).get("content", "")),
+
+            # Page 10 (Section 7)
+            "customTitle7": truncate_title(clean_title(get_section(6).get("title", ""))),
+            "customContent7": truncate_content(standardize_sustainable_terms(normalize_main_content(get_section(6).get("content", ""), get_section(6).get("title", "Section 7")))),
+            "subheading7": truncate_title(get_sub(6, 0).get("title", "")),
+            "subcontent7": truncate_subcontent(get_sub(6, 0).get("content", "")),
+            "listItem5": finalize_line(truncate_text(get_or(split_sentences(get_section(6).get("content", "")), 0, ""), 90)),
+            "listItem6": finalize_line(truncate_text(get_or(split_sentences(get_section(6).get("content", "")), 1, ""), 90)),
+            "listItem7": finalize_line(truncate_text(get_or(split_sentences(get_section(6).get("content", "")), 2, ""), 90)),
+
+            # Page 11 (Section 8)
+            "customTitle8": truncate_title(clean_title(get_section(7).get("title", ""))),
+            "customContent8": truncate_content(standardize_sustainable_terms(normalize_main_content(get_section(7).get("content", ""), get_section(7).get("title", "Section 8")))),
+            "subheading8": truncate_title(get_sub(7, 0).get("title", "")),
+            "subcontent8": truncate_subcontent(get_sub(7, 0).get("content", "")),
+            "accentBoxTitle4": truncate_title(get_sub(7, 1).get("title", "")),
+            "accentBoxContent4": truncate_subcontent(get_sub(7, 1).get("content", "")),
+
+            # Page 12 (Section 9)
+            "customTitle9": truncate_title(clean_title(get_section(8).get("title", ""))),
+            "customContent9": truncate_content(standardize_sustainable_terms(normalize_main_content(get_section(8).get("content", ""), get_section(8).get("title", "Section 9")))),
+            "subheading9": truncate_title(get_sub(8, 0).get("title", "")),
+            "subcontent9": truncate_subcontent(get_sub(8, 0).get("content", "")),
+            "listItem8": finalize_line(truncate_text(get_or(split_sentences(get_section(8).get("content", "")), 0, ""), 90)),
+            "listItem9": finalize_line(truncate_text(get_or(split_sentences(get_section(8).get("content", "")), 1, ""), 90)),
+            "listItem10": finalize_line(truncate_text(get_or(split_sentences(get_section(8).get("content", "")), 2, ""), 90)),
+
+            # Page 13 (Section 10)
+            "customTitle10": truncate_title(clean_title(get_section(9).get("title", ""))),
+            "customContent10": truncate_content(standardize_sustainable_terms(normalize_main_content(get_section(9).get("content", ""), get_section(9).get("title", "Section 10")))),
+            "subheading10": truncate_title(get_sub(9, 0).get("title", "")),
+            "subcontent10": truncate_subcontent(get_sub(9, 0).get("content", "")),
+            "boxTitle4": truncate_title(get_sub(9, 1).get("title", "")),
+            "boxContent4": truncate_subcontent(get_sub(9, 1).get("content", "")),
+
+            # Page 14 (Contact) - with length limits
             "contactTitle": "Contact Us",
             "contactDescription": truncate_content(normalize_main_content(contact.get("description", ""), contact.get("title", "Contact"))),
             "differentiatorTitle": "Contact us",
