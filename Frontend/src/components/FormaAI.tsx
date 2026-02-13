@@ -123,7 +123,7 @@ const FormaAI: React.FC = () => {
       // Show error message briefly
       setMessages(prev => [...prev, `❌ Error: ${errMsg}`])
       setTimeout(() => {
-        setMessages(prev => setMessages(prev => prev.filter(msg => !msg.includes('❌ Error:'))))
+        setMessages(prev => prev.filter(msg => !msg.includes('❌ Error:')))
       }, 5000)
     } finally {
       setMessage('')
