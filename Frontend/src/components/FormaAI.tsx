@@ -7,7 +7,7 @@ import Modal from './Modal'
 import TemplateSelectionForm from './forms/TemplateSelectionForm'
 import './FormaAI.css'
 import './Dashboard.css'
-import { apiClient } from '../lib/apiClient'
+import { dashboardApi, LeadMagnetProgress } from '../lib/dashboardApi'
 
 const FormaAI: React.FC = () => {
   const { logout } = useAuth()
@@ -21,8 +21,7 @@ const FormaAI: React.FC = () => {
   const [architecturalImages, setArchitecturalImages] = useState<File[]>([])
   const [messages, setMessages] = useState<string[]>([])
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
-  const [generationProgress, setGenerationProgress] = useState<number>(0)
-  const progressTimers = useRef<number[]>([])
+  const [generationProgress, setGenerationProgress] = useState<LeadMagnetProgress | null>(null)
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const messagesRef = useRef<HTMLDivElement | null>(null)
@@ -82,12 +81,7 @@ const FormaAI: React.FC = () => {
     setMessages(prev => [...prev, userMsg])
     setTemplateError(null)
     setIsGeneratingPDF(true)
-    setGenerationProgress(0)
-    // Simulated progress milestones
-    progressTimers.current.forEach(id => window.clearTimeout(id))
-    progressTimers.current = []
-    progressTimers.current.push(window.setTimeout(() => setGenerationProgress(25), 600))
-    progressTimers.current.push(window.setTimeout(() => setGenerationProgress(75), 1800))
+    setGenerationProgress({ percent: 5, stage: 'Initializing', details: 'Connecting to AI...' })
 
     try {
       // Create FormData to handle file uploads
@@ -106,47 +100,36 @@ const FormaAI: React.FC = () => {
         formData.append(`attachment_${index}`, file)
       })
 
-      // Request may return either JSON or a PDF; use arraybuffer then inspect content-type
-      const res = await apiClient.post('/api/ai-conversation/', formData, { 
-        responseType: 'arraybuffer',
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+      // Use the new sendAIConversation method which handles polling and progress
+      const result = await dashboardApi.sendAIConversation(formData, (progress) => {
+        setGenerationProgress(progress)
       })
-      const contentType = (res.headers && (res.headers['content-type'] || res.headers['Content-Type'])) || ''
 
-      if (contentType.includes('application/pdf')) {
-        const blob = new Blob([res.data], { type: 'application/pdf' })
-        const url = URL.createObjectURL(blob)
-        setPreviewUrl(url)
+      if (result.pdfUrl) {
+        setPreviewUrl(result.pdfUrl)
         setShowPreviewModal(true)
 
         setMessages(prev => [...prev, '✅ PDF generated. Preview opened.'])
         setTimeout(() => {
           setMessages(prev => prev.filter(msg => msg !== '✅ PDF generated. Preview opened.'))
         }, 3000)
-      } else {
-        // Decode JSON payload from arraybuffer
-        const text = new TextDecoder('utf-8').decode(res.data as ArrayBuffer)
-        const data = JSON.parse(text)
-        const assistantMsg = data?.response || 'AI responded.'
+      } else if (result.data) {
+        const assistantMsg = result.data?.response || 'AI responded.'
         setMessages(prev => [...prev, assistantMsg])
       }
     } catch (err: any) {
-      const errMsg = err?.response?.data ? 'Request failed.' : (err?.message || 'Request error.')
+      console.error('Forma AI Error:', err)
+      const errMsg = err?.message || 'Request failed.'
       // Show error message briefly
       setMessages(prev => [...prev, `❌ Error: ${errMsg}`])
       setTimeout(() => {
-        setMessages(prev => prev.filter(msg => !msg.includes('❌ Error:')))
+        setMessages(prev => setMessages(prev => prev.filter(msg => !msg.includes('❌ Error:'))))
       }, 5000)
     } finally {
       setMessage('')
       setAttachedFiles([])
-      setGenerationProgress(100)
+      setGenerationProgress(null)
       setIsGeneratingPDF(false)
-      // Clear timers
-      progressTimers.current.forEach(id => window.clearTimeout(id))
-      progressTimers.current = []
     }
   }
 
@@ -276,6 +259,27 @@ const FormaAI: React.FC = () => {
                 )}
 
                 <div className="chat-input-box">
+                  {isGeneratingPDF && generationProgress && (
+                    <div className="generation-progress-inline" style={{ padding: '12px 16px', borderBottom: '1px solid #eee' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
+                        <span style={{ fontWeight: 600, color: '#2c3e50' }}>{generationProgress.stage}</span>
+                        <span style={{ color: '#7f8c8d' }}>{generationProgress.percent}%</span>
+                      </div>
+                      <div style={{ width: '100%', height: '6px', backgroundColor: '#f0f2f5', borderRadius: '3px', overflow: 'hidden' }}>
+                        <div 
+                          style={{ 
+                            width: `${generationProgress.percent}%`, 
+                            height: '100%', 
+                            backgroundColor: '#3498db', 
+                            transition: 'width 0.4s ease-out' 
+                          }}
+                        />
+                      </div>
+                      {generationProgress.details && (
+                        <div style={{ fontSize: '11px', color: '#95a5a6', marginTop: '4px' }}>{generationProgress.details}</div>
+                      )}
+                    </div>
+                  )}
                   <textarea
                     className="chat-input"
                     value={message}
@@ -330,64 +334,50 @@ const FormaAI: React.FC = () => {
         />
       </Modal>
 
-      <Modal 
-        isOpen={showPreviewModal}
-        onClose={() => {
-          setShowPreviewModal(false)
-          if (previewUrl) { window.URL.revokeObjectURL(previewUrl); setPreviewUrl(null) }
-        }}
-        title="Preview PDF"
-        maxWidth={1000}
-      >
-        {previewUrl ? (
-          <div>
-            <iframe title="Forma AI PDF Preview" src={previewUrl} style={{ width: '100%', height: '70vh', border: '1px solid #333' }} />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
-              <button
-                className="btn btn-primary"
-                onClick={() => {
-                  if (previewUrl) {
-                    const link = document.createElement('a')
-                    link.href = previewUrl
-                    link.setAttribute('download', `forma-ai-${selectedTemplateId}.pdf`)
-                    document.body.appendChild(link)
-                    link.click()
-                    link.remove()
-                  }
-                }}
-              >
-                Download PDF
-              </button>
-              <button
-                className="btn btn-secondary"
-                onClick={() => {
-                  setShowPreviewModal(false)
-                  if (previewUrl) { window.URL.revokeObjectURL(previewUrl); setPreviewUrl(null) }
-                }}
-              >
-                Close
-              </button>
+      {showPreviewModal && (
+        <Modal 
+          isOpen={showPreviewModal}
+          onClose={() => {
+            setShowPreviewModal(false)
+            if (previewUrl) { window.URL.revokeObjectURL(previewUrl); setPreviewUrl(null) }
+          }}
+          title="Preview PDF"
+          maxWidth={1000}
+        >
+          {previewUrl ? (
+            <div>
+              <iframe title="Forma AI PDF Preview" src={previewUrl} style={{ width: '100%', height: '70vh', border: '1px solid #333' }} />
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => {
+                    if (previewUrl) {
+                      const link = document.createElement('a')
+                      link.href = previewUrl
+                      link.setAttribute('download', `forma-ai-${selectedTemplateId}.pdf`)
+                      document.body.appendChild(link)
+                      link.click()
+                      link.remove()
+                    }
+                  }}
+                >
+                  Download PDF
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setShowPreviewModal(false)
+                    if (previewUrl) { window.URL.revokeObjectURL(previewUrl); setPreviewUrl(null) }
+                  }}
+                >
+                  Close
+                </button>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div>Loading preview...</div>
-        )}
-      </Modal>
-
-      {isGeneratingPDF && (
-        <div className="pdf-overlay">
-          <div className="pdf-overlay-content">
-            <div className="pdf-spinner"></div>
-            <p>Generating your PDF... {generationProgress}%</p>
-            <button 
-              className="cancel-btn" 
-              onClick={handleCancelGeneration}
-              style={{ marginTop: '1rem', padding: '0.5rem 1rem', background: '#ff4444', border: 'none', borderRadius: '4px', color: 'white', cursor: 'pointer' }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
+          ) : (
+            <div>Loading preview...</div>
+          )}
+        </Modal>
       )}
     </div>
   )

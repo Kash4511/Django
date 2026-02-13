@@ -100,6 +100,18 @@ def _run_pdf_generation(lead_magnet_id, user_id, template_id, use_ai_content, us
         user = User.objects.get(id=user_id)
         lead_magnet = LeadMagnet.objects.get(id=lead_magnet_id)
         
+        def update_progress(percent, stage, details=""):
+            if lead_magnet:
+                lead_magnet.generation_progress = {
+                    "percent": percent,
+                    "stage": stage,
+                    "details": details
+                }
+                lead_magnet.save(update_fields=['generation_progress'])
+                logger.info(f"📊 Progress {lead_magnet_id}: {percent}% - {stage}")
+
+        update_progress(5, "Initializing", "Loading user profile and templates...")
+        
         template_selection = TemplateSelection.objects.filter(lead_magnet=lead_magnet).first()
 
         try:
@@ -136,6 +148,7 @@ def _run_pdf_generation(lead_magnet_id, user_id, template_id, use_ai_content, us
 
         if use_ai_content:
             try:
+                update_progress(15, "AI Generation", "Analyzing requirements...")
                 answers_for_ai = user_answers or (template_selection.captured_answers if template_selection else {})
                 
                 if not answers_for_ai:
@@ -154,7 +167,9 @@ def _run_pdf_generation(lead_magnet_id, user_id, template_id, use_ai_content, us
                         pass
 
                 if not answers_for_ai:
+                    logger.error(f"No answers found for AI generation for Lead Magnet {lead_magnet_id}")
                     lead_magnet.status = 'draft'
+                    update_progress(0, "Failed", "No input data found")
                     lead_magnet.save(update_fields=['status'])
                     return
                 
@@ -162,7 +177,10 @@ def _run_pdf_generation(lead_magnet_id, user_id, template_id, use_ai_content, us
                 if architectural_images:
                     answers_for_ai['architectural_images'] = architectural_images
 
+                update_progress(25, "AI Generation", "Generating content with Perplexity AI...")
                 ai_content = ai_client.generate_lead_magnet_json(user_answers=answers_for_ai, firm_profile=firm_profile)
+                
+                update_progress(60, "Formatting", "Mapping AI content to template...")
                 template_vars = ai_client.map_to_template_vars(ai_content, firm_profile)
                 
                 if not str(template_vars.get('companyName', '')).strip():
@@ -176,9 +194,11 @@ def _run_pdf_generation(lead_magnet_id, user_id, template_id, use_ai_content, us
             except Exception as e:
                 logger.error(f"AI content generation failed in background: {str(e)}")
                 lead_magnet.status = 'draft'
+                update_progress(0, "Failed", f"AI error: {str(e)}")
                 lead_magnet.save(update_fields=['status'])
                 return
         else:
+            update_progress(50, "Formatting", "Preparing template variables...")
             template_vars = {
                 'primaryColor': firm_profile.get('primary_brand_color') or '',
                 'secondaryColor': firm_profile.get('secondary_brand_color') or '',
@@ -194,6 +214,7 @@ def _run_pdf_generation(lead_magnet_id, user_id, template_id, use_ai_content, us
         # Handle images
         if isinstance(architectural_images, list) and architectural_images:
             try:
+                update_progress(70, "Processing Images", "Optimizing images for PDF...")
                 img_list = []
                 for i, img in enumerate(architectural_images[:3]):
                     if isinstance(img, str) and ';base64,' in img:
@@ -205,8 +226,11 @@ def _run_pdf_generation(lead_magnet_id, user_id, template_id, use_ai_content, us
 
         # Final PDF generation
         try:
+            update_progress(80, "Rendering PDF", "Generating PDF with DocRaptor...")
+            logger.info(f"🧵 Thread {threading.get_ident()}: Starting PDF generation with DocRaptor for Lead Magnet {lead_magnet_id}")
             result = template_service.generate_pdf_with_ai_content(template_id, template_vars)
             if result.get('success'):
+                update_progress(95, "Finalizing", "Saving PDF file...")
                 lead_magnet.status = 'completed'
                 if template_selection:
                     template_selection.status = 'pdf-generated'
@@ -215,16 +239,20 @@ def _run_pdf_generation(lead_magnet_id, user_id, template_id, use_ai_content, us
                 pdf_data = result.get('pdf_data', b'')
                 filename = result.get('filename', f'lead-magnet-{lead_magnet_id}.pdf')
                 lead_magnet.pdf_file.save(filename, ContentFile(pdf_data), save=False)
+                update_progress(100, "Completed", "PDF successfully generated!")
                 lead_magnet.save(update_fields=['status', 'pdf_file'])
-                logger.info(f"Successfully generated PDF for lead magnet {lead_magnet_id} in background")
+                logger.info(f"✅ Thread {threading.get_ident()}: Successfully generated PDF for lead magnet {lead_magnet_id}")
             else:
-                logger.error(f"PDF generation failed in background: {result.get('error')}")
+                error_msg = result.get('error', 'Unknown DocRaptor error')
+                logger.error(f"❌ Thread {threading.get_ident()}: PDF generation failed for {lead_magnet_id}: {error_msg}")
                 lead_magnet.status = 'draft'
+                update_progress(0, "Failed", f"PDF error: {error_msg}")
                 lead_magnet.save(update_fields=['status'])
         except Exception as e:
-            logger.error(f"PDF generation failed in background with exception: {str(e)}")
+            logger.error(f"❌ Thread {threading.get_ident()}: PDF generation failed with exception: {str(e)}")
             if lead_magnet:
                 lead_magnet.status = 'draft'
+                update_progress(0, "Failed", f"Exception: {str(e)}")
                 lead_magnet.save(update_fields=['status'])
 
     except Exception as e:
@@ -283,11 +311,13 @@ class GeneratePDFView(APIView):
                         'lead_magnet_id': lead_magnet_id,
                         'status_url': status_url,
                         'retry_after_seconds': 3
-                    }, status=status.HTTP_409_CONFLICT)
+                    }, status=status.HTTP_200_OK)
 
             # Start processing in background
             lead_magnet.status = 'in-progress'
             lead_magnet.save(update_fields=['status'])
+            
+            logger.info(f"🚀 [502 FIX] Starting background thread for Lead Magnet {lead_magnet_id}")
             
             # Start background thread
             thread = threading.Thread(
@@ -297,16 +327,17 @@ class GeneratePDFView(APIView):
             thread.daemon = True
             thread.start()
 
-            # Return 409 immediately. 
-            # The frontend is already designed to catch 409 and start polling status.
+            # Return 202 Accepted. 
+            # The frontend is already designed to handle this and start polling status.
             # This prevents the 30s load balancer timeout (502 error).
+            logger.info(f"✅ [502 FIX] Returning immediate 202 response for {lead_magnet_id}")
             return Response({
                 'status': 'in_progress',
                 'message': 'PDF generation started in background',
                 'lead_magnet_id': lead_magnet_id,
                 'status_url': status_url,
                 'retry_after_seconds': 2
-            }, status=status.HTTP_409_CONFLICT)
+            }, status=status.HTTP_202_ACCEPTED)
 
         except Exception as e:
             import traceback
@@ -329,11 +360,25 @@ class GeneratePDFStatusView(APIView):
             return Response({'error': 'Lead magnet not found'}, status=status.HTTP_404_NOT_FOUND)
 
         if str(lead_magnet.status) == 'in-progress':
-            return Response({'status': 'in_progress'}, status=status.HTTP_200_OK)
+            return Response({
+                'status': 'in_progress',
+                'progress': lead_magnet.generation_progress or {"percent": 0, "stage": "Starting..."}
+            }, status=status.HTTP_200_OK)
 
         if str(lead_magnet.status) == 'completed' and lead_magnet.pdf_file:
             url = request.build_absolute_uri(lead_magnet.pdf_file.url)
-            return Response({'status': 'ready', 'pdf_url': url}, status=status.HTTP_200_OK)
+            return Response({
+                'status': 'ready', 
+                'pdf_url': url,
+                'progress': {"percent": 100, "stage": "Completed"}
+            }, status=status.HTTP_200_OK)
+
+        # Handle draft or failed state
+        if str(lead_magnet.status) == 'draft':
+            return Response({
+                'status': 'failed',
+                'progress': lead_magnet.generation_progress or {"percent": 0, "stage": "Failed"}
+            }, status=status.HTTP_200_OK)
 
         return Response({'status': 'pending'}, status=status.HTTP_200_OK)
 
@@ -566,8 +611,56 @@ class FormaAIConversationView(APIView):
             'content': message,
             'files': files
         })
-        
-        # Build firm profile similar to PDF generation flow
+        conversation.save() # Save here to ensure message is persisted
+
+        # If requested, use background task for PDF generation to avoid 502 timeouts
+        if generate_pdf:
+            # Create a LeadMagnet to track progress and store the PDF
+            lead_magnet = LeadMagnet.objects.create(
+                title=f"AI Generated: {message[:50]}...",
+                owner=request.user,
+                status='in-progress'
+            )
+            
+            # Link conversation to lead magnet
+            conversation.lead_magnet = lead_magnet
+            conversation.save()
+
+            # Derive minimal user_answers
+            def _derive_outcome_from_message(msg: str) -> str:
+                m = (msg or '').strip()
+                m = m.replace('\n', ' ')
+                m = m.strip(' .;:')
+                if len(m.split()) <= 3:
+                    return f"{m}"
+                return m
+
+            user_answers = {
+                'main_topic': message,
+                'lead_magnet_type': 'Custom Guide',
+                'desired_outcome': _derive_outcome_from_message(message),
+            }
+
+            # Start background thread
+            thread = threading.Thread(
+                target=_run_pdf_generation,
+                args=(lead_magnet.id, request.user.id, template_id, True, user_answers, architectural_images)
+            )
+            thread.daemon = True
+            thread.start()
+
+            status_url = request.build_absolute_uri(f"/api/generate-pdf/status/?lead_magnet_id={lead_magnet.id}")
+            
+            return Response({
+                'status': 'in_progress',
+                'message': 'AI PDF generation started in background',
+                'lead_magnet_id': lead_magnet.id,
+                'conversation_id': conversation.id,
+                'status_url': status_url,
+                'retry_after_seconds': 2
+            }, status=status.HTTP_202_ACCEPTED)
+
+        # Build firm profile for normal chat (if generate_pdf is false)
         firm_profile = {}
         try:
             fp = FirmProfile.objects.get(user=request.user)

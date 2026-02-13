@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, FileText, Download, Plus, Settings, LogOut, Palette, X } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { dashboardApi } from '../lib/dashboardApi'
+import { dashboardApi, LeadMagnetProgress } from '../lib/dashboardApi'
 import type { TemplateSelectionRequest } from '../lib/dashboardApi'
 import LeadMagnetGenerationForm from './forms/LeadMagnetGenerationForm'
 import TemplateSelectionForm from './forms/TemplateSelectionForm'
@@ -24,8 +24,8 @@ const CreateLeadMagnet: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  // Removed Review & Confirm modal staging state
   const [isGenerating, setIsGenerating] = useState(false)
+  const [generationProgress, setGenerationProgress] = useState<LeadMagnetProgress | null>(null)
 
   const handleLogout = () => {
     logout()
@@ -138,14 +138,22 @@ const CreateLeadMagnet: React.FC = () => {
           ? await Promise.all(architecturalImages.slice(0,3).map(fileToDataUrl))
           : [];
         setIsGenerating(true)
-        await dashboardApi.generatePDFWithAI({
+        setGenerationProgress({ percent: 0, stage: 'Starting...', details: 'Initializing background task' })
+        
+        const pdfUrl = await dashboardApi.generatePDFWithAI({
           template_id: templateId,
           lead_magnet_id: leadMagnet.id,
           use_ai_content: true,
           user_answers: capturedAnswers as unknown as Record<string, unknown>,
-          architectural_images: architecturalImageDataUrls
+          architectural_images: architecturalImageDataUrls,
+          onProgress: (progress) => {
+            setGenerationProgress(progress)
+          }
         })
-        setSuccessMessage('PDF generated and downloaded')
+        
+        setSuccessMessage('PDF generated successfully!')
+        setPreviewUrl(pdfUrl)
+        setShowPreviewModal(true)
       } catch (pdfError) {
         const e = pdfError as { message?: string }
         setErrorMessage(typeof e.message === 'string' ? e.message : 'PDF generation failed')
@@ -235,10 +243,36 @@ const CreateLeadMagnet: React.FC = () => {
             {errorMessage && (
               <div className="status-message error" style={{ marginTop: '8px', color: '#b00020' }}>{errorMessage}</div>
             )}
-            {successMessage && (
+            {successMessage && !isGenerating && (
               <div className="status-message success" style={{ marginTop: '8px', color: '#0b7a0b' }}>{successMessage}</div>
             )}
+            
+            {isGenerating && generationProgress && (
+              <div className="generation-progress-container" style={{ marginTop: '16px', width: '100%', maxWidth: '600px' }}>
+                <div className="progress-info" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span className="progress-stage" style={{ fontWeight: 600, color: '#2c3e50' }}>{generationProgress.stage}</span>
+                  <span className="progress-percent" style={{ color: '#7f8c8d' }}>{generationProgress.percent}%</span>
+                </div>
+                <div className="progress-bar-bg" style={{ width: '100%', height: '8px', backgroundColor: '#ecf0f1', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div 
+                    className="progress-bar-fill" 
+                    style={{ 
+                      width: `${generationProgress.percent}%`, 
+                      height: '100%', 
+                      backgroundColor: '#3498db', 
+                      transition: 'width 0.5s ease-in-out' 
+                    }}
+                  ></div>
+                </div>
+                {generationProgress.details && (
+                  <p className="progress-details" style={{ fontSize: '12px', color: '#95a5a6', marginTop: '4px' }}>
+                    {generationProgress.details}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
+
 
           <div className="form-container">
             {currentStep === 'lead-magnet-generation' && (

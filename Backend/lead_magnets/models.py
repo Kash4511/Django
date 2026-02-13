@@ -34,8 +34,12 @@ class LeadMagnet(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    # PDF file storage (for future implementation)
+    # PDF file storage
     pdf_file = models.FileField(upload_to='lead_magnets/', blank=True, null=True)
+
+    # Progress tracking for background generation
+    # Stores JSON like: {"percent": 0, "stage": "Starting...", "details": ""}
+    generation_progress = models.JSONField(default=dict, blank=True)
     
     def __str__(self):
         return str(self.title)

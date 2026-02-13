@@ -62,6 +62,18 @@ export interface PDFTemplate {
   secondary_preview_url?: string;
 }
 
+export interface LeadMagnetProgress {
+  percent: number;
+  stage: string;
+  details: string;
+}
+
+export interface PDFStatusResponse {
+  status: 'in_progress' | 'ready' | 'failed' | 'pending';
+  pdf_url?: string;
+  progress?: LeadMagnetProgress;
+}
+
 export interface CreateLeadMagnetRequest {
   title: string;
   description?: string;
@@ -305,64 +317,34 @@ export const dashboardApi = {
     }
   },
 
-  // Lead magnets - THIS GENERATES THE PDF
+    // Lead magnets - THIS GENERATES THE PDF
   generatePDFWithAI: async (request: { 
     template_id: string; 
     lead_magnet_id: number; 
     use_ai_content: boolean;
     user_answers?: Record<string, unknown>;
     architectural_images?: string[];
-  }): Promise<void> => {
+    onProgress?: (progress: LeadMagnetProgress) => void;
+  }): Promise<string> => {
     if (pdfGenerationRunning) {
-      return;
+      throw new Error('PDF generation already running');
     }
     pdfGenerationRunning = true;
     try {
-      const response = await apiClient.post(`${API_BASE_URL}/generate-pdf/`, request, {
-        responseType: 'blob'
-      });
-      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(pdfBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `lead-magnet-${request.lead_magnet_id}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      return;
+      const response = await apiClient.post(`${API_BASE_URL}/generate-pdf/`, request);
+      
+      // Handle success (200) or accepted (202)
+      if ((response.status === 200 || response.status === 202) && response.data.pdf_url) {
+        return response.data.pdf_url;
+      }
+
+      // If status is 202 or 200 but no URL yet, start polling
+      return await pollForPDF(request.lead_magnet_id, request.onProgress);
     } catch (error) {
       const err = error as AxiosError;
+      // Handle 409 Conflict (Legacy or specific conflict case)
       if (err.response && err.response.status === 409) {
-        const poll = async (): Promise<string> => {
-          const statusResp = await apiClient.get(`${API_BASE_URL}/generate-pdf/status/`, {
-            params: { lead_magnet_id: request.lead_magnet_id }
-          });
-          const data = statusResp.data as { status?: string; pdf_url?: string };
-          if (data && data.status === 'ready' && data.pdf_url) {
-            return data.pdf_url;
-          }
-          return '';
-        };
-        const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-        let attempts = 0;
-        const maxAttempts = 40;
-        const intervalMs = 2500;
-        while (attempts < maxAttempts) {
-          const pdfUrl = await poll();
-          if (pdfUrl) {
-            const link = document.createElement('a');
-            link.href = pdfUrl;
-            link.download = '';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            return;
-          }
-          attempts += 1;
-          await wait(intervalMs);
-        }
-        throw new Error('PDF generation did not complete in time');
+        return await pollForPDF(request.lead_magnet_id, request.onProgress);
       }
       handleApiError(error, 'Generating PDF with AI');
       throw error;
@@ -371,7 +353,7 @@ export const dashboardApi = {
     }
   },
 
-  getGeneratePDFStatus: async (lead_magnet_id: number): Promise<{ status: string; pdf_url?: string }> => {
+  getGeneratePDFStatus: async (lead_magnet_id: number): Promise<PDFStatusResponse> => {
     const response = await apiClient.get(`${API_BASE_URL}/generate-pdf/status/`, {
       params: { lead_magnet_id }
     });
@@ -420,7 +402,7 @@ export const dashboardApi = {
     } catch (error) {
       const err = error as AxiosError;
       if (err.response && err.response.status === 409) {
-        return '';
+        return await pollForPDF(request.lead_magnet_id);
       }
       if (error instanceof Error && error.message.includes('Generating PDF preview URL failed')) {
         throw error;
@@ -429,12 +411,10 @@ export const dashboardApi = {
       if (err.response && err.response.data instanceof Blob) {
         const blob = err.response.data as Blob;
         let text = '';
-        let parseError: Error | null = null;
         
         try {
           text = await blob.text();
         } catch (textError) {
-          parseError = textError as Error;
           console.error('Generating PDF preview URL - Error reading blob as text:', textError);
         }
         
@@ -446,61 +426,20 @@ export const dashboardApi = {
           
           try {
             errorData = JSON.parse(text);
-            // Extract error message from various possible fields
-            if (errorData) {
-              errorMessage = errorData.error || errorData.message || 'PDF generation failed';
-              errorDetails = errorData.details || '';
-            } else {
-              errorMessage = text || 'PDF generation failed';
-              errorDetails = 'Could not parse error response as JSON';
-            }
-          } catch {
-            // If JSON parsing fails, use the raw text
-            errorData = null;
-            errorMessage = text || 'PDF generation failed';
-            errorDetails = 'Could not parse error response as JSON';
+            errorMessage = errorData?.error || errorData?.message || 'Unknown error';
+            errorDetails = errorData?.details || '';
+          } catch (jsonError) {
+            console.error('Generating PDF preview URL - Error parsing blob text as JSON:', jsonError);
+            errorMessage = text;
           }
           
-          // Build the full error message
-          const fullErrorMessage = errorDetails 
-            ? `${errorMessage}\nDetails: ${errorDetails}`
-            : errorMessage;
-          
-          console.error('Generating PDF preview URL - Server Error:', {
-            status: err.response.status,
-            statusText: err.response.statusText,
-            error: errorMessage,
-            details: errorDetails,
-            rawText: text.length > 200 ? text.substring(0, 200) + '...' : text
-          });
-          
           throw new Error(
-            `Generating PDF preview URL failed: ${err.response.status} ${err.response.statusText}\n` +
-            `${fullErrorMessage}`
-          );
-        } else {
-          // Could not read blob text
-          const status = err.response?.status || 500;
-          const statusText = err.response?.statusText || 'Internal Server Error';
-          console.error('Generating PDF preview URL - Could not read error blob:', parseError);
-          throw new Error(
-            `Generating PDF preview URL failed: ${status} ${statusText}\n` +
-            `Details: Unable to read server error response. Please check server logs.`
+            `Generating PDF preview URL failed: ${errorMessage}${errorDetails ? '\nDetails: ' + errorDetails : ''}`
           );
         }
-      } else {
-        if (err.response) {
-          const status = err.response.status;
-          if (status >= 500) {
-            throw new Error('Server error, try again later');
-          }
-          const data = err.response.data as { error?: string; details?: string };
-          const msg = (data && (data.error || data.details)) || `${status} Error`;
-          throw new Error(msg);
-        }
-        handleApiError(error, 'Generating PDF preview URL');
-        throw error;
       }
+      
+      throw error;
     }
   },
 
@@ -616,5 +555,94 @@ export const dashboardApi = {
     } catch (error) {
       handleApiError(error, `Deleting lead magnet ${id}`);
     }
+  },
+
+  // AI Conversation with background PDF generation support
+  sendAIConversation: async (
+    formData: FormData,
+    onProgress?: (progress: LeadMagnetProgress) => void
+  ): Promise<{ pdfUrl?: string; data?: any }> => {
+    try {
+      const response = await apiClient.post(`${API_BASE_URL}/ai-conversation/`, formData);
+      
+      // If the response is already a PDF (direct response)
+      const contentType = response.headers['content-type'] || '';
+      if (contentType.includes('application/pdf')) {
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        return { pdfUrl: url };
+      }
+
+      // If status is 202 Accepted, start polling
+      if (response.status === 202) {
+        const leadMagnetId = response.data.lead_magnet_id;
+        if (leadMagnetId) {
+          const pdfUrl = await pollForPDF(leadMagnetId, onProgress);
+          return { pdfUrl };
+        }
+      }
+      
+      return { data: response.data };
+    } catch (error: any) {
+      // Handle 409 Conflict (Generation started in background - Legacy support)
+      if (error.response && error.response.status === 409) {
+        const leadMagnetId = error.response.data.lead_magnet_id;
+        if (leadMagnetId) {
+          const pdfUrl = await pollForPDF(leadMagnetId, onProgress);
+          return { pdfUrl };
+        }
+      }
+      handleApiError(error, 'AI Conversation');
+      throw error;
+    }
   }
 };
+
+/**
+ * Helper to poll for PDF status until ready or failed
+ */
+async function pollForPDF(
+  lead_magnet_id: number, 
+  onProgress?: (progress: LeadMagnetProgress) => void
+): Promise<string> {
+  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  let attempts = 0;
+  const maxAttempts = 60; // 5 minutes with 5s interval
+  const intervalMs = 5000;
+
+  console.log(`🔍 Starting polling for PDF status (Lead Magnet: ${lead_magnet_id})...`);
+
+  while (attempts < maxAttempts) {
+    try {
+      const data = await dashboardApi.getGeneratePDFStatus(lead_magnet_id);
+      
+      if (data.progress && onProgress) {
+        onProgress(data.progress);
+      }
+
+      if (data.status === 'ready' && data.pdf_url) {
+        console.log(`✅ PDF is ready: ${data.pdf_url}`);
+        return data.pdf_url;
+      }
+
+      if (data.status === 'failed') {
+        const errorMsg = data.progress?.details || 'PDF generation failed on server';
+        console.error(`❌ PDF generation failed: ${errorMsg}`);
+        throw new Error(errorMsg);
+      }
+
+      console.log(`⏳ Polling attempt ${attempts + 1}/${maxAttempts}: status is ${data.status}`);
+    } catch (error: any) {
+      if (error.response && error.response.status === 404) {
+        console.warn(`⚠️ PDF status not found (404) for ${lead_magnet_id}, retrying...`);
+      } else {
+        throw error;
+      }
+    }
+
+    attempts += 1;
+    await wait(intervalMs);
+  }
+
+  throw new Error('PDF generation timed out. Please check "My Lead Magnets" in a few minutes.');
+}

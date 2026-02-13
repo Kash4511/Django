@@ -352,15 +352,6 @@ const TemplateSelectionForm: React.FC<TemplateSelectionFormProps> = ({
         )}
       </Modal>
 
-      {loading && (
-        <div className="template-loading-overlay">
-          <div className="overlay-content">
-            <Loader2 className="spinner" size={32} />
-            <p>Creating lead magnet… this can take up to 30s.</p>
-            <p>Elapsed: {elapsed}s</p>
-          </div>
-        </div>
-      )}
     </>
   )
 }
