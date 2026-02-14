@@ -175,6 +175,42 @@ const CreateLeadMagnet: React.FC = () => {
 
   return (
     <div className="create-lead-magnet">
+      {/* PDF Generation Overlay Popup */}
+      {isGenerating && generationProgress && (
+        <div className="pdf-overlay">
+          <div className="pdf-overlay-content">
+            <div className="pdf-icon-wrapper">
+              <FileText size={48} className="rotating-icon" />
+            </div>
+            <h2>Generating Your PDF</h2>
+            <p>Our AI is crafting your lead magnet based on your input.</p>
+            
+            <div className="progress-container" style={{ margin: '2rem 0' }}>
+              <div className="progress-info" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span className="progress-stage" style={{ fontWeight: 600, color: '#3498db' }}>{generationProgress.stage}</span>
+                <span className="progress-percent" style={{ color: '#ecf0f1' }}>{generationProgress.percent}%</span>
+              </div>
+              <div className="progress-bar-bg" style={{ width: '100%', height: '10px', backgroundColor: '#3d3d3d', borderRadius: '5px', overflow: 'hidden' }}>
+                <div 
+                  className="progress-bar-fill" 
+                  style={{ 
+                    width: `${generationProgress.percent}%`, 
+                    height: '100%', 
+                    backgroundColor: '#3498db', 
+                    transition: 'width 0.5s ease-in-out',
+                    boxShadow: '0 0 10px rgba(52, 152, 219, 0.5)'
+                  }}
+                ></div>
+              </div>
+              {generationProgress.details && (
+                <p className="progress-details" style={{ fontSize: '14px', color: '#95a5a6', marginTop: '12px' }}>
+                  {generationProgress.details}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <nav className="dashboard-nav">
         <div className="nav-brand">Forma</div>
         <div className="nav-actions">
@@ -245,31 +281,6 @@ const CreateLeadMagnet: React.FC = () => {
             )}
             {successMessage && !isGenerating && (
               <div className="status-message success" style={{ marginTop: '8px', color: '#0b7a0b' }}>{successMessage}</div>
-            )}
-            
-            {isGenerating && generationProgress && (
-              <div className="generation-progress-container" style={{ marginTop: '16px', width: '100%', maxWidth: '600px' }}>
-                <div className="progress-info" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span className="progress-stage" style={{ fontWeight: 600, color: '#2c3e50' }}>{generationProgress.stage}</span>
-                  <span className="progress-percent" style={{ color: '#7f8c8d' }}>{generationProgress.percent}%</span>
-                </div>
-                <div className="progress-bar-bg" style={{ width: '100%', height: '8px', backgroundColor: '#ecf0f1', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div 
-                    className="progress-bar-fill" 
-                    style={{ 
-                      width: `${generationProgress.percent}%`, 
-                      height: '100%', 
-                      backgroundColor: '#3498db', 
-                      transition: 'width 0.5s ease-in-out' 
-                    }}
-                  ></div>
-                </div>
-                {generationProgress.details && (
-                  <p className="progress-details" style={{ fontSize: '12px', color: '#95a5a6', marginTop: '4px' }}>
-                    {generationProgress.details}
-                  </p>
-                )}
-              </div>
             )}
           </div>
 

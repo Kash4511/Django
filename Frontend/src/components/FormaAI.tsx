@@ -156,6 +156,51 @@ const FormaAI: React.FC = () => {
 
   return (
     <div className="forma-ai">
+      {/* PDF Generation Overlay Popup */}
+      {isGeneratingPDF && generationProgress && (
+        <div className="pdf-overlay">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="pdf-overlay-content"
+          >
+            <div className="pdf-icon-wrapper">
+              <FileText size={48} className="rotating-icon" />
+            </div>
+            <h2>Generating Your PDF</h2>
+            <p>Our AI is crafting your lead magnet based on your input.</p>
+            
+            <div className="progress-container" style={{ margin: '2rem 0' }}>
+              <div className="progress-info" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span className="progress-stage" style={{ fontWeight: 600, color: '#3498db' }}>{generationProgress.stage}</span>
+                <span className="progress-percent" style={{ color: '#ecf0f1' }}>{generationProgress.percent}%</span>
+              </div>
+              <div className="progress-bar-bg" style={{ width: '100%', height: '10px', backgroundColor: '#3d3d3d', borderRadius: '5px', overflow: 'hidden' }}>
+                <div 
+                  className="progress-bar-fill" 
+                  style={{ 
+                    width: `${generationProgress.percent}%`, 
+                    height: '100%', 
+                    backgroundColor: '#3498db', 
+                    transition: 'width 0.5s ease-in-out',
+                    boxShadow: '0 0 10px rgba(52, 152, 219, 0.5)'
+                  }}
+                ></div>
+              </div>
+              {generationProgress.details && (
+                <p className="progress-details" style={{ fontSize: '14px', color: '#95a5a6', marginTop: '12px' }}>
+                  {generationProgress.details}
+                </p>
+              )}
+            </div>
+            
+            <button className="cancel-btn" onClick={handleCancelGeneration}>
+              Cancel Generation
+            </button>
+          </motion.div>
+        </div>
+      )}
+
       {/* Control panel removed as requested */}
       <nav className="dashboard-nav">
         <div className="nav-brand">Forma</div>
@@ -259,27 +304,6 @@ const FormaAI: React.FC = () => {
                 )}
 
                 <div className="chat-input-box">
-                  {isGeneratingPDF && generationProgress && (
-                    <div className="generation-progress-inline" style={{ padding: '12px 16px', borderBottom: '1px solid #eee' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
-                        <span style={{ fontWeight: 600, color: '#2c3e50' }}>{generationProgress.stage}</span>
-                        <span style={{ color: '#7f8c8d' }}>{generationProgress.percent}%</span>
-                      </div>
-                      <div style={{ width: '100%', height: '6px', backgroundColor: '#f0f2f5', borderRadius: '3px', overflow: 'hidden' }}>
-                        <div 
-                          style={{ 
-                            width: `${generationProgress.percent}%`, 
-                            height: '100%', 
-                            backgroundColor: '#3498db', 
-                            transition: 'width 0.4s ease-out' 
-                          }}
-                        />
-                      </div>
-                      {generationProgress.details && (
-                        <div style={{ fontSize: '11px', color: '#95a5a6', marginTop: '4px' }}>{generationProgress.details}</div>
-                      )}
-                    </div>
-                  )}
                   <textarea
                     className="chat-input"
                     value={message}

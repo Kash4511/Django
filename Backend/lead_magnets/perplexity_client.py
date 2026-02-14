@@ -69,14 +69,14 @@ class PerplexityClient:
                         "max_tokens": 4000,
                         "temperature": 0.7
                     },
-                    timeout=12  # Reduced from 20 to fit within Render's 30s limit
+                    timeout=120  # Increased to 120s as requested by user
                 )
                 break
             except requests.exceptions.Timeout:
                 retry_count += 1
                 if retry_count > max_retries:
                     print("❌ Perplexity API timeout after multiple attempts")
-                    raise Exception("Perplexity API timeout (12s per attempt). Try again with less complex input.")
+                    raise Exception("Perplexity API timeout (120s per attempt). Try again with less complex input.")
                 else:
                     print(f"⚠️ API timeout on attempt {retry_count}, retrying...")
                     continue
@@ -315,9 +315,9 @@ class PerplexityClient:
             "- Use firm_name, work_email, phone_number, firm_website, tagline EXACTLY as provided.\n"
             "- Use brand colors EXACTLY as provided (primary, secondary, accent). If any input color is missing, set that field to an empty string rather than inventing a color.\n"
             "- Include logo_url if provided; else set to an empty string.\n"
-            "- Generate 10 complete sections: each section has 1 paragraph; each subsection 1–2 sentences.\n"
-            "- Terms must include a summary and 3 paragraphs (2–3 sentences each).\n"
-            "- Contents.items must have EXACTLY 10 descriptive entries aligned to the sections.\n"
+            "- Generate 6 complete sections (reduced complexity): each section has 1 concise paragraph; each subsection 1 sentence.\n"
+            "- Terms must include a summary and 3 paragraphs (1–2 sentences each).\n"
+            "- Contents.items must have EXACTLY 6 descriptive entries aligned to the sections.\n"
             "- NO extra text outside JSON, NO Markdown, NO comments.\n"
             "- Do NOT use any placeholder like 'TEST DOCUMENT'.\n"
             "- JSON Safety: Ensure all quotes inside strings are properly escaped. Do not use unescaped newlines within strings.\n"
