@@ -1484,7 +1484,7 @@
         </div>
 
         <!-- PAGE 10: CUSTOM CONTENT 7 -->
-        {% if customTitle7 or customContent7 or subheading7 or listItem5 or listItem6 or listItem7 %}
+        {% if customTitle7 or customContent7 or subheading7 or subcontent7 or architecturalImages %}
         <div class="page content-page">
             <div class="page-header-enhanced">
                 <div class="header-decoration">
@@ -1501,14 +1501,23 @@
             
             <div class="page-content-area">
                 <p class="content-text">{{customContent7}}</p>
-                
+                {% if architecturalImages and architecturalImages|length > 3 and architecturalImages[3].src %}
+                <div class="architectural-image">
+                    <img src="{{architecturalImages[3].src}}" alt="{{architecturalImages[3].alt}}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 12px;">
+                    <div class="image-placeholder-subtext">{{architecturalImages[3].alt}}</div>
+                </div>
+                {% else %}
+                <div class="image-placeholder">
+                    <div class="image-placeholder-icon"></div>
+                    <div class="image-placeholder-text">Illustration</div>
+                    <div class="image-placeholder-subtext">Concept visualization</div>
+                </div>
+                {% endif %}
+                {% if subheading7 %}
                 <h3 class="section-title">{{subheading7}}</h3>
-                {% if listItem5 or listItem6 or listItem7 %}
-                <ul class="checklist">
-                    {% if listItem5 %}<li>{{listItem5}}</li>{% endif %}
-                    {% if listItem6 %}<li>{{listItem6}}</li>{% endif %}
-                    {% if listItem7 %}<li>{{listItem7}}</li>{% endif %}
-                </ul>
+                {% endif %}
+                {% if subcontent7 %}
+                <p class="content-text">{{subcontent7}}</p>
                 {% endif %}
             </div>
             
@@ -1538,8 +1547,8 @@
         </div>
         {% endif %}
 
-        <!-- PAGE 11: CUSTOM CONTENT 8 -->
-        {% if customTitle8 or customContent8 or subheading8 or subcontent8 or accentBoxTitle4 or accentBoxContent4 %}
+        <!-- PAGE 11: CUSTOM CONTENT 8 (Explanatory) -->
+        {% if customTitle8 or customContent8 or subheading8 or subcontent8 or accentBoxTitle4 or accentBoxContent4 or architecturalImages %}
         <div class="page content-page">
             <div class="page-header-enhanced">
                 <div class="header-decoration">
@@ -1555,24 +1564,29 @@
             <div class="header-accent-bar"></div>
             
             <div class="page-content-area">
-                <h3 class="section-title">Budget Checklist</h3>
-                <div class="content-box accent">
-                    <h3>Project Budget Breakdown</h3>
-                    <ul>
-                        <li>Passive solar design materials: $_________</li>
-                        <li>Building envelope and insulation: $_________</li>
-                        <li>Mechanical systems (HVAC/ventilation): $_________</li>
-                        <li>Smart technology integration: $_________</li>
-                        <li>Local/low-carbon materials: $_________</li>
-                        <li>Permitting and regulatory costs: $_________</li>
-                        <li>Contingency (10–15%): $_________</li>
-                        <li>Total project budget: $_________</li>
-                    </ul>
+                <p class="content-text">{{customContent8}}</p>
+                {% if architecturalImages and architecturalImages|length > 4 and architecturalImages[4].src %}
+                <div class="architectural-image">
+                    <img src="{{architecturalImages[4].src}}" alt="{{architecturalImages[4].alt}}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 12px;">
+                    <div class="image-placeholder-subtext">{{architecturalImages[4].alt}}</div>
                 </div>
-                {% if subheading8 or subcontent8 %}
-                <div class="content-box">
-                    <h3>{{subheading8}}</h3>
-                    <p>{{subcontent8}}</p>
+                {% else %}
+                <div class="image-placeholder">
+                    <div class="image-placeholder-icon"></div>
+                    <div class="image-placeholder-text">Illustration</div>
+                    <div class="image-placeholder-subtext">Supporting visual</div>
+                </div>
+                {% endif %}
+                {% if subheading8 %}
+                <h3 class="section-title">{{subheading8}}</h3>
+                {% endif %}
+                {% if subcontent8 %}
+                <p class="content-text">{{subcontent8}}</p>
+                {% endif %}
+                {% if accentBoxTitle4 or accentBoxContent4 %}
+                <div class="content-box accent">
+                    <h3>{{accentBoxTitle4}}</h3>
+                    <p>{{accentBoxContent4}}</p>
                 </div>
                 {% endif %}
             </div>
@@ -1603,8 +1617,8 @@
         </div>
         {% endif %}
 
-        <!-- PAGE 12: CUSTOM CONTENT 9 -->
-        {% if customTitle9 or customContent9 or subheading9 or listItem8 or listItem9 or listItem10 %}
+        <!-- PAGE 12: CUSTOM CONTENT 9 (Explanatory) -->
+        {% if customTitle9 or customContent9 or subheading9 or subcontent9 or architecturalImages %}
         <div class="page content-page">
             <div class="page-header-enhanced">
                 <div class="header-decoration">
@@ -1620,20 +1634,30 @@
             <div class="header-accent-bar"></div>
             
             <div class="page-content-area">
-                <h3 class="section-title">Action Planner Worksheet</h3>
-                <div class="content-box">
-                    <h3>Plan Entries</h3>
-                    <ul>
-                        <li>Goal: __________________ • Priority: ________ • Timeline: ________ • Owner: ________ • KPI: __________________</li>
-                        <li>Goal: __________________ • Priority: ________ • Timeline: ________ • Owner: ________ • KPI: __________________</li>
-                        <li>Goal: __________________ • Priority: ________ • Timeline: ________ • Owner: ________ • KPI: __________________</li>
-                    </ul>
+                <p class="content-text">{{customContent9}}</p>
+                {% if architecturalImages and architecturalImages|length > 5 and architecturalImages[5].src %}
+                <div class="architectural-image">
+                    <img src="{{architecturalImages[5].src}}" alt="{{architecturalImages[5].alt}}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 12px;">
+                    <div class="image-placeholder-subtext">{{architecturalImages[5].alt}}</div>
                 </div>
-                {% if subheading9 or customContent9 %}
-                <div class="content-box">
-                    <h3>{{subheading9}}</h3>
-                    <p>{{customContent9}}</p>
+                {% else %}
+                <div class="image-placeholder">
+                    <div class="image-placeholder-icon"></div>
+                    <div class="image-placeholder-text">Illustration</div>
+                    <div class="image-placeholder-subtext">Key concept</div>
                 </div>
+                {% endif %}
+                {% if subheading9 %}
+                <h3 class="section-title">{{subheading9}}</h3>
+                {% endif %}
+                {% if listItem8 or listItem9 or listItem10 %}
+                <ul>
+                    {% if listItem8 %}<li>{{listItem8}}</li>{% endif %}
+                    {% if listItem9 %}<li>{{listItem9}}</li>{% endif %}
+                    {% if listItem10 %}<li>{{listItem10}}</li>{% endif %}
+                </ul>
+                {% elif subcontent9 %}
+                <p class="content-text">{{subcontent9}}</p>
                 {% endif %}
             </div>
             
@@ -1663,8 +1687,8 @@
         </div>
         {% endif %}
 
-        <!-- PAGE 13: CUSTOM CONTENT 10 -->
-        {% if customTitle10 or customContent10 or subheading10 or subcontent10 or boxTitle4 or boxContent4 %}
+        <!-- PAGE 13: CUSTOM CONTENT 10 (Explanatory) -->
+        {% if customTitle10 or customContent10 or subheading10 or subcontent10 or boxTitle4 or boxContent4 or architecturalImages %}
         <div class="page content-page">
             <div class="page-header-enhanced">
                 <div class="header-decoration">
@@ -1680,39 +1704,31 @@
             <div class="header-accent-bar"></div>
             
             <div class="page-content-area">
-                <h3 class="section-title">Site Analysis Worksheet</h3>
-                <div class="content-box">
-                    <h3>Environmental</h3>
-                    <ul>
-                        <li>Climate and solar exposure: __________________</li>
-                        <li>Prevailing winds and ventilation: __________________</li>
-                        <li>Topography and drainage: __________________</li>
-                    </ul>
+                <p class="content-text">{{customContent10}}</p>
+                {% if architecturalImages and architecturalImages|length > 6 and architecturalImages[6].src %}
+                <div class="architectural-image">
+                    <img src="{{architecturalImages[6].src}}" alt="{{architecturalImages[6].alt}}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 12px;">
+                    <div class="image-placeholder-subtext">{{architecturalImages[6].alt}}</div>
                 </div>
-                <div class="content-box">
-                    <h3>Regulatory</h3>
-                    <ul>
-                        <li>Zoning and setbacks: __________________</li>
-                        <li>Permitting requirements: __________________</li>
-                        <li>Energy and building codes: __________________</li>
-                    </ul>
+                {% else %}
+                <div class="image-placeholder">
+                    <div class="image-placeholder-icon"></div>
+                    <div class="image-placeholder-text">Illustration</div>
+                    <div class="image-placeholder-subtext">Detailed example</div>
                 </div>
+                {% endif %}
+                {% if subheading10 %}
+                <h3 class="section-title">{{subheading10}}</h3>
+                {% endif %}
+                {% if subcontent10 %}
+                <p class="content-text">{{subcontent10}}</p>
+                {% endif %}
+                {% if boxTitle4 or boxContent4 %}
                 <div class="content-box">
-                    <h3>Cost & Risk</h3>
-                    <ul>
-                        <li>Cost drivers and constraints: __________________</li>
-                        <li>Risks and mitigations: __________________</li>
-                        <li>Schedule considerations: __________________</li>
-                    </ul>
+                    <h3>{{boxTitle4}}</h3>
+                    <p>{{boxContent4}}</p>
                 </div>
-                <div class="content-box">
-                    <h3>Sustainability Opportunities</h3>
-                    <ul>
-                        <li>Passive design options: __________________</li>
-                        <li>Local/low-carbon materials: __________________</li>
-                        <li>On-site renewables and storage: __________________</li>
-                    </ul>
-                </div>
+                {% endif %}
             </div>
             
             <div class="footer-enhanced">
