@@ -104,19 +104,64 @@ class PerplexityClient:
         try:
             content = json.loads(json_content)
             return content
-        except json.JSONDecodeError as e:
-            print(f"❌ Failed to parse JSON from Perplexity response: {e}")
-            # Log the full raw content for debugging in server logs
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"AI JSON Parse Error: {str(e)}")
-            logger.error(f"Raw message content: {message_content}")
-            logger.error(f"Extracted JSON content: {json_content}")
+        except json.JSONDecodeError:
+            # Try to repair the JSON if first attempt fails
+            print("⚠️ Initial JSON parse failed, attempting repair...")
+            repaired_json = self._repair_json(json_content)
+            try:
+                content = json.loads(repaired_json)
+                print("✅ JSON repaired successfully!")
+                return content
+            except json.JSONDecodeError as e:
+                print(f"❌ Failed to parse JSON even after repair: {e}")
+                # Log the full raw content for debugging in server logs
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"AI JSON Parse Error: {str(e)}")
+                logger.error(f"Raw message content: {message_content}")
+                logger.error(f"Extracted JSON content: {json_content}")
+                logger.error(f"Repaired JSON content: {repaired_json}")
+                
+                # Print more details to console
+                print(f"Raw content: {repr(message_content)}")
+                print(f"Extracted JSON: {repr(json_content)}")
+                raise Exception(f"Invalid JSON returned from Perplexity API: {str(e)}")
+
+    def _repair_json(self, json_str: str) -> str:
+        """
+        Attempt to repair common JSON errors from AI models.
+        """
+        if not json_str:
+            return ""
+
+        repaired = json_str.strip()
+        
+        # 1. Handle unescaped newlines within strings
+        # Replace actual newlines with literal \n characters if they are inside what looks like a string
+        # This is a basic fix for AI models that forget to escape newlines
+        def fix_newlines(match):
+            return match.group(0).replace('\n', '\\n').replace('\r', '\\r')
+        
+        repaired = re.sub(r'":\s*"[^"]*?"', fix_newlines, repaired, flags=re.DOTALL)
+
+        # 2. Fix unescaped double quotes within strings
+        # If we see " followed by text and then " followed by text without a : or , or } or ]
+        # This is complex, but we can try to fix the most common case: "key": "Value with "quotes" inside"
+        # We look for a quote that is NOT preceded by : or [ or { or , and NOT followed by , or } or ] or :
+        # But for now, let's stick to the most critical: unescaped newlines and truncation.
+
+        # 3. Ensure balanced braces (common in truncated responses)
+        open_braces = repaired.count('{')
+        close_braces = repaired.count('}')
+        if open_braces > close_braces:
+            repaired += '}' * (open_braces - close_braces)
+        
+        open_brackets = repaired.count('[')
+        close_brackets = repaired.count(']')
+        if open_brackets > close_brackets:
+            repaired += ']' * (open_brackets - close_brackets)
             
-            # Print more details to console
-            print(f"Raw content: {repr(message_content)}")
-            print(f"Extracted JSON: {repr(json_content)}")
-            raise Exception(f"Invalid JSON returned from Perplexity API: {str(e)}")
+        return repaired
 
     def _extract_json_from_markdown(self, content: str) -> str:
         """
@@ -128,7 +173,14 @@ class PerplexityClient:
         # Remove leading/trailing whitespace
         content = content.strip()
         
-        # 1. Try regex for ```json { ... } ```
+        # 0. Try to find the JSON block if the model included conversational text
+        # Look for the first '{' that is followed by a '"' (likely a key)
+        first_brace = content.find('{')
+        if first_brace != -1:
+            # Check if there's text before the brace that should be ignored
+            content = content[first_brace:]
+
+        # 1. Try regex for ```json { ... } ``` or ``` { ... } ```
         json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', content, re.DOTALL)
         if json_match:
             return json_match.group(1).strip()
@@ -288,7 +340,7 @@ class PerplexityClient:
                     ]
                 },
                 "contents": {
-                    "items": ["<10 descriptive items for TOC>"]
+                    "items": ["<6 descriptive items for TOC>"]
                 },
                 "sections": [
                     {
@@ -320,7 +372,8 @@ class PerplexityClient:
             "- Contents.items must have EXACTLY 6 descriptive entries aligned to the sections.\n"
             "- NO extra text outside JSON, NO Markdown, NO comments.\n"
             "- Do NOT use any placeholder like 'TEST DOCUMENT'.\n"
-            "- JSON Safety: Ensure all quotes inside strings are properly escaped. Do not use unescaped newlines within strings.\n"
+            "- JSON Safety: Use ONLY single quotes for interior text if needed, and double quotes ONLY for JSON keys and string boundaries. Ensure all double quotes inside strings are escaped as \\\". Do not use unescaped newlines within strings.\n"
+            "- Final check: Ensure the JSON is complete and ends with a closing brace '}'.\n"
         )
 
         return prompt
