@@ -11,6 +11,32 @@ Currently, two official plugins are available:
 
 The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
+## API Resilience
+
+The lead magnet generation system includes robust resilience features to handle malformed AI responses and API instability.
+
+### Backend Resilience (Perplexity API)
+The `PerplexityClient` in `Backend/lead_magnets/perplexity_client.py` implements:
+- **Exponential Backoff Retries**: Automatically retries up to 3 times (configurable via `AI_MAX_RETRIES` environment variable) on JSON parsing failures or API errors.
+- **Robust JSON Repair**: A multi-stage regex-based repair mechanism that fixes common AI hallucinations:
+    - Missing commas between key-value pairs.
+    - Unescaped quotes within JSON strings.
+    - Unescaped control characters/newlines.
+    - Single quotes used for keys or string boundaries.
+    - Trailing commas in objects or arrays.
+    - Unbalanced braces or brackets.
+- **Debug Logging**: On any parsing failure, the first 5KB of the raw response is logged to standard output for easier diagnosis of new edge cases.
+
+### Frontend Resilience
+The `dashboardApi` in `Frontend/src/lib/dashboardApi.ts` includes:
+- **`parseJSON` Helper**: A robust JSON parsing utility that sanitizes common malformations (trailing commas, control characters) before parsing.
+- **Aggressive Repair**: Attempts to fix single-quote/double-quote mismatches if standard parsing fails.
+- **Safe Error Handling**: Prevents unhandled exceptions in the browser console by gracefully handling invalid PDF/JSON responses from the generation endpoint.
+
+### Configuration
+- `AI_MAX_RETRIES`: (Default: 3) Set this in your `.env` file to control the number of retry attempts for AI generation.
+- Debug logging is enabled by default for parsing failures.
+
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:

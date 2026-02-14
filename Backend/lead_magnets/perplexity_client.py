@@ -11,6 +11,12 @@ except ImportError:
     load_dotenv = None
 
 
+import time
+import math
+import logging
+
+logger = logging.getLogger(__name__)
+
 class PerplexityClient:
     """Client for interacting with Perplexity AI API for lead magnet content generation"""
     
@@ -31,15 +37,18 @@ class PerplexityClient:
             print("❌ PERPLEXITY_API_KEY missing")
             raise Exception("PERPLEXITY_API_KEY is not configured; cannot generate AI content. Please add PERPLEXITY_API_KEY=your_key_here to your Backend/.env file")
 
-        max_retries = 1  # Reduced from 2
+        max_retries = int(os.getenv('AI_MAX_RETRIES', 3))
         retry_count = 0
         models_to_try = ["sonar-pro", "sonar"]
 
         while retry_count <= max_retries:
-            model_to_use = models_to_try[1] if retry_count == max_retries else models_to_try[0]
+            model_to_use = models_to_try[1] if retry_count >= 1 else models_to_try[0]
             try:
                 if retry_count > 0:
-                    print(f"🔄 Retrying AI content generation (attempt {retry_count + 1}/{max_retries + 1}) with model: {model_to_use}...")
+                    # Exponential backoff: 2^retry_count * 1s
+                    wait_time = math.pow(2, retry_count)
+                    print(f"🔄 Retrying AI content generation (attempt {retry_count + 1}/{max_retries + 1}) in {wait_time}s with model: {model_to_use}...")
+                    time.sleep(wait_time)
                 else:
                     print(f"Generating AI content with model: {model_to_use}...")
 
@@ -69,63 +78,64 @@ class PerplexityClient:
                         "max_tokens": 4000,
                         "temperature": 0.7
                     },
-                    timeout=120  # Increased to 120s as requested by user
+                    timeout=120
                 )
-                break
+
+                if response.status_code != 200:
+                    print(f"❌ Perplexity API error: {response.status_code} - {response.text}")
+                    if retry_count < max_retries:
+                        retry_count += 1
+                        continue
+                    raise Exception(f"Perplexity API error: {response.status_code} - {response.text}")
+
+                result = response.json()
+                message_content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
+                
+                # Log message content length and first few chars for debugging
+                print(f"DEBUG: AI response content length: {len(message_content)}")
+                
+                json_content = self._extract_json_from_markdown(message_content)
+                try:
+                    content = json.loads(json_content)
+                    return content
+                except json.JSONDecodeError as initial_error:
+                    # Try to repair the JSON if first attempt fails
+                    print(f"⚠️ Initial JSON parse failed on attempt {retry_count + 1}: {initial_error}")
+                    repaired_json = self._repair_json(json_content)
+                    try:
+                        content = json.loads(repaired_json)
+                        print("✅ JSON repaired successfully!")
+                        return content
+                    except json.JSONDecodeError as repair_error:
+                        print(f"❌ Failed to parse JSON even after repair: {repair_error}")
+                        
+                        # Log the full raw content (first 5KB as requested) for debugging
+                        raw_preview = message_content[:5000]
+                        logger.error(f"AI JSON Parse Error on attempt {retry_count + 1}")
+                        logger.error(f"Raw response (first 5KB): {raw_preview}")
+                        logger.error(f"Extracted JSON: {json_content}")
+                        logger.error(f"Repaired JSON: {repaired_json}")
+                        
+                        if retry_count < max_retries:
+                            print(f"🔄 Retrying due to malformed JSON...")
+                            retry_count += 1
+                            continue
+                        raise Exception(f"Invalid JSON returned from Perplexity API after {max_retries + 1} attempts. Error: {repair_error}")
+
             except requests.exceptions.Timeout:
-                retry_count += 1
-                if retry_count > max_retries:
-                    print("❌ Perplexity API timeout after multiple attempts")
-                    raise Exception("Perplexity API timeout (120s per attempt). Try again with less complex input.")
-                else:
-                    print(f"⚠️ API timeout on attempt {retry_count}, retrying...")
+                print(f"⚠️ API timeout on attempt {retry_count + 1}")
+                if retry_count < max_retries:
+                    retry_count += 1
                     continue
-            except requests.exceptions.RequestException as e:
-                print(f"❌ Perplexity API request error: {e}")
-                raise Exception(f"Perplexity API request error: {e}")
+                raise Exception(f"Perplexity API timeout after {max_retries + 1} attempts (120s per attempt).")
             except Exception as e:
-                print(f"❌ Error calling Perplexity API: {str(e)}")
+                print(f"❌ Error during AI generation (attempt {retry_count + 1}): {str(e)}")
+                if retry_count < max_retries:
+                    retry_count += 1
+                    continue
                 raise
 
-        print(f"Perplexity response status: {response.status_code}")
-        if response.status_code != 200:
-            print(f"❌ Perplexity API error: {response.status_code} - {response.text}")
-            raise Exception(f"Perplexity API error: {response.status_code} - {response.text}")
-
-        result = response.json()
-        message_content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
-        
-        # Log message content length and first few chars for debugging
-        print(f"DEBUG: AI response content length: {len(message_content)}")
-        if len(message_content) > 0:
-            print(f"DEBUG: AI response preview: {message_content[:100]}...")
-
-        json_content = self._extract_json_from_markdown(message_content)
-        try:
-            content = json.loads(json_content)
-            return content
-        except json.JSONDecodeError:
-            # Try to repair the JSON if first attempt fails
-            print("⚠️ Initial JSON parse failed, attempting repair...")
-            repaired_json = self._repair_json(json_content)
-            try:
-                content = json.loads(repaired_json)
-                print("✅ JSON repaired successfully!")
-                return content
-            except json.JSONDecodeError as e:
-                print(f"❌ Failed to parse JSON even after repair: {e}")
-                # Log the full raw content for debugging in server logs
-                import logging
-                logger = logging.getLogger(__name__)
-                logger.error(f"AI JSON Parse Error: {str(e)}")
-                logger.error(f"Raw message content: {message_content}")
-                logger.error(f"Extracted JSON content: {json_content}")
-                logger.error(f"Repaired JSON content: {repaired_json}")
-                
-                # Print more details to console
-                print(f"Raw content: {repr(message_content)}")
-                print(f"Extracted JSON: {repr(json_content)}")
-                raise Exception(f"Invalid JSON returned from Perplexity API: {str(e)}")
+        return {} # Should not reach here
 
     def _repair_json(self, json_str: str) -> str:
         """
@@ -137,20 +147,44 @@ class PerplexityClient:
         repaired = json_str.strip()
         
         # 1. Handle unescaped newlines within strings
-        # Replace actual newlines with literal \n characters if they are inside what looks like a string
-        # This is a basic fix for AI models that forget to escape newlines
         def fix_newlines(match):
             return match.group(0).replace('\n', '\\n').replace('\r', '\\r')
         
         repaired = re.sub(r'":\s*"[^"]*?"', fix_newlines, repaired, flags=re.DOTALL)
 
-        # 2. Fix unescaped double quotes within strings
-        # If we see " followed by text and then " followed by text without a : or , or } or ]
-        # This is complex, but we can try to fix the most common case: "key": "Value with "quotes" inside"
-        # We look for a quote that is NOT preceded by : or [ or { or , and NOT followed by , or } or ] or :
-        # But for now, let's stick to the most critical: unescaped newlines and truncation.
+        # 2.5 Fix missing commas between key-value pairs
+        # We do this BEFORE fixing unescaped quotes to help the regex identify boundaries
+        repaired = re.sub(r'("[^"]*")\s*(")', r'\1, \2', repaired)
+        repaired = re.sub(r'("[^"]*")\s*([{])', r'\1, \2', repaired)
+        repaired = re.sub(r'([}\]])\s*(")', r'\1, \2', repaired)
 
-        # 3. Ensure balanced braces (common in truncated responses)
+        # 2. Fix unescaped double quotes within strings
+        def fix_unescaped_quotes(match):
+            full_match = match.group(0)
+            # Match "key": "value"
+            m = re.match(r'("[^"]*")\s*:\s*"(.*)"', full_match, re.DOTALL)
+            if not m:
+                return full_match
+            
+            key_part = m.group(1)
+            val_content = m.group(2)
+            
+            # Escape any double quotes that aren't already escaped
+            fixed_val = re.sub(r'(?<!\\)"', r'\"', val_content)
+            return f'{key_part}: "{fixed_val}"'
+
+        # Target key-value pairs more precisely: "key": "value"
+        # The lookahead (?=\s*[,}\]]) ensures we've reached a valid JSON boundary
+        repaired = re.sub(r'"[^"]*"\s*:\s*".*?"(?=\s*[,}\]])', fix_unescaped_quotes, repaired, flags=re.DOTALL)
+
+        # 3. Handle trailing commas in objects or arrays
+        repaired = re.sub(r',\s*([}\]])', r'\1', repaired)
+
+        # 4. Fix single quotes used for keys or string boundaries
+        if repaired.count("'") > repaired.count('"') * 2:
+            repaired = re.sub(r"'(.*?)'", r'"\1"', repaired)
+
+        # 5. Ensure balanced braces
         open_braces = repaired.count('{')
         close_braces = repaired.count('}')
         if open_braces > close_braces:

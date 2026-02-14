@@ -353,6 +353,42 @@ export const dashboardApi = {
     }
   },
 
+  // Helper function to robustly parse JSON
+  parseJSON: (text: string): any => {
+    if (!text || typeof text !== 'string') return null;
+    
+    // Clean common malformations before parsing
+    let cleaned = text.trim();
+    
+    // Remove trailing commas in objects and arrays
+    cleaned = cleaned.replace(/,\s*([}\]])/g, '$1');
+    
+    // Fix unescaped control characters
+    cleaned = cleaned.replace(/[\u0000-\u001F\u007F-\u009F]/g, (match) => {
+      const charCode = match.charCodeAt(0);
+      return '\\u' + charCode.toString(16).padStart(4, '0');
+    });
+
+    try {
+      return JSON.parse(cleaned);
+    } catch (e) {
+      console.warn('JSON.parse failed, attempting aggressive repair:', e);
+      
+      // Handle single quotes (if not already handled)
+      try {
+        // This is risky but sometimes necessary for AI responses
+        // Only try if the error message mentions single quotes or it's obvious
+        const singleQuoteRepaired = cleaned
+          .replace(/'/g, '"') // Replace single quotes with double quotes
+          .replace(/\\"/g, '"'); // Fix double escaped quotes if any
+        return JSON.parse(singleQuoteRepaired);
+      } catch (innerE) {
+        console.error('Aggressive JSON repair failed:', innerE);
+        throw e; // Throw original error
+      }
+    }
+  },
+
   getGeneratePDFStatus: async (lead_magnet_id: number): Promise<PDFStatusResponse> => {
     const response = await apiClient.get(`${API_BASE_URL}/generate-pdf/status/`, {
       params: { lead_magnet_id }
@@ -390,7 +426,7 @@ export const dashboardApi = {
         const text = await blob.text();
         let errorData: { error?: string; details?: string };
         try {
-          errorData = JSON.parse(text);
+          errorData = dashboardApi.parseJSON(text);
         } catch {
           errorData = { error: 'PDF generation failed', details: 'Response was not a valid PDF' };
         }
@@ -425,7 +461,7 @@ export const dashboardApi = {
           let errorDetails = '';
           
           try {
-            errorData = JSON.parse(text);
+            errorData = dashboardApi.parseJSON(text);
             errorMessage = errorData?.error || errorData?.message || 'Unknown error';
             errorDetails = errorData?.details || '';
           } catch (jsonError) {
