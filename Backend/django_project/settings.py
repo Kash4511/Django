@@ -64,7 +64,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_project.middleware.CatchAllMiddleware',
 ]
 
@@ -215,9 +215,14 @@ SIMPLE_JWT = {
 }
 
 # -----------------------------
-# CORS + CSRF
+# CORS + CSRF + Security
 # -----------------------------
 CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = [
+    "https://django-six-gamma.vercel.app",
+    "https://django-mex59cqvx-kash4511s-projects.vercel.app",
+    "https://django-msvx.onrender.com",
+]
 
 # Explicitly list origins instead of using ALLOW_ALL when credentials are True
 CORS_ALLOWED_ORIGINS = [

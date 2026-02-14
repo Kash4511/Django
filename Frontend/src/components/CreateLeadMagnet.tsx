@@ -24,6 +24,7 @@ const CreateLeadMagnet: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [isPreviewBlob, setIsPreviewBlob] = useState<boolean>(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationProgress, setGenerationProgress] = useState<LeadMagnetProgress | null>(null)
 
@@ -153,6 +154,7 @@ const CreateLeadMagnet: React.FC = () => {
         
         setSuccessMessage('PDF generated successfully!')
         setPreviewUrl(pdfUrl)
+        setIsPreviewBlob(pdfUrl.startsWith('blob:'))
         setShowPreviewModal(true)
       } catch (pdfError) {
         const e = pdfError as { message?: string }
@@ -308,7 +310,9 @@ const CreateLeadMagnet: React.FC = () => {
         isOpen={showPreviewModal}
         onClose={() => {
           setShowPreviewModal(false)
-          if (previewUrl) { window.URL.revokeObjectURL(previewUrl); setPreviewUrl(null) }
+          if (previewUrl && isPreviewBlob) { window.URL.revokeObjectURL(previewUrl) }
+          setPreviewUrl(null)
+          setIsPreviewBlob(false)
         }}
         title="PDF Preview"
         maxWidth={1200}
@@ -321,6 +325,16 @@ const CreateLeadMagnet: React.FC = () => {
                 <span>Lead Magnet Preview</span>
               </div>
               <div className="pdf-preview-actions">
+                <a 
+                  href={previewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="pdf-preview-btn pdf-download-btn"
+                  style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Plus size={16} />
+                  Open in New Tab
+                </a>
                 <button
                   className="pdf-preview-btn pdf-download-btn"
                   onClick={() => {
@@ -341,7 +355,9 @@ const CreateLeadMagnet: React.FC = () => {
                   className="pdf-preview-btn pdf-close-btn"
                   onClick={() => {
                     setShowPreviewModal(false)
-                    if (previewUrl) { window.URL.revokeObjectURL(previewUrl); setPreviewUrl(null) }
+                    if (previewUrl && isPreviewBlob) { window.URL.revokeObjectURL(previewUrl) }
+                    setPreviewUrl(null)
+                    setIsPreviewBlob(false)
                   }}
                 >
                   <X size={16} />
@@ -350,11 +366,43 @@ const CreateLeadMagnet: React.FC = () => {
               </div>
             </div>
             <div className="pdf-preview-content">
-              <iframe 
-                title="Lead Magnet Preview" 
-                src={previewUrl} 
-                className="pdf-preview-iframe"
-              />
+              <div className="pdf-preview-iframe-wrapper" style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <iframe 
+                  title="Lead Magnet Preview" 
+                  src={previewUrl} 
+                  className="pdf-preview-iframe"
+                />
+                <div className="pdf-iframe-fallback" style={{ 
+                  position: 'absolute', 
+                  top: 0, 
+                  left: 0, 
+                  width: '100%', 
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  backgroundColor: '#f8f9fa',
+                  zIndex: -1,
+                  padding: '2rem',
+                  textAlign: 'center'
+                }}>
+                  <p style={{ color: '#6c757d', marginBottom: '1rem' }}>
+                    If the preview doesn't load, it might be due to security restrictions or a connection issue.
+                  </p>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <a 
+                      href={previewUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="btn btn-secondary"
+                      style={{ textDecoration: 'none' }}
+                    >
+                      Open in New Tab
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         ) : (

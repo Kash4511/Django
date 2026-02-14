@@ -24,6 +24,7 @@ const FormaAI: React.FC = () => {
   const [generationProgress, setGenerationProgress] = useState<LeadMagnetProgress | null>(null)
   const [showPreviewModal, setShowPreviewModal] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [isPreviewBlob, setIsPreviewBlob] = useState<boolean>(false)
   const messagesRef = useRef<HTMLDivElement | null>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
@@ -107,6 +108,7 @@ const FormaAI: React.FC = () => {
 
       if (result.pdfUrl) {
         setPreviewUrl(result.pdfUrl)
+        setIsPreviewBlob(result.pdfUrl.startsWith('blob:'))
         setShowPreviewModal(true)
 
         setMessages(prev => [...prev, '✅ PDF generated. Preview opened.'])
@@ -363,22 +365,71 @@ const FormaAI: React.FC = () => {
           isOpen={showPreviewModal}
           onClose={() => {
             setShowPreviewModal(false)
-            if (previewUrl) { window.URL.revokeObjectURL(previewUrl); setPreviewUrl(null) }
+            if (previewUrl && isPreviewBlob) { window.URL.revokeObjectURL(previewUrl) }
+            setPreviewUrl(null)
+            setIsPreviewBlob(false)
           }}
           title="Preview PDF"
           maxWidth={1000}
         >
           {previewUrl ? (
-            <div>
-              <iframe title="Forma AI PDF Preview" src={previewUrl} style={{ width: '100%', height: '70vh', border: '1px solid #333' }} />
+            <div className="pdf-preview-container">
+              <div className="pdf-preview-iframe-wrapper" style={{ position: 'relative' }}>
+                <iframe 
+                  title="Forma AI PDF Preview" 
+                  src={previewUrl} 
+                  style={{ width: '100%', height: '70vh', border: '1px solid #333' }}
+                  onError={(e) => console.error('Iframe load error:', e)}
+                />
+                <div className="pdf-iframe-fallback" style={{ 
+                  position: 'absolute', 
+                  top: 0, 
+                  left: 0, 
+                  width: '100%', 
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  backgroundColor: '#1a1a1a',
+                  zIndex: -1,
+                  padding: '2rem',
+                  textAlign: 'center'
+                }}>
+                  <p style={{ color: '#ecf0f1', marginBottom: '1rem' }}>
+                    If the preview doesn't load, it might be due to security restrictions or a connection issue.
+                  </p>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <a 
+                      href={previewUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="btn btn-secondary"
+                      style={{ textDecoration: 'none' }}
+                    >
+                      Open in New Tab
+                    </a>
+                  </div>
+                </div>
+              </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
+                <a 
+                  href={previewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-secondary"
+                  style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Plus size={16} />
+                  Open in New Tab
+                </a>
                 <button
                   className="btn btn-primary"
                   onClick={() => {
                     if (previewUrl) {
                       const link = document.createElement('a')
                       link.href = previewUrl
-                      link.setAttribute('download', `forma-ai-${selectedTemplateId}.pdf`)
+                      link.setAttribute('download', `forma-ai-${selectedTemplateId || 'lead-magnet'}.pdf`)
                       document.body.appendChild(link)
                       link.click()
                       link.remove()
@@ -391,7 +442,9 @@ const FormaAI: React.FC = () => {
                   className="btn btn-secondary"
                   onClick={() => {
                     setShowPreviewModal(false)
-                    if (previewUrl) { window.URL.revokeObjectURL(previewUrl); setPreviewUrl(null) }
+                    if (previewUrl && isPreviewBlob) { window.URL.revokeObjectURL(previewUrl) }
+                    setPreviewUrl(null)
+                    setIsPreviewBlob(false)
                   }}
                 >
                   Close
