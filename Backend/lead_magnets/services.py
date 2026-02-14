@@ -178,7 +178,7 @@ class DocRaptorService:
 # --- Jinja2 Rendering ---
 
 def clean_rendered_html(html: str) -> str:
-    """Remove empty list items, content boxes without text, empty quotes, and stray empty paragraphs."""
+    """Remove empty list items, content boxes without text, empty quotes, stray empty paragraphs, and DocRaptor artifacts."""
     if not html:
         return html
     cleaned = html
@@ -186,6 +186,12 @@ def clean_rendered_html(html: str) -> str:
     cleaned = re.sub(r"<li>\s*</li>", "", cleaned)
     # Remove empty paragraphs
     cleaned = re.sub(r"<p>\s*</p>", "", cleaned)
+    # Remove DocRaptor log links and artifacts
+    cleaned = re.sub(r"https?://(?:www\.)?docraptor\.com/[^\s<>\"]+", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bdoc_logs/\S+", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\blead-magnet-[A-Za-z0-9_\-]+", "", cleaned)
+    # Collapse multiple consecutive blank lines
+    cleaned = re.sub(r"(\n\s*){3,}", "\n\n", cleaned)
     # Remove content-box blocks where both h3 and p are empty
     def _drop_empty_box(m):
         h3 = re.sub(r"<.*?>", "", m.group(1)).strip()
@@ -198,6 +204,8 @@ def clean_rendered_html(html: str) -> str:
         normalized = re.sub(r"[\s\"“”‘’—\-•]+", "", inner)
         return "" if not re.search(r"[A-Za-z0-9]", normalized) else m.group(0)
     cleaned = re.sub(r"<blockquote>[\s\S]*?</blockquote>", _drop_empty_quote, cleaned)
+    # Remove exact duplicate adjacent paragraphs
+    cleaned = re.sub(r"(<p[^>]*>)(.*?)</p>\s*(\1\2</p>)+", r"\1\2</p>", cleaned, flags=re.DOTALL)
     return cleaned
 
 def render_template(template_html: str, ai_data: Dict[str, Any]) -> str:

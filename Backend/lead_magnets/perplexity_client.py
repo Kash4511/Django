@@ -649,6 +649,26 @@ class PerplexityClient:
         # Quality and completion helpers
         def count_words(t: str) -> int:
             return len(re.findall(r"\b\w+\b", (t or '')))
+        
+        def normalize_brand_name(name: str) -> str:
+            t = (name or '').strip()
+            if not t:
+                return ''
+            t = re.sub(r"\s+", " ", t)
+            return t.title()
+        
+        def normalize_website(url: str) -> str:
+            t = (url or '').strip()
+            t = re.sub(r"^https?://", "", t, flags=re.IGNORECASE)
+            return t.lower()
+        
+        def normalize_phone(num: str) -> str:
+            digits = re.sub(r"\D", "", num or "")
+            if len(digits) == 10:
+                return f"({digits[0:3]}) {digits[3:6]}-{digits[6:10]}"
+            if len(digits) == 11 and digits[0] == '1':
+                return f"+1 ({digits[1:4]}) {digits[4:7]}-{digits[7:11]}"
+            return num or ""
 
         def ensure_min_sentences(text: str, min_sentences: int = 3, max_sentences: int = 5, topic_hint: Optional[str] = None) -> str:
             sentences = [finalize_line(s) for s in split_sentences(text)]
@@ -738,7 +758,7 @@ class PerplexityClient:
             "documentTitle": enhanced_title.upper(),
             "mainTitle": enhanced_title,
             "documentSubtitle": sloganize(cover.get("subtitle", "")),
-            "companyName": company_name,
+            "companyName": normalize_brand_name(company_name),
             "companySubtitle": company_subtitle,
             "primaryColor": primary_color,
             "secondaryColor": secondary_color,
@@ -746,9 +766,9 @@ class PerplexityClient:
             "logoUrl": logo_url,
 
             # Contact info (used on cover and contact page)
-            "phoneNumber": phone,
-            "emailAddress": email,
-            "website": website,
+            "phoneNumber": normalize_phone(phone),
+            "emailAddress": (email or '').lower(),
+            "website": normalize_website(website),
 
             # Header texts per page (step indicators)
             "headerText1": step(1),
@@ -934,10 +954,49 @@ class PerplexityClient:
             "contactDescription": truncate_content(normalize_main_content(contact.get("description", ""), contact.get("title", "Contact"))),
             "differentiatorTitle": "Contact us",
             "differentiator": finalize_line(truncate_text(contact.get("differentiator", ""), 180)),
+            "ctaText": finalize_line(f"{contact.get('title') or 'Schedule a consultation'} — reply to {email or 'our email'} or call {normalize_phone(phone) or 'our office'}"),
             # Quality metrics
             "qualityWarnings": "",
             "qualityHasWarnings": False,
         }
+        
+        # Derive Problem/Solution/Why/Outcome/Actions for first six sections
+        def pswoa(section_idx: int):
+            sec = get_section(section_idx)
+            title_hint = sec.get("title", f"Section {section_idx+1}")
+            base = normalize_main_content(sec.get("content", ""), title_hint)
+            sents = split_sentences(base)
+            subs = sec.get("subsections", [])
+            problem = finalize_line(get_or(sents, 0, f"The key challenge is unclear for {title_hint.lower()}"))
+            solution = finalize_line(get_or(sents, 1, f"Adopt a practical approach to address {title_hint.lower()} with clear steps"))
+            why = finalize_line(get_or(sents, 2, f"This improves outcomes, reduces risk, and aligns stakeholders"))
+            outcome = finalize_line(get_or(sents, 3, f"Expect measurable improvements within a defined timeframe"))
+            actions: List[str] = []
+            for sub in subs[:3]:
+                t = (sub.get("title") or "").strip()
+                c = (sub.get("content") or "").strip()
+                if t and c:
+                    actions.append(finalize_line(f"{t}: {truncate_text(c, 120)}"))
+                elif t:
+                    actions.append(finalize_line(t))
+            if len(actions) < 2:
+                for s in sents[4:7]:
+                    if len(actions) >= 3:
+                        break
+                    actions.append(finalize_line(s))
+            while len(actions) < 2:
+                actions.append(finalize_line(f"Complete a quick checklist and assign owners"))
+            return problem, solution, why, outcome, actions[:3]
+        
+        for idx in range(6):
+            p, s, w, o, acts = pswoa(idx)
+            n = idx + 1
+            template_vars[f"s{n}Problem"] = p
+            template_vars[f"s{n}Solution"] = s
+            template_vars[f"s{n}Why"] = w
+            template_vars[f"s{n}Outcome"] = o
+            for i, a in enumerate(acts, start=1):
+                template_vars[f"s{n}Action{i}"] = a
 
         # Build basic quality warnings for client-side display
         warnings: List[str] = []
