@@ -379,10 +379,10 @@ class PerplexityClient:
                 "sections": [
                     {
                         "title": "<Section 1 title>",
-                        "content": "<1-2 detailed paragraphs with specific examples>",
+                        "content": "<150–220 words. Include 2–3 concrete, actionable insights: what to do, why it matters, and expected outcome. Do NOT repeat the section title inside content. End with a 1-sentence transition to the next topic.>",
                         "subsections": [
-                            {"title": "<Sub 1>", "content": "<2-3 detailed sentences with specific information>"},
-                            {"title": "<Sub 2>", "content": "<2-3 detailed sentences with specific information>"}
+                            {"title": "<Sub 1>", "content": "<1 concise, actionable sentence>"},
+                            {"title": "<Sub 2>", "content": "<1 concise, actionable sentence>"}
                         ]
                     }
                 ],
@@ -399,14 +399,14 @@ class PerplexityClient:
             "Hard Requirements:\n"
             "- Address the target_audience EXCLUSIVELY. All content must be tailored to their specific pain_points and desired_outcomes.\n"
             "- Use firm_name, work_email, phone_number, firm_website, tagline EXACTLY as provided.\n"
-            "- Use brand colors EXACTLY as provided (primary, secondary, accent). If any input color is missing, set that field to an empty string rather than inventing a color.\n"
+            "- Use brand colors EXACTLY as provided (primary, secondary, accent). If any input color is missing, set that field to an empty string.\n"
             "- Include logo_url if provided; else set to an empty string.\n"
-            "- Generate 6 complete sections (reduced complexity): each section has 1 concise paragraph; each subsection 1 sentence.\n"
+            "- Generate 6 complete sections. Each section content is 150–220 words with 2–3 concrete, actionable insights (what, why, outcome) and a short transition. Each subsection is ONE actionable sentence.\n"
             "- Terms must include a summary and 3 paragraphs (1–2 sentences each).\n"
             "- Contents.items must have EXACTLY 6 descriptive entries aligned to the sections.\n"
             "- NO extra text outside JSON, NO Markdown, NO comments.\n"
-            "- Do NOT use any placeholder like 'TEST DOCUMENT'.\n"
-            "- JSON Safety: Use ONLY single quotes for interior text if needed, and double quotes ONLY for JSON keys and string boundaries. Ensure all double quotes inside strings are escaped as \\\". Do not use unescaped newlines within strings.\n"
+            "- Do NOT use any placeholder like 'TEST DOCUMENT'. Do NOT repeat section titles inside the content.\n"
+            "- JSON Safety: Use double quotes for all keys and string boundaries. Escape any interior double quotes as \\\". Do not include unescaped newlines inside strings.\n"
             "- Final check: Ensure the JSON is complete and ends with a closing brace '}'.\n"
         )
 
@@ -454,8 +454,19 @@ class PerplexityClient:
 
         # Terms and contents
         terms_title = terms.get("title", "Terms of Use")
-        terms_summary = terms.get("summary", "")
-        terms_paragraphs = terms.get("paragraphs", [])
+        # Rewrite Terms in a professional, legally-neutral structure using firm name
+        firm_display = (company_name or "").strip()
+        terms_summary = f"Purpose of the Guide — This resource provides general educational information and does not constitute legal, architectural, engineering, or other professional advice."
+        terms_structured = [
+            "Permitted Use — You may view, download, and share this guide for personal or internal business use. Redistribution for sale or public hosting without prior written permission is prohibited.",
+            "No Professional Liability — Use of this guide does not create a client relationship. Decisions should be validated by qualified professionals and applicable codes, standards, and local regulations.",
+            f"Intellectual Property — All text, layout, and design remain the property of {firm_display or 'the publisher'}. All trademarks and third‑party marks remain the property of their respective owners.",
+            f"Limitation of Liability — {firm_display or 'The publisher'} disclaims liability for direct, indirect, incidental, or consequential losses arising from use of this guide.",
+            "Updates & Revisions — Content may be updated without notice. The most current version supersedes all prior versions.",
+        ]
+        # If AI provided paragraphs, prefer them when they appear sufficiently structured; otherwise use ours
+        ai_terms_paragraphs = [p for p in terms.get("paragraphs", []) if isinstance(p, str) and len(p.strip()) > 20]
+        terms_paragraphs = ai_terms_paragraphs if len(ai_terms_paragraphs) >= 3 else terms_structured
         content_items = contents.get("items", [])
 
         # Helper functions
@@ -641,13 +652,13 @@ class PerplexityClient:
 
         def ensure_min_sentences(text: str, min_sentences: int = 3, max_sentences: int = 5, topic_hint: Optional[str] = None) -> str:
             sentences = [finalize_line(s) for s in split_sentences(text)]
-            # Fallback pool of professional, neutral sentences
+            # Fallback pool: concise, actionable lines to avoid filler
             th = (topic_hint or 'this topic').strip()
             fallback_pool = [
-                f"This section provides clear guidance on {th}.",
-                "It outlines benefits, trade-offs, and common pitfalls to avoid.",
-                "Recommendations and steps help readers take confident action.",
-                "Examples illustrate how to apply ideas in real-world scenarios.",
+                finalize_line(f"Define the objective for {th} and set measurable success criteria"),
+                finalize_line(f"Prioritize two high-impact actions and assign ownership and timeline"),
+                finalize_line(f"Track results against a baseline and iterate based on data"),
+                finalize_line(f"Mitigate a common risk with a simple, repeatable control"),
             ]
             i = 0
             while len(sentences) < min_sentences and i < len(fallback_pool):
@@ -657,16 +668,17 @@ class PerplexityClient:
             sentences = sentences[:max_sentences]
             return " ".join(sentences)
 
-        def ensure_min_words(text: str, min_words: int = 60, max_words: int = 220, topic_hint: Optional[str] = None) -> str:
+        def ensure_min_words(text: str, min_words: int = 150, max_words: int = 260, topic_hint: Optional[str] = None) -> str:
             t = (text or '').strip()
             if count_words(t) >= min_words:
                 return t
             # Add more fallback content until minimum reached
             th = (topic_hint or 'the topic').strip()
             additions = [
-                f"The discussion focuses on key considerations for {th}.",
-                "It balances practicality with strategic outcomes and long-term value.",
-                "Readers gain clarity on next steps and measurable results.",
+                finalize_line(f"Start with a quick assessment checklist for {th} and capture initial metrics"),
+                finalize_line(f"Implement a phased approach: plan, pilot, scale; document assumptions and risks"),
+                finalize_line(f"Define expected outcomes and how they will be measured weekly"),
+                finalize_line(f"Close with a transition to the next topic to maintain narrative flow"),
             ]
             for line in additions:
                 if count_words(t) >= min_words:
