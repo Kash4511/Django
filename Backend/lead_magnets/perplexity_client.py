@@ -954,7 +954,14 @@ class PerplexityClient:
             "contactDescription": truncate_content(normalize_main_content(contact.get("description", ""), contact.get("title", "Contact"))),
             "differentiatorTitle": "Contact us",
             "differentiator": finalize_line(truncate_text(contact.get("differentiator", ""), 180)),
-            "ctaText": finalize_line(f"{contact.get('title') or 'Schedule a consultation'} — reply to {email or 'our email'} or call {normalize_phone(phone) or 'our office'}"),
+            "ctaText": finalize_line(
+                ("Book your consultation at " + (normalize_website(website) if website else "")).strip() +
+                ((" or email " + (email or "")).strip() if email else "") +
+                ((" or call " + (normalize_phone(phone) or "")).strip() if phone else "")
+            ),
+            "valueBullet1": "Custom sustainability roadmap aligned to your budget",
+            "valueBullet2": "Clear ROI with measurable milestones",
+            "valueBullet3": "Hands-on implementation support",
             # Quality metrics
             "qualityWarnings": "",
             "qualityHasWarnings": False,
@@ -986,7 +993,16 @@ class PerplexityClient:
                     actions.append(finalize_line(s))
             while len(actions) < 2:
                 actions.append(finalize_line(f"Complete a quick checklist and assign owners"))
-            return problem, solution, why, outcome, actions[:3]
+            # De-duplicate and limit to three concise actions
+            seen = set()
+            uniq = []
+            for a in actions:
+                if a not in seen:
+                    uniq.append(a)
+                    seen.add(a)
+                if len(uniq) >= 3:
+                    break
+            return problem, solution, why, outcome, uniq[:3]
         
         for idx in range(6):
             p, s, w, o, acts = pswoa(idx)
@@ -997,6 +1013,20 @@ class PerplexityClient:
             template_vars[f"s{n}Outcome"] = o
             for i, a in enumerate(acts, start=1):
                 template_vars[f"s{n}Action{i}"] = a
+            # Hook paragraph: 2–3 sentences + transition
+            sec = get_section(idx)
+            base = normalize_main_content(sec.get("content", ""), sec.get("title", f"Section {n}"))
+            sents = split_sentences(base)
+            hook = " ".join(sents[:2]) if len(sents) >= 2 else get_or(sents, 0, "")
+            next_map = {
+                1: "Next: accelerate delivery speed.",
+                2: "Next: build competitive advantage.",
+                3: "Next: increase operational efficiency.",
+                4: "Next: scale delivery without sacrificing quality.",
+                5: "Next: convert qualified leads into clients.",
+            }
+            hook_full = (hook + " " + next_map.get(n, "")).strip()
+            template_vars[f"s{n}Hook"] = finalize_line(hook_full)
 
         # Build basic quality warnings for client-side display
         warnings: List[str] = []
