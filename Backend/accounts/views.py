@@ -25,9 +25,6 @@ class UserRegistrationView(generics.CreateAPIView):
         except Exception as e:
             return Response({'error': 'Registration failed', 'details': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    def options(self, request, *args, **kwargs):
-        return Response({'status': 'ok'}, status=status.HTTP_200_OK)
-
 class UserLoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -44,9 +41,6 @@ class UserLoginView(APIView):
             })
         except Exception as e:
             return Response({'error': 'Login failed', 'details': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    def options(self, request, *args, **kwargs):
-        return Response({'status': 'ok'}, status=status.HTTP_200_OK)
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer

@@ -222,9 +222,13 @@ CORS_ALLOW_CREDENTIALS = True
 # Explicitly list origins instead of using ALLOW_ALL when credentials are True
 CORS_ALLOWED_ORIGINS = [
     "https://django-six-gamma.vercel.app",
+    "https://django-mex59cqvx-kash4511s-projects.vercel.app",
     "http://localhost:3000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+]
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.vercel\.app$",
 ]
 CORS_URLS_REGEX = r'^/api/.*$'
 
@@ -263,6 +267,7 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
 # Ensure CSRF is trusted for the frontend origin
 CSRF_TRUSTED_ORIGINS = [
     "https://django-six-gamma.vercel.app",
+    "https://django-mex59cqvx-kash4511s-projects.vercel.app",
 ]
 
 # -----------------------------

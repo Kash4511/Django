@@ -211,18 +211,37 @@ def _run_pdf_generation(lead_magnet_id, user_id, template_id, use_ai_content, us
                 'website': firm_profile.get('firm_website') or '',
             }
 
-        # Handle images
+        # Handle images (can be base64 strings from JSON or file objects from FormData)
         if isinstance(architectural_images, list) and architectural_images:
             try:
                 update_progress(70, "Processing Images", "Optimizing images for PDF...")
                 img_list = []
+                import base64
+                from django.core.files.base import ContentFile
+                
                 for i, img in enumerate(architectural_images[:3]):
                     if isinstance(img, str) and ';base64,' in img:
                         img_list.append({'src': img, 'alt': f'Architectural Image {i+1}'})
+                    elif hasattr(img, 'read'): # Handle file-like objects
+                        try:
+                            img.seek(0)
+                            content = img.read()
+                            encoded = base64.b64encode(content).decode('utf-8')
+                            # Try to guess mime type or default to png
+                            mime = "image/png"
+                            if hasattr(img, 'content_type'):
+                                mime = img.content_type
+                            img_list.append({
+                                'src': f"data:{mime};base64,{encoded}",
+                                'alt': f'Architectural Image {i+1}'
+                            })
+                        except Exception as img_err:
+                            logger.error(f"Error processing image file: {img_err}")
+                
                 if img_list:
                     template_vars['architecturalImages'] = img_list
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error(f"General error in image processing: {e}")
 
         # Final PDF generation
         try:
@@ -344,9 +363,6 @@ class GeneratePDFView(APIView):
             logger.error(f"GeneratePDFView unexpected error: {str(e)}\n{traceback.format_exc()}")
             return Response({'error': 'Unexpected error', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def options(self, request, *args, **kwargs):
-        return Response({'status': 'ok'}, status=status.HTTP_200_OK)
-
 class GeneratePDFStatusView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -401,9 +417,6 @@ class CreateLeadMagnetView(APIView):
             if trace:
                 payload['trace'] = trace
             return Response(payload, status=status.HTTP_400_BAD_REQUEST)
-
-    def options(self, request, *args, **kwargs):
-        return Response({'status': 'ok'}, status=status.HTTP_200_OK)
 
 class ListTemplatesView(APIView):
     """Get all available PDF templates from DocRaptor service"""
@@ -554,9 +567,6 @@ class HealthView(APIView):
     authentication_classes = []
 
     def get(self, request):
-        return Response({'status': 'ok'}, status=status.HTTP_200_OK)
-
-    def options(self, request, *args, **kwargs):
         return Response({'status': 'ok'}, status=status.HTTP_200_OK)
 
 class FormaAIConversationView(APIView):
