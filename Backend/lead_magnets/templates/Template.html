@@ -932,22 +932,30 @@
                         <span style="flex: 0 0 75%; color: black; font-weight: 400;">{{contentItem6}}</span>
                         <span style="flex: 0 0 25%; text-align: right; color: black; font-weight: 600;">{{pageNumber9}}</span>
                     </li>
+                    {% if contentItem7 %}
                     <li style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: flex-start;">
                         <span style="flex: 0 0 75%; color: black; font-weight: 400;">{{contentItem7}}</span>
                         <span style="flex: 0 0 25%; text-align: right; color: black; font-weight: 600;">{{pageNumber10}}</span>
                     </li>
+                    {% endif %}
+                    {% if contentItem8 %}
                     <li style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: flex-start;">
                         <span style="flex: 0 0 75%; color: black; font-weight: 400;">{{contentItem8}}</span>
                         <span style="flex: 0 0 25%; text-align: right; color: black; font-weight: 600;">{{pageNumber11}}</span>
                     </li>
+                    {% endif %}
+                    {% if contentItem9 %}
                     <li style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: flex-start;">
                         <span style="flex: 0 0 75%; color: black; font-weight: 400;">{{contentItem9}}</span>
                         <span style="flex: 0 0 25%; text-align: right; color: black; font-weight: 600;">{{pageNumber12}}</span>
                     </li>
+                    {% endif %}
+                    {% if contentItem10 %}
                     <li style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: flex-start;">
                         <span style="flex: 0 0 75%; color: black; font-weight: 400;">{{contentItem10}}</span>
                         <span style="flex: 0 0 25%; text-align: right; color: black; font-weight: 600;">{{pageNumber13}}</span>
                     </li>
+                    {% endif %}
                 </ul>
             </div>
             
@@ -1061,12 +1069,14 @@
                 <p class="content-text">{{customContent2}}</p>
                 
                 <h3 class="section-title">{{subheading2}}</h3>
+                {% if listItem1 or listItem2 or listItem3 or listItem4 %}
                 <ul class="checklist">
-                    <li>{{listItem1}}</li>
-                    <li>{{listItem2}}</li>
-                    <li>{{listItem3}}</li>
-                    <li>{{listItem4}}</li>
+                    {% if listItem1 %}<li>{{listItem1}}</li>{% endif %}
+                    {% if listItem2 %}<li>{{listItem2}}</li>{% endif %}
+                    {% if listItem3 %}<li>{{listItem3}}</li>{% endif %}
+                    {% if listItem4 %}<li>{{listItem4}}</li>{% endif %}
                 </ul>
+                {% endif %}
                 
                 <div style="margin-top: 8mm;"></div>
             </div>
@@ -1185,9 +1195,9 @@
                 <!-- TWO COLUMN LAYOUT WITH SMALL IMAGE PLACEHOLDERS -->
                 <div class="two-columns">
                     <div class="column">
+                        {% if columnBoxTitle1 or columnBoxContent1 %}
                         <div class="content-box">
                             <h3>{{columnBoxTitle1}}</h3>
-                            <!-- ARCHITECTURAL IMAGE 3 (SMALL) -->
                             {% if architecturalImages and architecturalImages|length > 2 %}
                             <div class="architectural-image-small">
                                 <img src="{{architecturalImages[2].src}}" alt="{{architecturalImages[2].alt}}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px;">
@@ -1202,6 +1212,7 @@
                             {% endif %}
                             <p>{{columnBoxContent1}}</p>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
                 
@@ -1348,6 +1359,7 @@
         </div>
 
         <!-- PAGE 10: CUSTOM CONTENT 7 -->
+        {% if customTitle7 or customContent7 or subheading7 or listItem5 or listItem6 or listItem7 %}
         <div class="page content-page">
             <div class="page-header-enhanced">
                 <div class="header-decoration">
@@ -1366,11 +1378,13 @@
                 <p class="content-text">{{customContent7}}</p>
                 
                 <h3 class="section-title">{{subheading7}}</h3>
+                {% if listItem5 or listItem6 or listItem7 %}
                 <ul class="checklist">
-                    <li>{{listItem5}}</li>
-                    <li>{{listItem6}}</li>
-                    <li>{{listItem7}}</li>
+                    {% if listItem5 %}<li>{{listItem5}}</li>{% endif %}
+                    {% if listItem6 %}<li>{{listItem6}}</li>{% endif %}
+                    {% if listItem7 %}<li>{{listItem7}}</li>{% endif %}
                 </ul>
+                {% endif %}
             </div>
             
             <div class="footer-enhanced">
@@ -1397,8 +1411,10 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
         <!-- PAGE 11: CUSTOM CONTENT 8 -->
+        {% if customTitle8 or customContent8 or subheading8 or subcontent8 or accentBoxTitle4 or accentBoxContent4 %}
         <div class="page content-page">
             <div class="page-header-enhanced">
                 <div class="header-decoration">
@@ -1449,8 +1465,10 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
         <!-- PAGE 12: CUSTOM CONTENT 9 -->
+        {% if customTitle9 or customContent9 or subheading9 or listItem8 or listItem9 or listItem10 %}
         <div class="page content-page">
             <div class="page-header-enhanced">
                 <div class="header-decoration">
@@ -1469,11 +1487,13 @@
                 <p class="content-text">{{customContent9}}</p>
                 
                 <h3 class="section-title">{{subheading9}}</h3>
+                {% if listItem8 or listItem9 or listItem10 %}
                 <ul class="checklist">
-                    <li>{{listItem8}}</li>
-                    <li>{{listItem9}}</li>
-                    <li>{{listItem10}}</li>
+                    {% if listItem8 %}<li>{{listItem8}}</li>{% endif %}
+                    {% if listItem9 %}<li>{{listItem9}}</li>{% endif %}
+                    {% if listItem10 %}<li>{{listItem10}}</li>{% endif %}
                 </ul>
+                {% endif %}
             </div>
             
             <div class="footer-enhanced">
@@ -1500,8 +1520,10 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
         <!-- PAGE 13: CUSTOM CONTENT 10 -->
+        {% if customTitle10 or customContent10 or subheading10 or subcontent10 or boxTitle4 or boxContent4 %}
         <div class="page content-page">
             <div class="page-header-enhanced">
                 <div class="header-decoration">
@@ -1552,6 +1574,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
         <!-- PAGE 14: CONTACT & CTA -->
         <div class="page content-page">
