@@ -88,6 +88,11 @@ class FirmProfileView(generics.RetrieveUpdateAPIView):
 class GeneratePDFView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_permissions(self):
+        if self.request.method == 'OPTIONS':
+            return [permissions.AllowAny()]
+        return [permission() for permission in self.permission_classes]
+
     def post(self, request):
         try:
             logger.info('GeneratePDFView: request received', extra={
@@ -323,6 +328,11 @@ class GeneratePDFView(APIView):
 
 class GeneratePDFStatusView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self):
+        if self.request.method == 'OPTIONS':
+            return [permissions.AllowAny()]
+        return [permission() for permission in self.permission_classes]
 
     def get(self, request):
         lead_magnet_id = request.query_params.get('lead_magnet_id')
