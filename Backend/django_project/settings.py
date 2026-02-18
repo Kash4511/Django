@@ -102,7 +102,7 @@ POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
 POSTGRES_SSLMODE = os.getenv("POSTGRES_SSLMODE", "require")
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("SUPERBASE_STRING")
 
 if all([POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST]):
     DATABASES = {
@@ -154,6 +154,10 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+
+default_db = DATABASES.get('default', {})
+print(f"🔌 DB backend: {default_db.get('ENGINE', '')}")
+print(f"🔌 DB name: {default_db.get('NAME', '')}")
 
 # -----------------------------
 # Password Validation
