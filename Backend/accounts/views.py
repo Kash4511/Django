@@ -5,6 +5,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from .models import User
 from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserSerializer
+import logging
+
+logger = logging.getLogger(__name__)
 
 class UserRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -16,6 +19,8 @@ class UserRegistrationView(generics.CreateAPIView):
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             user = serializer.save()
+            total_users = User.objects.count()
+            logger.info("UserRegistrationView: user created", extra={"email": user.email, "total_users": total_users})
             refresh = RefreshToken.for_user(user)
             return Response({
                 'user': UserSerializer(user).data,
@@ -33,6 +38,8 @@ class UserLoginView(APIView):
 
     def post(self, request):
         try:
+            total_users = User.objects.count()
+            logger.info("UserLoginView: login attempt", extra={"total_users": total_users})
             serializer = UserLoginSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             user = serializer.validated_data['user']

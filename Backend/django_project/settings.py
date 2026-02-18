@@ -155,6 +155,10 @@ else:
         }
     }
 
+default_db = DATABASES.get('default', {})
+print(f"🔌 DB backend: {default_db.get('ENGINE', '')}")
+print(f"🔌 DB name: {default_db.get('NAME', '')}")
+
 # -----------------------------
 # Password Validation
 # -----------------------------
