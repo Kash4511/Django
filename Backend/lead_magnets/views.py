@@ -83,7 +83,23 @@ class FirmProfileView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def get_object(self):
-        profile, created = FirmProfile.objects.get_or_create(user=self.request.user)
+        user = self.request.user
+        profile, created = FirmProfile.objects.get_or_create(
+            user=user,
+            defaults={
+                'firm_name': (user.email.split('@')[0] if getattr(user, 'email', '') else 'Firm'),
+                'work_email': getattr(user, 'email', '') or 'no-reply@example.com',
+                'phone_number': '',
+                'firm_website': '',
+                'firm_size': '1-2',
+                'industry_specialties': [],
+                'primary_brand_color': '',
+                'secondary_brand_color': '',
+                'preferred_font_style': 'no-preference',
+                'branding_guidelines': '',
+                'location': '',
+            }
+        )
         return profile
 
     def patch(self, request, *args, **kwargs):
