@@ -225,14 +225,16 @@ CORS_ALLOW_CREDENTIALS = False
 
 CORS_ALLOWED_ORIGINS = [
     "https://django-six-gamma.vercel.app",
+    "https://django-4muchbxg6-kash4511s-projects.vercel.app",
     "http://localhost:3000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
+
 CORS_URLS_REGEX = r'^/api/.*$'
 
-# Temporary safety net to guarantee CORS headers during stabilization
-CORS_ALLOW_ALL_ORIGINS = True
+# Restrict CORS to known frontends for security; do not allow all origins
+CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOW_HEADERS = [
     "accept",
