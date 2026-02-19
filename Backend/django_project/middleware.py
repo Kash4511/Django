@@ -1,6 +1,9 @@
 from django.http import JsonResponse
 from django.conf import settings
 import traceback
+import logging
+
+logger = logging.getLogger(__name__)
 
 class CatchAllMiddleware:
     def __init__(self, get_response):
@@ -13,4 +16,5 @@ class CatchAllMiddleware:
             data = {"error": "Fatal server error", "details": str(e)}
             if settings.DEBUG:
                 data["trace"] = traceback.format_exc()
+            logger.exception("Unhandled exception in CatchAllMiddleware")
             return JsonResponse(data, status=500)

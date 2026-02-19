@@ -356,6 +356,10 @@ class GeneratePDFView(APIView):
         except Exception as e:
             import traceback
             trace = traceback.format_exc() if settings.DEBUG else None
+            logger.exception('GeneratePDFView: unexpected exception', extra={
+                'user': str(getattr(request.user, 'id', 'anonymous')),
+                'path': str(getattr(request, 'path', ''))
+            })
             payload = {'error': 'PDF generation failed', 'details': str(e), 'type': type(e).__name__}
             if trace:
                 payload['trace'] = trace
