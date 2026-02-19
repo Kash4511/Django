@@ -1,5 +1,6 @@
 import os
 import logging
+import json
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -84,6 +85,27 @@ class FirmProfileView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         profile, created = FirmProfile.objects.get_or_create(user=self.request.user)
         return profile
+
+    def patch(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = request.data.copy()
+        specialties = data.get('industry_specialties')
+        if isinstance(specialties, str):
+            try:
+                data['industry_specialties'] = json.loads(specialties)
+            except json.JSONDecodeError:
+                pass
+        serializer = self.get_serializer(instance, data=data, partial=True)
+        if serializer.is_valid():
+            self.perform_update(serializer)
+            return Response(serializer.data)
+        return Response(
+            {
+                'error': 'Firm profile update failed',
+                'details': serializer.errors,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 class GeneratePDFView(APIView):
     permission_classes = [permissions.IsAuthenticated]
