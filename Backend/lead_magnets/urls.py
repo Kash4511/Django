@@ -16,6 +16,7 @@ urlpatterns = [
     path('generate-pdf/', views.generate_pdf, name='generate-pdf'),
     path('ping/', ping, name='ping'),
     path('generate-pdf/status/', views.GeneratePDFStatusView.as_view(), name='generate-pdf-status'),
+    path('pdf-jobs/<uuid:job_id>/', views.PDFJobDetailView.as_view(), name='pdf-job-detail'),
     path('health/', views.HealthView.as_view(), name='health'),
     path('brand-assets/preview-pdf/', views.BrandAssetsPDFPreviewView.as_view(), name='brand-assets-preview-pdf'),
     path('preview-template/', views.PreviewTemplateView.as_view(), name='preview-template'),
