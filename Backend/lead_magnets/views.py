@@ -427,7 +427,6 @@ class HealthView(APIView):
         return Response({'status': 'ok'}, status=status.HTTP_200_OK)
 
 class FormaAIConversationView(APIView):
-    """Handle Forma AI conversations"""
     permission_classes = [permissions.IsAuthenticated]
     
     def post(self, request):
@@ -503,7 +502,6 @@ class FormaAIConversationView(APIView):
                 'industry': 'Architecture'
             }
 
-        # Convert the chat message into minimal user_answers for AI JSON
         def _derive_outcome_from_message(msg: str) -> str:
             m = (msg or '').strip()
             # Keep it concise and user-centered; avoid stock phrases
@@ -592,7 +590,10 @@ class FormaAIConversationView(APIView):
         summary_title = template_vars.get('mainTitle') or ai_content.get('cover', {}).get('title') or 'Generated Document'
         ai_response = f"Generated AI content: {summary_title}."
         conversation.messages.append({'role': 'assistant', 'content': ai_response})
-        conversation.save()
+        conversation.user_answers = user_answers
+        conversation.ai_generated_content = ai_content
+        conversation.template_vars = template_vars
+        conversation.save(update_fields=['messages', 'user_answers', 'ai_generated_content', 'template_vars', 'updated_at'])
 
         # If requested, generate PDF and return as file response
         if generate_pdf:

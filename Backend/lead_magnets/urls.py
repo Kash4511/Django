@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .revision_views import FormaAIRevisionView
 from .tests_ping import ping
 
 urlpatterns = [
@@ -24,4 +25,5 @@ urlpatterns = [
     
     # AI Conversation
     path('ai-conversation/', views.FormaAIConversationView.as_view(), name='ai-conversation'),
+    path('ai-conversation/revise/', FormaAIRevisionView.as_view(), name='ai-conversation-revise'),
 ]

@@ -138,6 +138,58 @@ class PerplexityClient:
         # If not wrapped in code blocks, return as-is
         return content
 
+    def revise_lead_magnet_json(self, existing_content: Dict[str, Any], revision_request: Dict[str, Any], firm_profile: Dict[str, Any]) -> Dict[str, Any]:
+        if not self.api_key:
+            raise Exception("PERPLEXITY_API_KEY is not configured; cannot revise AI content.")
+
+        prompt = (
+            "You are editing an existing, structured lead magnet JSON document. "
+            "You receive the current JSON and explicit revision instructions. "
+            "Return the full updated JSON document, preserving the original schema used in generation. "
+            "Do not remove keys; instead, update values where needed.\n\n"
+            "Quality and Conversion Rules:\n"
+            "- Keep the expert, human voice with specific details and concrete examples.\n"
+            "- Remove generic phrasing and filler; avoid sentences like 'in today's world', 'this section provides', or 'in conclusion'.\n"
+            "- Ensure each revised section has specific insights, practical guidance, and at least one concrete scenario.\n"
+            "- Maintain a strong, asset-based ending (checklist, framework, assessment, tool, estimator, audit, or hook).\n"
+            "- Keep the title professional, specific, and outcome-focused.\n\n"
+            "Existing content (JSON):\n"
+            f"{json.dumps(existing_content, ensure_ascii=False)}\n\n"
+            "Revision request (JSON):\n"
+            f"{json.dumps(revision_request, ensure_ascii=False)}\n\n"
+            "Firm profile (JSON):\n"
+            f"{json.dumps(firm_profile, ensure_ascii=False)}\n\n"
+            "Return ONLY the full updated JSON document. No commentary, no Markdown.\n"
+        )
+
+        response = requests.post(
+            self.base_url,
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            json={
+                "model": "sonar-pro",
+                "messages": [
+                    {"role": "system", "content": "You are a senior content editor revising JSON-structured lead magnets."},
+                    {"role": "user", "content": prompt},
+                ],
+                "max_tokens": 4000,
+                "temperature": 0.6,
+            },
+            timeout=40,
+        )
+        if response.status_code != 200:
+            raise Exception(f"Perplexity revision API error: {response.status_code} - {response.text}")
+        result = response.json()
+        message_content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+        json_content = self._extract_json_from_markdown(message_content)
+        try:
+            return json.loads(json_content)
+        except json.JSONDecodeError as e:
+            raise Exception(f"Invalid JSON returned from revision API: {e}")
+
     def debug_ai_content(self, ai_content: Dict[str, Any]):
         """Debug function to see what the AI actually returned"""
         try:
@@ -210,11 +262,32 @@ class PerplexityClient:
         else:
             prompt_style = "Use a style appropriate to the user's main_topic; do not assume architecture or sustainability."
 
-        # Compose a strict instruction. Model must output ONLY JSON with the exact schema.
         prompt = (
-            "You are a senior content strategist. Generate a comprehensive, professional lead magnet in JSON. "
+            "You are a senior content strategist and copywriter. Generate a comprehensive, professional lead magnet in JSON. "
             "Follow ALL requirements. Output MUST be valid JSON ONLY (no Markdown, no prose). "
             "Do not include any test or placeholder text. Use the inputs exactly.\n\n"
+            "Writing Quality Rules:\n"
+            "- Write in a human, expert voice with specific details and concrete examples.\n"
+            "- Avoid generic filler phrases such as 'this section provides', 'in today's world', 'in conclusion', or 'overall'.\n"
+            "- Each section must include specific insights, concrete examples, and actionable guidance.\n"
+            "- Vary phrasing so sections feel naturally written, not templated.\n"
+            "- Use practical tips, expert notes, and realistic scenarios tied to the audience.\n\n"
+            "Conversion Structure Rules:\n"
+            "- Tease the value and outcome early in the document.\n"
+            "- Build authority using simple frameworks, named methods, or short examples.\n"
+            "- End with a strong, tangible next-step asset rather than a generic CTA.\n"
+            "- The ending must include exactly ONE primary asset type: checklist, framework, assessment, tool, estimator, audit offer, or next-step hook.\n"
+            "- The ending must describe a clear value exchange and logical continuation (what the reader gets next).\n"
+            "- Never end with generic CTAs like 'Contact us today' or 'Get in touch'.\n\n"
+            "Title Rules:\n"
+            "- Create a specific, professional, outcome-focused title that is relevant to the topic and audience.\n"
+            "- Avoid generic titles like 'Complete Guide' or 'Ultimate Guide' as the main title.\n"
+            "- Prefer formats such as Outcome + Audience, Method + Result, or Problem + Solution asset.\n"
+            "- Examples: 'Smart Home Cost Optimization Blueprint for Architects', 'Sustainable Design ROI Playbook for Homeowners'.\n\n"
+            "Depth and Quality Controls:\n"
+            "- Internally check each section for specificity, practicality, non-generic phrasing, and uniqueness versus other sections.\n"
+            "- If a section reads as generic or boilerplate, internally regenerate that section until it is specific and practical.\n"
+            "- Ensure that sections do not repeat the same ideas or sentences.\n\n"
             "Style Instructions: " + prompt_style + "\n\n" +
             "Inputs:\n" +
             json.dumps({
@@ -241,6 +314,15 @@ class PerplexityClient:
             }, ensure_ascii=False) + "\n\n" +
             "Output Schema (keys must match EXACTLY):\n" +
             json.dumps({
+                "meta": {
+                    "main_topic": "<copy of main_topic>",
+                    "lead_magnet_type": "<normalized lead magnet type>",
+                    "target_audience": "<short audience label, e.g. 'Homeowners' or 'Architects'>",
+                    "desired_outcome": "<short outcome phrase>",
+                    "conversion_angle": "<short phrase capturing main promise or angle>",
+                    "ending_asset_type": "<one of: checklist, framework, assessment, tool, estimator, audit, hook>",
+                    "ending_asset_label": "<name of the ending asset, e.g. 'Smart Retrofit Readiness Checklist'>"
+                },
                 "style": {
                     "primary_color": "<hex or CSS color, use brand_primary_color>",
                     "secondary_color": "<hex or CSS color, use brand_secondary_color>",
@@ -250,7 +332,7 @@ class PerplexityClient:
                     "logo_url": "<use provided logo_url if available>"
                 },
                 "cover": {
-                    "title": "<compose from lead_magnet_type + main_topic>",
+                    "title": "<professional, outcome-focused title using lead_magnet_type, main_topic, and target_audience>",
                     "subtitle": "<use desired_outcome; summarize value proposition>",
                     "company_name": "<firm_name>",
                     "company_tagline": "<tagline>"
@@ -310,8 +392,8 @@ class PerplexityClient:
                     }
                 ],
                 "contact": {
-                    "title": "<use call_to_action>",
-                    "description": "<3-4 detailed sentences about contacting the firm>",
+                    "title": "<title of the tangible next-step asset, not a generic CTA>",
+                    "description": "<3-4 detailed sentences describing the asset, the value exchange, and how it continues the document>",
                     "phone": "<phone_number>",
                     "email": "<work_email>",
                     "website": "<firm_website>",
@@ -329,6 +411,7 @@ class PerplexityClient:
             "- Contents.items must have 6 descriptive entries aligned to the sections.\n"
             "- NO extra text outside JSON, NO Markdown, NO comments.\n"
             "- Do NOT use any placeholder like 'TEST DOCUMENT'.\n"
+            "- The ending contact block MUST describe a single tangible asset (checklist, framework, assessment, tool, estimator, audit, or next-step hook) and may optionally mention contact channels only as a support to that asset.\n"
         )
 
         return prompt
@@ -562,13 +645,12 @@ class PerplexityClient:
 
         def ensure_min_sentences(text: str, min_sentences: int = 3, max_sentences: int = 5, topic_hint: Optional[str] = None) -> str:
             sentences = [finalize_line(s) for s in split_sentences(text)]
-            # Fallback pool of professional, neutral sentences
             th = (topic_hint or 'this topic').strip()
             fallback_pool = [
-                f"This section provides clear guidance on {th}.",
-                "It outlines benefits, trade-offs, and common pitfalls to avoid.",
-                "Recommendations and steps help readers take confident action.",
-                "Examples illustrate how to apply ideas in real-world scenarios.",
+                f"Highlight a specific scenario where {th} changes a project decision.",
+                f"Describe one concrete mistake to avoid when dealing with {th}.",
+                f"Share a short example showing how an expert approaches {th}.",
+                f"Close with a practical step the reader can take this week related to {th}.",
             ]
             i = 0
             while len(sentences) < min_sentences and i < len(fallback_pool):
@@ -582,12 +664,11 @@ class PerplexityClient:
             t = (text or '').strip()
             if count_words(t) >= min_words:
                 return t
-            # Add more fallback content until minimum reached
             th = (topic_hint or 'the topic').strip()
             additions = [
-                f"The discussion focuses on key considerations for {th}.",
-                "It balances practicality with strategic outcomes and long-term value.",
-                "Readers gain clarity on next steps and measurable results.",
+                f"Include one specific metric, checklist item, or decision point related to {th}.",
+                "Offer a short framework or sequence of steps the reader can follow.",
+                "Mention a realistic constraint or trade-off and how to handle it.",
             ]
             for line in additions:
                 if count_words(t) >= min_words:
@@ -599,14 +680,30 @@ class PerplexityClient:
                 t = " ".join(words[:max_words])
             return t
 
+        def strip_generic_phrases(text: str) -> str:
+            t = text or ""
+            patterns = [
+                r"\b[Ii]n today's world[, ]*",
+                r"\b[Ii]n today's (digital|fast-paced|ever[-\s]?changing) (landscape|world)[, ]*",
+                r"\b[Tt]his section (provides|offers|explores)\b[: ]*",
+                r"\b[Ii]n conclusion[, ]*",
+                r"\b[Tt]o conclude[, ]*",
+                r"\b[Ii]n summary[, ]*",
+                r"\b[oO]verall[, ]*",
+            ]
+            for p in patterns:
+                t = re.sub(p, "", t)
+            t = re.sub(r"\s{2,}", " ", t).strip()
+            return t
+
         def normalize_main_content(text: str, title_hint: str) -> str:
-            # Normalize whitespace and complete sentences
             t = re.sub(r"\s+", " ", (text or '').strip())
             t = ensure_min_sentences(t, min_sentences=3, max_sentences=5, topic_hint=title_hint)
             t = ensure_min_words(t, min_words=60, max_words=220, topic_hint=title_hint)
+            t = strip_generic_phrases(t)
             return t
 
-        # Create a short, professional title for the PDF
+        meta = ai_content.get("meta", {}) if isinstance(ai_content, dict) else {}
         raw_title = (cover.get("title") or "Professional Guide").strip()
 
         def clean_title(title: str) -> str:
@@ -631,14 +728,43 @@ class PerplexityClient:
             t = re.sub(r"[:\s]+$", "", t).strip()
             t = re.sub(r"[:\-\s]+(A|An|The)$", "", t, flags=re.IGNORECASE).strip()
 
-            # Collapse multiple spaces and trim punctuation
+            generic_patterns = [
+                r"^(complete|ultimate)\s+guide$",
+                r"^(guide|playbook|report)$",
+            ]
+            lowered = t.lower()
+            for pat in generic_patterns:
+                if re.match(pat, lowered):
+                    t = ""
+                    break
+            t = re.sub(r"\s+", " ", t)
             t = re.sub(r"\s+", " ", t)
             t = t.strip(" -:;.,")
             # Keep it concise
             return truncate_title(t) if 'truncate_title' in locals() else t[:60]
 
+        def build_fallback_title() -> str:
+            topic = (meta.get("main_topic") or "").strip()
+            lm_type = (meta.get("lead_magnet_type") or "").strip()
+            audience_label = (meta.get("target_audience") or "").strip()
+            desired = (meta.get("desired_outcome") or "").strip()
+            parts = []
+            if topic and lm_type:
+                parts.append(f"{topic} {lm_type}")
+            elif topic:
+                parts.append(topic)
+            elif lm_type:
+                parts.append(lm_type)
+            if desired:
+                parts.append(desired)
+            base = " ".join(parts).strip()
+            if audience_label:
+                return f"{truncate_title(base)} for {audience_label}".strip()
+            return truncate_title(base or "Specialized Lead Magnet")
+
         main_title = clean_title(raw_title)
-        # Do NOT append company name to title; keep it short and professional
+        if not main_title:
+            main_title = build_fallback_title()
         enhanced_title = main_title
         
         # Build template variables dict comprehensively
@@ -777,10 +903,9 @@ class PerplexityClient:
             "quoteText2": truncate_subcontent(split_sentences(get_section(4).get("content", ""))[0] if split_sentences(get_section(4).get("content", "")) else ""),
             "quoteAuthor2": company_name or "",
 
-            # Page 9 (Contact) - with length limits
-            "contactTitle": "Contact Us",
-            "contactDescription": truncate_content(normalize_main_content(contact.get("description", ""), contact.get("title", "Contact"))),
-            "differentiatorTitle": "Contact us",
+            "contactTitle": truncate_title(clean_title(contact.get("title", "") or (meta.get("ending_asset_label") or "Next-Step Asset"))),
+            "contactDescription": truncate_content(normalize_main_content(contact.get("description", ""), contact.get("title", "Next-Step Asset"))),
+            "differentiatorTitle": truncate_title(clean_title(meta.get("ending_asset_label") or contact.get("title", "") or "Why This Asset Matters")),
             "differentiator": finalize_line(truncate_text(contact.get("differentiator", ""), 180)),
             # Quality metrics
             "qualityWarnings": "",

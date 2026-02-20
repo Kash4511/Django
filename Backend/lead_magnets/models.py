@@ -198,17 +198,15 @@ class LeadMagnetGeneration(models.Model):
         verbose_name_plural = 'Lead Magnet Generations'
 
 class FormaAIConversation(models.Model):
-    """Stores Forma AI chat conversations and user answers"""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ai_conversations')
     
-    # Chat messages stored as JSON array [{role: 'user', content: '...'}, {role: 'assistant', content: '...'}]
     messages = models.JSONField(default=list)
     
-    # Extracted user answers/requirements
     user_answers = models.JSONField(default=dict, blank=True)
     
-    # Linked lead magnet if conversation results in PDF generation
     lead_magnet = models.ForeignKey(LeadMagnet, on_delete=models.SET_NULL, null=True, blank=True, related_name='ai_conversations')
+    ai_generated_content = models.JSONField(default=dict, blank=True)
+    template_vars = models.JSONField(default=dict, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
