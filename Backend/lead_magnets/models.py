@@ -278,21 +278,13 @@ class PDFJob(models.Model):
     file_url = models.URLField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
-    # PDF generation status
-    STATUS_CHOICES = [
-        ('template-selected', 'Template Selected'),
-        ('content-generated', 'Content Generated'),
-        ('preview-ready', 'Preview Ready'),
-        ('pdf-generated', 'PDF Generated'),
-    ]
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='template-selected')
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    def __str__(self):
-        return f"Template: {self.template_name} - {self.lead_magnet.title}"
-    
+
+    def __str__(self) -> str:
+        return f"{self.user_id}:{self.id}:{self.status}"
+
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "created_at"]),
+            models.Index(fields=["status", "created_at"]),
+        ]
