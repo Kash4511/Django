@@ -1,0 +1,10 @@
+##To do:
+
+Fix flow and generation of pdf
+Generate more detailed and informative pdfs
+Improve user interface login/registration
+
+
+#awaiting:
+Api keys
+creation of env file
