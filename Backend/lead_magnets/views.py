@@ -132,6 +132,13 @@ def generate_pdf(request):
             'user': str(getattr(request.user, 'id', 'anonymous')),
             'path': str(getattr(request, 'path', ''))
         })
+        try:
+            payload_repr = str(request.data)
+        except Exception:
+            payload_repr = 'unserializable'
+        logger.info('GeneratePDFView: request payload snapshot', extra={
+            'payload': payload_repr[:2000]
+        })
         template_id = request.data.get('template_id')
         lead_magnet_id = request.data.get('lead_magnet_id')
         use_ai_content = bool(request.data.get('use_ai_content', True))
@@ -223,12 +230,17 @@ def generate_pdf(request):
 
                 if not answers_for_ai:
                     return Response({'error': 'AI content not available', 'details': 'Could not find generation data. Please recreate the lead magnet.'}, status=status.HTTP_400_BAD_REQUEST)
-                
+                logger.info('GeneratePDFView: before AI generate', extra={
+                    'lead_magnet_id': str(lead_magnet_id)
+                })
                 ai_content = ai_client.generate_lead_magnet_json(user_answers=answers_for_ai, firm_profile=firm_profile)
                 ai_client.debug_ai_content(ai_content)
                 template_vars = ai_client.map_to_template_vars(ai_content, firm_profile)
                 if not str(template_vars.get('companyName', '')).strip():
                     template_vars['companyName'] = firm_profile.get('firm_name') or ''
+                logger.info('GeneratePDFView: after AI generate', extra={
+                    'template_keys': list(template_vars.keys())
+                })
                 if template_selection:
                     template_selection.ai_generated_content = ai_content
                     template_selection.captured_answers = answers_for_ai
@@ -274,6 +286,14 @@ def generate_pdf(request):
             except Exception:
                 pass
 
+        for k, v in list(template_vars.items()):
+            if isinstance(v, str) and len(v) > 8000:
+                logger.info('GeneratePDFView: truncating template variable', extra={
+                    'key': k,
+                    'original_length': len(v)
+                })
+                template_vars[k] = v[:8000]
+
         required_keys = ['mainTitle', 'companyName']
         missing = [k for k in required_keys if not str(template_vars.get(k, '')).strip()]
         if missing:
@@ -284,7 +304,14 @@ def generate_pdf(request):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            logger.info('GeneratePDFView: before PDF generation', extra={
+                'lead_magnet_id': str(lead_magnet_id)
+            })
             result = template_service.generate_pdf_with_ai_content(template_id, template_vars)
+            logger.info('GeneratePDFView: after PDF generation', extra={
+                'lead_magnet_id': str(lead_magnet_id),
+                'success': bool(result.get('success'))
+            })
         except MemoryError:
             return Response({'error': 'PDF generation failed', 'details': 'Memory limit exceeded', 'type': 'MemoryError'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except requests.exceptions.Timeout as e:
@@ -341,9 +368,14 @@ def generate_pdf(request):
     except Exception as e:
         import traceback
         trace = traceback.format_exc() if settings.DEBUG else None
+        try:
+            payload_repr = str(request.data)
+        except Exception:
+            payload_repr = 'unserializable'
         logger.exception('GeneratePDFView: unexpected exception', extra={
             'user': str(getattr(request.user, 'id', 'anonymous')),
-            'path': str(getattr(request, 'path', ''))
+            'path': str(getattr(request, 'path', '')),
+            'payload': payload_repr[:2000]
         })
         payload = {'error': 'PDF generation failed', 'details': str(e), 'type': type(e).__name__}
         if trace:
