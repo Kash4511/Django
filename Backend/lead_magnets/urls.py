@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .tests_ping import ping
 
 urlpatterns = [
     path('dashboard/stats/', views.DashboardStatsView.as_view(), name='dashboard-stats'),
@@ -12,7 +13,8 @@ urlpatterns = [
     path('templates/', views.ListTemplatesView.as_view(), name='list-templates'),
     path('select-template/', views.SelectTemplateView.as_view(), name='select-template'),
     path('generate-slogan/', views.GenerateSloganView.as_view(), name='generate-slogan'),
-    path('generate-pdf/', views.GeneratePDFView.as_view(), name='generate-pdf'),
+    path('generate-pdf/', views.generate_pdf, name='generate-pdf'),
+    path('ping/', ping, name='ping'),
     path('generate-pdf/status/', views.GeneratePDFStatusView.as_view(), name='generate-pdf-status'),
     path('health/', views.HealthView.as_view(), name='health'),
     path('brand-assets/preview-pdf/', views.BrandAssetsPDFPreviewView.as_view(), name='brand-assets-preview-pdf'),
