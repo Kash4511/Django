@@ -5,11 +5,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class CatchAllMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
+        if request.path.startswith("/api/") or request.method == "OPTIONS":
+            return self.get_response(request)
         try:
             return self.get_response(request)
         except Exception as e:
