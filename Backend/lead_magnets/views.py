@@ -364,13 +364,6 @@ class SelectTemplateView(APIView):
             )
 
         try:
-            template = Template.objects.filter(id=template_id).first()
-            if not template:
-                return Response(
-                    {'error': 'Template not found'},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-
             lead_magnet = LeadMagnet.objects.get(id=lead_magnet_id, owner=request.user)
 
             template_selection, created = TemplateSelection.objects.update_or_create(
