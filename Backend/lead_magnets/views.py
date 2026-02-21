@@ -389,7 +389,6 @@ class SelectTemplateView(APIView):
                     'captured_answers': captured_answers,
                     'image_upload_preference': request.data.get('image_upload_preference', 'no'),
                     'source': source,
-                    'status': 'template-selected',
                 },
             )
 
