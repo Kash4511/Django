@@ -58,16 +58,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         password,
       })
 
-      const { access, refresh } = response.data
-      localStorage.setItem('access_token', access)
-      localStorage.setItem('refresh_token', refresh)
+      if (response.status !== 200) {
+        throw new Error('Login failed');
+      }
 
-      // Fetch user profile
-      const profileResponse = await apiClient.get('/api/auth/profile/')
-      setUser(profileResponse.data)
+      const { access, refresh } = response.data as { access?: string; refresh?: string };
+
+      if (!access) {
+        throw new Error('No access token returned');
+      }
+
+      localStorage.setItem('access_token', access);
+      if (typeof refresh === 'string') {
+        localStorage.setItem('refresh_token', refresh);
+      }
+
+      const profileResponse = await apiClient.get('/api/auth/profile/');
+      setUser(profileResponse.data);
     } catch (error: unknown) {
-      console.error('Login failed:', error)
-      throw error
+      console.error('Login failed:', (error as any)?.response?.data || error);
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      throw error;
     }
   }
 

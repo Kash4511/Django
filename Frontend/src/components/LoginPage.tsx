@@ -50,7 +50,7 @@ const LoginPage: React.FC = () => {
     } catch (err: unknown) {
       console.error('Login error:', err)
       const asObj = err as Record<string, unknown>
-      const response = asObj.response as { data?: unknown } | undefined
+      const response = asObj.response as { data?: unknown; status?: number } | undefined
       const data = response?.data
       if (data && typeof data === 'object') {
         const errorData = data as Record<string, unknown>
@@ -62,7 +62,7 @@ const LoginPage: React.FC = () => {
         } else if (typeof errorData.detail === 'string') {
           setError(errorData.detail as string)
         } else {
-          setError('Login failed. Please check your credentials.')
+          setError('Invalid email or password')
         }
       } else if (
         (asObj.code === 'ECONNABORTED') ||
@@ -74,6 +74,7 @@ const LoginPage: React.FC = () => {
       } else {
         setError('An unexpected error occurred. Please try again.')
       }
+      return;
     } finally {
       setLoading(false)
     }

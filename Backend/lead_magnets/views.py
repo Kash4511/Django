@@ -379,23 +379,34 @@ class SelectTemplateView(APIView):
                     name=template_name or str(template_id),
                 )
 
-            template_selection, created = TemplateSelection.objects.update_or_create(
-                lead_magnet=lead_magnet,
-                defaults={
-                    'user': request.user,
-                    'template_id': template_id,
-                    'template_name': template_name,
-                    'template_thumbnail': template_thumbnail,
-                    'captured_answers': captured_answers,
-                    'image_upload_preference': request.data.get('image_upload_preference', 'no'),
-                    'source': source,
-                },
-            )
+            template_selection = None
+            try:
+                template_selection, created = TemplateSelection.objects.update_or_create(
+                    lead_magnet=lead_magnet,
+                    defaults={
+                        'user': request.user,
+                        'template_id': template_id,
+                        'template_name': template_name,
+                        'template_thumbnail': template_thumbnail,
+                        'captured_answers': captured_answers,
+                        'image_upload_preference': request.data.get('image_upload_preference', 'no'),
+                        'source': source,
+                    },
+                )
+            except Exception as e:
+                logger.exception(
+                    'SelectTemplateView: failed to persist TemplateSelection',
+                    extra={
+                        'user': str(getattr(request.user, 'id', 'anonymous')),
+                        'lead_magnet_id': str(lead_magnet_id),
+                        'template_id': str(template_id),
+                    },
+                )
 
             return Response(
                 {
                     'success': True,
-                    'template_selection_id': template_selection.id,
+                    'template_selection_id': getattr(template_selection, 'id', None),
                     'message': 'Template selected successfully',
                 },
                 status=status.HTTP_200_OK,
