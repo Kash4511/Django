@@ -374,9 +374,9 @@ class SelectTemplateView(APIView):
 
             template = Template.objects.filter(id=template_id).first()
             if not template:
-                return Response(
-                    {'error': 'Template not found'},
-                    status=status.HTTP_404_NOT_FOUND,
+                template = Template.objects.create(
+                    id=template_id,
+                    name=template_name or str(template_id),
                 )
 
             template_selection, created = TemplateSelection.objects.update_or_create(
