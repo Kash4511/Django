@@ -177,10 +177,16 @@ export const dashboardApi = {
   },
   
   selectTemplate: async (request: TemplateSelectionRequest): Promise<void> => {
+    if (!request?.template_id || !request?.lead_magnet_id) {
+      console.error('selectTemplate called with missing ids', request);
+      throw new Error('Template not selected or lead magnet missing');
+    }
+    console.log('selectTemplate payload', request);
     try {
       await apiClient.post(`${API_BASE_URL}/select-template/`, request);
     } catch (error) {
       handleApiError(error, 'Selecting template');
+      throw error;
     }
   },
   

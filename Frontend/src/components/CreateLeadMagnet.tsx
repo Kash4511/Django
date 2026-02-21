@@ -97,6 +97,9 @@ const CreateLeadMagnet: React.FC = () => {
   const handleTemplateSubmit = async (templateId: string, templateName: string, architecturalImages?: File[]) => {
     // Directly create the lead magnet and generate the PDF, no review modal
     if (loading || isGenerating) return
+    if (!templateId) {
+      throw new Error('Template not selected');
+    }
     setLoading(true)
     setErrorMessage(null)
     setSuccessMessage(null)
@@ -129,7 +132,7 @@ const CreateLeadMagnet: React.FC = () => {
         captured_answers: capturedAnswers as unknown as Record<string, unknown>,
         source: 'create-lead-magnet'
       }
-
+      console.log('selectTemplate payload', selectionRequest)
       await dashboardApi.selectTemplate(selectionRequest)
       setSuccessMessage('Template selected. Generating PDF with AI...')
 
