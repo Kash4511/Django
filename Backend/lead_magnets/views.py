@@ -6,6 +6,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import ValidationError
 from django.db.models import Count, Q
 from django.db import transaction
 from django.conf import settings
@@ -364,7 +365,19 @@ class SelectTemplateView(APIView):
             )
 
         try:
-            lead_magnet = LeadMagnet.objects.get(id=lead_magnet_id, owner=request.user)
+            lead_magnet = LeadMagnet.objects.filter(id=lead_magnet_id, owner=request.user).first()
+            if not lead_magnet:
+                return Response(
+                    {'error': 'Lead magnet not found'},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            template = Template.objects.filter(id=template_id).first()
+            if not template:
+                return Response(
+                    {'error': 'Template not found'},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
 
             template_selection, created = TemplateSelection.objects.update_or_create(
                 lead_magnet=lead_magnet,
@@ -386,13 +399,16 @@ class SelectTemplateView(APIView):
                     'template_selection_id': template_selection.id,
                     'message': 'Template selected successfully',
                 },
-                status=status.HTTP_201_CREATED,
+                status=status.HTTP_200_OK,
             )
 
-        except LeadMagnet.DoesNotExist:
+        except ValidationError as e:
             return Response(
-                {'error': 'Lead magnet not found'},
-                status=status.HTTP_404_NOT_FOUND,
+                {
+                    'error': 'Invalid data',
+                    'details': getattr(e, 'detail', str(e)),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:
             import traceback
@@ -413,7 +429,7 @@ class SelectTemplateView(APIView):
             }
             if trace:
                 payload['trace'] = trace
-            return Response(payload, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(payload, status=status.HTTP_400_BAD_REQUEST)
 
 class GenerateSloganView(APIView):
     permission_classes = [permissions.IsAuthenticated]
