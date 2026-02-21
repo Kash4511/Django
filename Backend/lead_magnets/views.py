@@ -323,24 +323,56 @@ class SelectTemplateView(APIView):
         template_thumbnail = request.data.get('template_thumbnail', '')
         captured_answers = request.data.get('captured_answers', {})
         source = request.data.get('source', 'create-lead-magnet')
-        
-        if not all([lead_magnet_id, template_id, template_name]):
-            return Response({
-                'error': 'lead_magnet_id, template_id, and template_name are required'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Validate source is one of the permitted choices
+
+        try:
+            payload_repr = str(request.data)
+        except Exception:
+            payload_repr = 'unserializable'
+
+        logger.info('SelectTemplateView: request received', extra={
+            'user': str(getattr(request.user, 'id', 'anonymous')),
+            'lead_magnet_id': str(lead_magnet_id),
+            'template_id': str(template_id),
+            'payload': payload_repr[:2000],
+        })
+
+        if not template_id:
+            return Response(
+                {'error': 'template_id is required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not lead_magnet_id:
+            return Response(
+                {'error': 'lead_magnet_id is required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not template_name:
+            return Response(
+                {'error': 'template_name is required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         valid_sources = [choice[0] for choice in TemplateSelection.SOURCE_CHOICES]
         if source not in valid_sources:
-            return Response({
-                'error': f'Invalid source. Must be one of: {", ".join(valid_sources)}'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(
+                {
+                    'error': f'Invalid source. Must be one of: {", ".join(valid_sources)}'
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         try:
-            # Get the lead magnet
+            template = Template.objects.filter(id=template_id).first()
+            if not template:
+                return Response(
+                    {'error': 'Template not found'},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
             lead_magnet = LeadMagnet.objects.get(id=lead_magnet_id, owner=request.user)
-            
-            # Create or update template selection
+
             template_selection, created = TemplateSelection.objects.update_or_create(
                 lead_magnet=lead_magnet,
                 defaults={
@@ -351,23 +383,44 @@ class SelectTemplateView(APIView):
                     'captured_answers': captured_answers,
                     'image_upload_preference': request.data.get('image_upload_preference', 'no'),
                     'source': source,
-                    'status': 'template-selected'
-                }
+                    'status': 'template-selected',
+                },
             )
-            
-            # Do not mark lead magnet as in-progress on template selection.
-            # Status will be set to in-progress when PDF generation starts.
-            
-            return Response({
-                'success': True,
-                'template_selection_id': template_selection.id,
-                'message': 'Template selected successfully'
-            }, status=status.HTTP_201_CREATED)
-            
+
+            return Response(
+                {
+                    'success': True,
+                    'template_selection_id': template_selection.id,
+                    'message': 'Template selected successfully',
+                },
+                status=status.HTTP_201_CREATED,
+            )
+
         except LeadMagnet.DoesNotExist:
-            return Response({
-                'error': 'Lead magnet not found'
-            }, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {'error': 'Lead magnet not found'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            import traceback
+
+            trace = traceback.format_exc() if settings.DEBUG else None
+            logger.exception(
+                'SelectTemplateView: unexpected exception',
+                extra={
+                    'user': str(getattr(request.user, 'id', 'anonymous')),
+                    'lead_magnet_id': str(lead_magnet_id),
+                    'template_id': str(template_id),
+                },
+            )
+            payload = {
+                'error': 'Template selection failed',
+                'details': str(e),
+                'type': type(e).__name__,
+            }
+            if trace:
+                payload['trace'] = trace
+            return Response(payload, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class GenerateSloganView(APIView):
     permission_classes = [permissions.IsAuthenticated]
