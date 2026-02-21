@@ -161,22 +161,45 @@ def generate_pdf(request):
             user=request.user,
             status=PDFJob.STATUS_PENDING,
         )
-
         logger.info('GeneratePDFView: enqueuing PDF job', extra={
             'user': str(getattr(request.user, 'id', 'anonymous')),
             'lead_magnet_id': str(lead_magnet_id),
             'job_id': str(job.id),
         })
 
-        generate_pdf_job_task.delay(
-            str(job.id),
-            request.user.id,
-            template_id,
-            lead_magnet_id,
-            use_ai_content,
-            user_answers,
-            architectural_images,
-        )
+        try:
+            generate_pdf_job_task.delay(
+                str(job.id),
+                request.user.id,
+                template_id,
+                lead_magnet_id,
+                use_ai_content,
+                user_answers,
+                architectural_images,
+            )
+        except Exception as e:
+            import traceback
+
+            trace = traceback.format_exc() if settings.DEBUG else None
+            logger.exception(
+                'GeneratePDFView: failed to enqueue PDF job',
+                extra={
+                    'user': str(getattr(request.user, 'id', 'anonymous')),
+                    'lead_magnet_id': str(lead_magnet_id),
+                    'job_id': str(job.id),
+                },
+            )
+            job.status = PDFJob.STATUS_FAILED
+            job.error = f'Enqueue failed: {e}'
+            job.save(update_fields=["status", "error", "updated_at"])
+            payload = {
+                'error': 'PDF service temporarily unavailable',
+                'details': str(e),
+                'job_id': str(job.id),
+            }
+            if trace:
+                payload['trace'] = trace
+            return Response(payload, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         return Response(
             {
