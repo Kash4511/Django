@@ -34,7 +34,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Check for existing session on mount
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('access_token')
+      const token = localStorage.getItem('access') || localStorage.getItem('access_token')
       if (token) {
         try {
           const response = await apiClient.get('/api/auth/profile/')
@@ -43,6 +43,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           console.error('Auth check failed:', error)
           localStorage.removeItem('access_token')
           localStorage.removeItem('refresh_token')
+          localStorage.removeItem('access')
+          localStorage.removeItem('refresh')
         }
       }
       setLoading(false)
@@ -68,8 +70,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error('No access token returned');
       }
 
+      localStorage.setItem('access', access);
       localStorage.setItem('access_token', access);
       if (typeof refresh === 'string') {
+        localStorage.setItem('refresh', refresh);
         localStorage.setItem('refresh_token', refresh);
       }
 
@@ -79,6 +83,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error('Login failed:', (error as any)?.response?.data || error);
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
+       localStorage.removeItem('access');
+       localStorage.removeItem('refresh');
       throw error;
     }
   }
@@ -94,7 +100,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       })
 
       const { access, refresh } = response.data
+      localStorage.setItem('access', access)
       localStorage.setItem('access_token', access)
+      localStorage.setItem('refresh', refresh)
       localStorage.setItem('refresh_token', refresh)
 
       // Fetch user profile
@@ -126,6 +134,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
+    localStorage.removeItem('access')
+    localStorage.removeItem('refresh')
     setUser(null)
   }
 

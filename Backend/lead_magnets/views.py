@@ -137,6 +137,8 @@ class FirmProfileView(generics.RetrieveUpdateAPIView):
 @permission_classes([permissions.IsAuthenticated])
 def generate_pdf(request):
     try:
+        if not getattr(request, "user", None) or not request.user.is_authenticated:
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
         logger.info('GeneratePDFView: request received', extra={
             'user': str(getattr(request.user, 'id', 'anonymous')),
             'path': str(getattr(request, 'path', ''))
@@ -157,10 +159,23 @@ def generate_pdf(request):
         except LeadMagnet.DoesNotExist:
             return Response({'error': 'Lead magnet not found', 'details': f"Lead magnet with ID {lead_magnet_id} not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        job = PDFJob.objects.create(
-            user=request.user,
-            status=PDFJob.STATUS_PENDING,
-        )
+        try:
+            job = PDFJob.objects.create(
+                user=request.user,
+                status=PDFJob.STATUS_PENDING,
+            )
+        except Exception as e:
+            logger.exception('GeneratePDFView: job creation failed', extra={
+                'user': str(getattr(request.user, 'id', 'anonymous')),
+                'lead_magnet_id': str(lead_magnet_id),
+            })
+            return Response(
+                {
+                    'error': 'Job creation failed',
+                    'details': str(e),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
         logger.info('GeneratePDFView: enqueuing PDF job', extra={
             'user': str(getattr(request.user, 'id', 'anonymous')),
             'lead_magnet_id': str(lead_magnet_id),
@@ -341,6 +356,11 @@ class SelectTemplateView(APIView):
 
     @transaction.atomic
     def post(self, request):
+        if not getattr(request, "user", None) or not request.user.is_authenticated:
+            return Response(
+                {'error': 'Unauthorized'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
         lead_magnet_id = request.data.get('lead_magnet_id')
         template_id = request.data.get('template_id')
         template_name = request.data.get('template_name')

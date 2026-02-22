@@ -18,7 +18,7 @@ const apiClient = axios.create({
 // Add request interceptor to add auth token to requests
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access') || localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -58,6 +58,7 @@ apiClient.interceptors.response.use(
         const { access } = response.data;
         
         // Save new token
+        localStorage.setItem('access', access);
         localStorage.setItem('access_token', access);
         
         // Update authorization header
@@ -69,6 +70,8 @@ apiClient.interceptors.response.use(
         // Refresh token failed, clear tokens and let app routing handle navigation
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        localStorage.removeItem('access');
+        localStorage.removeItem('refresh');
         return Promise.reject(refreshError);
       }
     }
