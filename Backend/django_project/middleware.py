@@ -11,6 +11,9 @@ class CatchAllMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        if request.method == "OPTIONS":
+             logger.info(f"OPTIONS request from {request.META.get('HTTP_ORIGIN')} for {request.path}")
+             
         logger.info(
             "HTTP request",
             extra={

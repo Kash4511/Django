@@ -259,10 +259,9 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://django-.*\.vercel\.app$",
     r"^https://django-.*-kash4511s-projects\.vercel\.app$",
+    r"^http://localhost:\d+$",
+    r"^http://127\.0\.0\.1:\d+$",
 ]
-
-CORS_URLS_REGEX = r'^/api/.*$'
-
 
 # Optional but helps with some older browsers
 CORS_PREFLIGHT_MAX_AGE = 86400

@@ -848,7 +848,6 @@ class HealthView(APIView):
     permission_classes     = [permissions.AllowAny]
     authentication_classes = []
     def get(self, request): return Response({"status":"ok"})
-    def options(self, request, *a, **k): return Response({"status":"ok"})
 
 
 @api_view(['POST'])
