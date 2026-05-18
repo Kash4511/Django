@@ -250,6 +250,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://django-six-gamma.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -285,6 +287,8 @@ CORS_ALLOW_METHODS = [
 
 CSRF_TRUSTED_ORIGINS = [
     "https://django-six-gamma.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
     "https://django-4muchbxg6-kash4511s-projects.vercel.app",
     "https://django-git-kaashifs-branch-kash4511s-projects.vercel.app",
     "https://django-msvx.onrender.com",
